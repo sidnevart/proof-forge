@@ -1,3 +1,5 @@
 # Architecture Docs
 
-Place architecture overviews, domain models, data designs, and system diagrams here.
+Здесь хранятся архитектурные обзоры, доменные модели, data design, системные диаграммы и закреплённые продуктовые ограничения для интерфейса.
+
+Для UI-работы обязательно учитывать [frontend-brand-constraints.md](./frontend-brand-constraints.md): этот документ фиксирует утверждённое направление бренда и запрещённые паттерны.

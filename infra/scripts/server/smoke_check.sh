@@ -7,7 +7,7 @@ HTTPS_PORT="${PROOFFORGE_HTTPS_PORT:-18443}"
 
 cd "$DEPLOY_PATH"
 
-docker compose -f compose.prod.yml ps
+docker compose --env-file .env.prod -f compose.prod.yml ps
 curl -fsS "http://127.0.0.1:${HTTP_PORT}/" >/dev/null
 curl -kfsS "https://127.0.0.1:${HTTPS_PORT}/" >/dev/null
 curl -kfsS "https://127.0.0.1:${HTTPS_PORT}/readyz" >/dev/null

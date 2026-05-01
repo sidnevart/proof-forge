@@ -15,11 +15,12 @@ if [[ ! -f .env.prod ]]; then
 fi
 
 export IMAGE_TAG IMAGE_NAMESPACE
+COMPOSE_ARGS=(--env-file .env.prod -f compose.prod.yml)
 
 printf '%s' "$GHCR_TOKEN" | docker login ghcr.io -u "$GHCR_USERNAME" --password-stdin
 trap 'docker logout ghcr.io >/dev/null 2>&1 || true' EXIT
 
-docker compose -f compose.prod.yml pull
-docker compose -f compose.prod.yml up -d
+docker compose "${COMPOSE_ARGS[@]}" pull
+docker compose "${COMPOSE_ARGS[@]}" up -d
 
 "$DEPLOY_PATH/scripts/smoke_check.sh"

@@ -1,0 +1,102 @@
+:root {
+  --bg: #0c1016;
+  --bg-elevated: #131a22;
+  --bg-panel: #171f29;
+  --bg-panel-strong: #1d2733;
+  --border: rgba(186, 202, 221, 0.18);
+  --border-strong: rgba(186, 202, 221, 0.28);
+  --text: #edf2f8;
+  --text-muted: #99a7b7;
+  --text-dim: #708094;
+  --accent-blue: #4db2ff;
+  --accent-green: #70d896;
+  --accent-amber: #ffbf5b;
+  --accent-red: #ff6d68;
+  --accent-ink: #0f141b;
+  --shadow: 0 24px 80px rgba(4, 10, 18, 0.48);
+  --radius-xs: 10px;
+  --radius-sm: 18px;
+  --radius-md: 24px;
+  --radius-lg: 36px;
+  --max-width: 1240px;
+  --font-heading: "Space Grotesk", "IBM Plex Sans", "Avenir Next", sans-serif;
+  --font-body: "IBM Plex Sans", "Inter", "Avenir Next", sans-serif;
+  --font-mono: "IBM Plex Mono", "SFMono-Regular", ui-monospace, monospace;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html {
+  scroll-behavior: smooth;
+}
+
+body {
+  margin: 0;
+  min-height: 100vh;
+  background:
+    radial-gradient(circle at top right, rgba(77, 178, 255, 0.18), transparent 22%),
+    radial-gradient(circle at 15% 10%, rgba(112, 216, 150, 0.12), transparent 18%),
+    linear-gradient(180deg, #081018 0%, #0a1219 100%);
+  color: var(--text);
+  font-family: var(--font-body);
+}
+
+a {
+  color: inherit;
+  text-decoration: none;
+}
+
+button,
+input,
+textarea {
+  font: inherit;
+}
+
+.app-shell {
+  min-height: 100vh;
+}
+
+.page-shell {
+  width: min(100% - 32px, var(--max-width));
+  margin: 0 auto;
+}
+
+.eyebrow {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  padding: 8px 14px;
+  border-radius: 999px;
+  border: 1px solid var(--border);
+  background: rgba(255, 255, 255, 0.04);
+  color: var(--text-muted);
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  font-size: 12px;
+}
+
+.grid-lines {
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  background-image:
+    linear-gradient(rgba(255, 255, 255, 0.03) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(255, 255, 255, 0.03) 1px, transparent 1px);
+  background-size: 32px 32px;
+  mask-image: linear-gradient(180deg, rgba(0, 0, 0, 0.72), transparent 92%);
+}
+
+.status-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 999px;
+  background: currentColor;
+}
+
+@media (max-width: 720px) {
+  .page-shell {
+    width: min(100% - 20px, var(--max-width));
+  }
+}

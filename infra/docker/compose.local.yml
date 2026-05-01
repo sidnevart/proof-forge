@@ -1,0 +1,20 @@
+services:
+  postgres:
+    image: postgres:16-alpine
+    container_name: proofforge-postgres
+    environment:
+      POSTGRES_DB: proofforge
+      POSTGRES_USER: proofforge
+      POSTGRES_PASSWORD: proofforge
+    ports:
+      - "55432:5432"
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U proofforge -d proofforge"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+    volumes:
+      - proofforge-postgres-data:/var/lib/postgresql/data
+
+volumes:
+  proofforge-postgres-data:

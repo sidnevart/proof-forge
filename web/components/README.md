@@ -1,3 +1,3 @@
 # Web Components
 
-Placeholder for reusable components and primitives backed by the local design system.
+Здесь лежат reusable UI primitives, marketing surfaces и product surfaces.

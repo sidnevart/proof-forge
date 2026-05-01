@@ -1,3 +1,3 @@
 # Web App
 
-Placeholder for routes, layouts, and page-level application surfaces.
+Здесь лежат route-level entrypoints для landing и product shell.

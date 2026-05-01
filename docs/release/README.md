@@ -1,3 +1,6 @@
 # Release Docs
 
-Place release notes, launch checklists, readiness reviews, and rollout plans here.
+Здесь лежат release notes, launch checklists, readiness reviews и rollout plans.
+
+Сейчас добавлен:
+- [cicd-secrets.md](./cicd-secrets.md)

@@ -1,0 +1,13 @@
+.git
+.github
+.DS_Store
+tmp
+.tmp
+.cache
+coverage
+web/.next
+web/node_modules
+web/coverage
+backend/bin
+backend/coverage.out
+infra/docker/.env.prod

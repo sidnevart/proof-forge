@@ -1,0 +1,32 @@
+.pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 12px;
+  border-radius: 999px;
+  border: 1px solid currentColor;
+  font-size: 12px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+}
+
+.approved {
+  color: var(--accent-green);
+}
+
+.pending {
+  color: var(--accent-amber);
+}
+
+.changes_requested {
+  color: var(--accent-blue);
+}
+
+.rejected {
+  color: var(--accent-red);
+}
+
+.active {
+  color: var(--text);
+}

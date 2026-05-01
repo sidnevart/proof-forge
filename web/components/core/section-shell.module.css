@@ -1,0 +1,21 @@
+.section {
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  background: rgba(19, 26, 34, 0.78);
+  box-shadow: var(--shadow);
+  padding: 28px;
+  backdrop-filter: blur(18px);
+}
+
+.header {
+  display: grid;
+  gap: 16px;
+  margin-bottom: 18px;
+}
+
+.title {
+  margin: 0;
+  font-family: var(--font-heading);
+  font-size: clamp(28px, 4vw, 42px);
+  line-height: 1;
+}

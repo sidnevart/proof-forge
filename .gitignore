@@ -1,9 +1,15 @@
 .DS_Store
 .env
+.env.prod
 .env.local
 .env.*.local
 !.env.example
+**/.env.prod
+infra/nginx/certs/*
+!infra/nginx/certs/.gitkeep
 node_modules/
+.next/
+*.tsbuildinfo
 dist/
 build/
 coverage/

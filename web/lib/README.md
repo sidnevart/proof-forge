@@ -1,3 +1,3 @@
 # Web Libraries
 
-Placeholder for data clients, helpers, and frontend platform code.
+Здесь лежат frontend helpers и demo data для bootstrap-этапа.

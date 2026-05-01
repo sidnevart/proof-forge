@@ -19,10 +19,10 @@ RUN addgroup -S app && adduser -S app -G app
 
 WORKDIR /app
 
-COPY --from=build /out/${TARGET} /app/${TARGET}
+COPY --from=build /out/${TARGET} /app/service
 
 USER app
 
 EXPOSE 8080
 
-ENTRYPOINT ["/bin/sh", "-c", "/app/${TARGET}"]
+ENTRYPOINT ["/app/service"]

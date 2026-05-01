@@ -135,6 +135,7 @@ services:
     environment:
       NODE_ENV: production
       NEXT_TELEMETRY_DISABLED: "1"
+      NEXT_PUBLIC_API_BASE_URL: http://localhost:8080
     ports:
       - "3003:3000"
     depends_on:

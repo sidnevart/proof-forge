@@ -1,6 +1,8 @@
 import type { CheckIn, CheckInDetail, DashboardResponse, EvidenceItem, GoalView, InvitePreview, ReviewRecord, User, WeeklyRecap } from "@/lib/types";
 
-const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL ?? "http://localhost:8080";
+// Production: empty string = same-origin requests through nginx.
+// Development: set NEXT_PUBLIC_API_BASE_URL=http://localhost:8080 in .env.local or compose.
+const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL ?? "";
 
 type ApiErrorPayload = {
   error?: {

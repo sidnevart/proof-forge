@@ -24,3 +24,7 @@ __pycache__/
 vendor/
 bin/
 out/
+
+# Compiled binaries
+/backend/api
+/backend/worker

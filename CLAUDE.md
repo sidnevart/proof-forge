@@ -14,3 +14,6 @@ Default execution policy:
 Repository intent:
 - this scaffold is the development system and operating model
 - product code should be added later through planned implementation slices
+
+Language policy:
+- All user-facing UI text (labels, buttons, headings, descriptions, error messages) must be written in Russian.

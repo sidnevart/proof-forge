@@ -145,6 +145,7 @@ services:
         condition: service_healthy
     networks:
       - internal
+      - edge
 
 volumes:
   postgres-data:
@@ -156,3 +157,5 @@ networks:
   internal:
     driver: bridge
     internal: true
+  edge:
+    driver: bridge

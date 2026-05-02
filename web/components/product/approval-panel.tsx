@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import { useCallback, useEffect, useState, useTransition } from "react";
 
 import { Button } from "@/components/core/button";
@@ -15,9 +16,9 @@ type ScreenState =
   | { kind: "loading" }
   | { kind: "unauthenticated" }
   | { kind: "error"; message: string }
-  | { kind: "not_submitted" }
+  | { kind: "not_submitted"; goalID?: number }
   | { kind: "reviewing"; checkIn: CheckIn; evidence: EvidenceItem[] }
-  | { kind: "decided"; decision: "approved" | "rejected" | "changes_requested" };
+  | { kind: "decided"; decision: "approved" | "rejected" | "changes_requested"; goalID: number };
 
 export function ApprovalPanel({ checkInID }: { checkInID: number }) {
   const [state, setState] = useState<ScreenState>({ kind: "loading" });
@@ -31,7 +32,7 @@ export function ApprovalPanel({ checkInID }: { checkInID: number }) {
     try {
       const data = await getCheckIn(checkInID);
       if (data.check_in.status !== "submitted") {
-        setState({ kind: "not_submitted" });
+        setState({ kind: "not_submitted", goalID: data.check_in.goal_id });
         return;
       }
       setState({ kind: "reviewing", checkIn: data.check_in, evidence: data.evidence ?? [] });
@@ -51,12 +52,18 @@ export function ApprovalPanel({ checkInID }: { checkInID: number }) {
     void load();
   }, [load]);
 
+  function decide(decision: "approved" | "rejected" | "changes_requested", goalID: number) {
+    setState({ kind: "decided", decision, goalID });
+  }
+
   function handleApprove() {
+    if (state.kind !== "reviewing") return;
+    const goalID = state.checkIn.goal_id;
     setActionError(null);
     startApprove(async () => {
       try {
         await approveCheckIn(checkInID, comment.trim() || undefined);
-        setState({ kind: "decided", decision: "approved" });
+        decide("approved", goalID);
       } catch (error) {
         setActionError(error instanceof Error ? error.message : "Не удалось подтвердить результат.");
       }
@@ -64,11 +71,13 @@ export function ApprovalPanel({ checkInID }: { checkInID: number }) {
   }
 
   function handleReject() {
+    if (state.kind !== "reviewing") return;
+    const goalID = state.checkIn.goal_id;
     setActionError(null);
     startReject(async () => {
       try {
         await rejectCheckIn(checkInID, comment.trim() || undefined);
-        setState({ kind: "decided", decision: "rejected" });
+        decide("rejected", goalID);
       } catch (error) {
         setActionError(error instanceof Error ? error.message : "Не удалось отклонить результат.");
       }
@@ -76,11 +85,13 @@ export function ApprovalPanel({ checkInID }: { checkInID: number }) {
   }
 
   function handleRequestChanges() {
+    if (state.kind !== "reviewing") return;
+    const goalID = state.checkIn.goal_id;
     setActionError(null);
     startRequest(async () => {
       try {
         await requestChanges(checkInID, comment.trim() || undefined);
-        setState({ kind: "decided", decision: "changes_requested" });
+        decide("changes_requested", goalID);
       } catch (error) {
         setActionError(error instanceof Error ? error.message : "Не удалось запросить доработку.");
       }
@@ -129,6 +140,13 @@ export function ApprovalPanel({ checkInID }: { checkInID: number }) {
           tone="empty"
           title="Подтверждение ещё не отправлено"
           description="Владелец цели ещё не отправил материалы на проверку. Как только они появятся, вы сможете вынести решение."
+          meta={
+            state.goalID ? (
+              <Link href={`/goals/${state.goalID}`} className={styles.backLink}>
+                К цели
+              </Link>
+            ) : null
+          }
         />
       </main>
     );
@@ -153,7 +171,16 @@ export function ApprovalPanel({ checkInID }: { checkInID: number }) {
     return (
       <main className={styles.page}>
         <ApprovalHeader />
-        <StatePanel tone={tones[state.decision]} title={titles[state.decision]} description={descs[state.decision]} />
+        <StatePanel
+          tone={tones[state.decision]}
+          title={titles[state.decision]}
+          description={descs[state.decision]}
+          meta={
+            <Link href={`/goals/${state.goalID}`} className={styles.backLink}>
+              К цели
+            </Link>
+          }
+        />
       </main>
     );
   }

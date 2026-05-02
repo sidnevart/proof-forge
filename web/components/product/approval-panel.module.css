@@ -4,6 +4,24 @@
   padding: 48px 0 96px;
 }
 
+.backLink {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  height: 40px;
+  padding: 0 20px;
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--border-strong);
+  font-size: 14px;
+  font-weight: 500;
+  color: var(--text);
+  transition: border-color 120ms ease;
+}
+
+.backLink:hover {
+  border-color: var(--text-dim);
+}
+
 .header {
   display: flex;
   align-items: flex-end;

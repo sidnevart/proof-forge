@@ -86,6 +86,31 @@ jobs:
           chmod 600 ~/.ssh/proofforge_deploy
           ssh-keyscan -p "$DEPLOY_PORT" "$DEPLOY_HOST" >> ~/.ssh/known_hosts
 
+      - name: Inject secrets into .env.prod
+        run: |
+          ssh -i ~/.ssh/proofforge_deploy -p "$DEPLOY_PORT" "$DEPLOY_USER@$DEPLOY_HOST" \
+            "SMTP_HOST='${{ secrets.SMTP_HOST }}' \
+             SMTP_PORT='${{ secrets.SMTP_PORT }}' \
+             SMTP_USERNAME='${{ secrets.SMTP_USERNAME }}' \
+             SMTP_PASSWORD='${{ secrets.SMTP_PASSWORD }}' \
+             SMTP_FROM='${{ secrets.SMTP_FROM }}' \
+             DEPLOY_PATH='$DEPLOY_PATH' bash -s" << 'ENDSSH'
+          set -e
+          env_file="$DEPLOY_PATH/.env.prod"
+          upsert() { local k="$1" v="$2"
+            if grep -q "^${k}=" "$env_file" 2>/dev/null; then
+              sed -i "s|^${k}=.*|${k}=${v}|" "$env_file"
+            else
+              echo "${k}=${v}" >> "$env_file"
+            fi
+          }
+          upsert SMTP_HOST     "$SMTP_HOST"
+          upsert SMTP_PORT     "$SMTP_PORT"
+          upsert SMTP_USERNAME "$SMTP_USERNAME"
+          upsert SMTP_PASSWORD "$SMTP_PASSWORD"
+          upsert SMTP_FROM     "$SMTP_FROM"
+          ENDSSH
+
       - name: Sync deploy assets
         run: |
           ssh -i ~/.ssh/proofforge_deploy -p "$DEPLOY_PORT" "$DEPLOY_USER@$DEPLOY_HOST" "mkdir -p '$DEPLOY_PATH/nginx' '$DEPLOY_PATH/scripts'"

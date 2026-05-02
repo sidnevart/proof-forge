@@ -1,4 +1,4 @@
-import type { CheckIn, CheckInDetail, DashboardResponse, EvidenceItem, GoalView, InvitePreview, ReviewRecord, User, WeeklyRecap } from "@/lib/types";
+import type { CheckIn, CheckInDetail, DashboardResponse, EvidenceItem, GoalView, InvitePreview, ReviewRecord, StakeView, User, WeeklyRecap } from "@/lib/types";
 
 // Production: empty string = same-origin requests through nginx.
 // Development: set NEXT_PUBLIC_API_BASE_URL=http://localhost:8080 in .env.local or compose.
@@ -182,4 +182,26 @@ export async function getRecaps(goalID: number): Promise<{ recaps: WeeklyRecap[]
 
 export async function getRecap(recapID: number): Promise<{ recap: WeeklyRecap }> {
   return request<{ recap: WeeklyRecap }>(`/v1/recaps/${recapID}`);
+}
+
+export async function createStake(goalID: number, description: string): Promise<{ stake: StakeView }> {
+  return request<{ stake: StakeView }>(`/v1/goals/${goalID}/stakes`, {
+    method: "POST",
+    body: JSON.stringify({ description }),
+  });
+}
+
+export async function listStakes(goalID: number): Promise<{ stakes: StakeView[] | null }> {
+  return request<{ stakes: StakeView[] | null }>(`/v1/goals/${goalID}/stakes`);
+}
+
+export async function cancelStake(stakeID: number): Promise<void> {
+  return request<void>(`/v1/stakes/${stakeID}`, { method: "DELETE" });
+}
+
+export async function forfeitStake(stakeID: number, reason: string): Promise<{ stake: StakeView }> {
+  return request<{ stake: StakeView }>(`/v1/stakes/${stakeID}/forfeit`, {
+    method: "POST",
+    body: JSON.stringify({ reason }),
+  });
 }

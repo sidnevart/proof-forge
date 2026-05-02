@@ -7,6 +7,7 @@ import { Button } from "@/components/core/button";
 import { SectionShell } from "@/components/core/section-shell";
 import { StatePanel } from "@/components/core/state-panel";
 import { StatusPill } from "@/components/core/status-pill";
+import { StakePanel } from "@/components/product/stake-panel";
 import { proofEvents, weeklyPosterStats } from "@/lib/demo-data";
 import { ApiError, getDashboard, loginUser, registerUser } from "@/lib/api";
 import { formatDateLabel } from "@/lib/ui-copy";
@@ -290,6 +291,10 @@ export function DashboardScreen() {
                 }
               />
             </SectionShell>
+
+            {primaryGoal.goal.status === "active" ? (
+              <StakePanel goalID={primaryGoal.goal.id} isOwner={true} isBuddy={false} />
+            ) : null}
 
             <SectionShell eyebrow="История подтверждений" title="Последние сигналы">
               <ol className={styles.eventList}>

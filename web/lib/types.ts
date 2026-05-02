@@ -113,6 +113,34 @@ export type WeeklyRecap = {
   created_at: string;
 };
 
+export type StakeStatus = "active" | "forfeited" | "completed" | "cancelled";
+
+export type Stake = {
+  id: number;
+  goal_id: number;
+  owner_user_id: number;
+  description: string;
+  status: StakeStatus;
+  forfeited_at?: string | null;
+  completed_at?: string | null;
+  cancelled_at?: string | null;
+  created_at: string;
+  updated_at: string;
+};
+
+export type StakeForfeiture = {
+  id: number;
+  stake_id: number;
+  declared_by_user_id: number;
+  reason: string;
+  created_at: string;
+};
+
+export type StakeView = {
+  stake: Stake;
+  forfeiture?: StakeForfeiture | null;
+};
+
 export type DashboardSummary = {
   total_goals: number;
   pending_buddy_acceptance: number;

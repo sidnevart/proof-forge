@@ -19,6 +19,7 @@ import (
 	"github.com/sidnevart/proof-forge/backend/internal/platform/postgres"
 	"github.com/sidnevart/proof-forge/backend/internal/platform/readiness"
 	"github.com/sidnevart/proof-forge/backend/internal/recaps"
+	"github.com/sidnevart/proof-forge/backend/internal/stakes"
 	"github.com/sidnevart/proof-forge/backend/internal/telegram"
 	"github.com/sidnevart/proof-forge/backend/internal/users"
 )
@@ -130,6 +131,11 @@ func registerAPIRoutes(router *chi.Mux, log *slog.Logger, pool *pgxpool.Pool, cf
 		recaps.NewService(recaps.NewPostgresRepository(pool), aiProvider, platformlogger.WithComponent(log, "recaps")),
 	)
 
+	stakesHandler := stakes.NewHandler(
+		platformlogger.WithComponent(log, "stakes"),
+		stakes.NewService(stakes.NewPostgresRepository(pool)),
+	)
+
 	if cfg.Telegram.Enabled {
 		telegramHandler := telegram.NewHandler(
 			cfg.Telegram.WebhookSecret,
@@ -147,6 +153,7 @@ func registerAPIRoutes(router *chi.Mux, log *slog.Logger, pool *pgxpool.Pool, cf
 			goalsHandler.RegisterRoutes(r)
 			checkinsHandler.RegisterRoutes(r)
 			recapsHandler.RegisterRoutes(r)
+			stakesHandler.RegisterRoutes(r)
 		})
 	})
 }

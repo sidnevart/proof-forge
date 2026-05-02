@@ -116,6 +116,68 @@ describe("InviteAcceptScreen", () => {
     ).toBe("buddy@example.com");
   });
 
+  it("lets an existing user log in and accept the invite", async () => {
+    fetchMock
+      .mockResolvedValueOnce(inviteResponse())
+      .mockResolvedValueOnce(
+        errorResponse("auth_required", "Authentication required", 401),
+      )
+      .mockResolvedValueOnce(
+        new Response(
+          JSON.stringify({
+            user: {
+              id: 7,
+              email: "buddy@example.com",
+              display_name: "Buddy",
+              created_at: "2026-05-01T10:00:00Z",
+              updated_at: "2026-05-01T10:00:00Z",
+            },
+          }),
+          {
+            status: 200,
+            headers: { "Content-Type": "application/json" },
+          },
+        ),
+      )
+      .mockResolvedValueOnce(
+        new Response(JSON.stringify({ accepted: true }), {
+          status: 200,
+          headers: { "Content-Type": "application/json" },
+        }),
+      );
+
+    render(<InviteAcceptScreen token="valid-token" />);
+
+    fireEvent.click(await screen.findByRole("button", { name: "Принять приглашение" }));
+    fireEvent.click(await screen.findByRole("button", { name: "Войти и принять приглашение" }));
+
+    await waitFor(() => {
+      expect(screen.getByText("Приглашение принято")).toBeInTheDocument();
+    });
+  });
+
+  it("shows a helpful error when invited account cannot be found", async () => {
+    fetchMock
+      .mockResolvedValueOnce(inviteResponse())
+      .mockResolvedValueOnce(
+        errorResponse("auth_required", "Authentication required", 401),
+      )
+      .mockResolvedValueOnce(
+        errorResponse("user_not_found", "No account found for this email", 404),
+      );
+
+    render(<InviteAcceptScreen token="valid-token" />);
+
+    fireEvent.click(await screen.findByRole("button", { name: "Принять приглашение" }));
+    fireEvent.click(await screen.findByRole("button", { name: "Войти и принять приглашение" }));
+
+    await waitFor(() => {
+      expect(
+        screen.getByText("Не удалось найти приглашённый аккаунт. Попросите владельца цели отправить приглашение заново."),
+      ).toBeInTheDocument();
+    });
+  });
+
   it("shows already accepted state when server returns 409", async () => {
     fetchMock
       .mockResolvedValueOnce(inviteResponse())

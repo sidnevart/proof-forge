@@ -7,7 +7,7 @@ import { Button } from "@/components/core/button";
 import { SectionShell } from "@/components/core/section-shell";
 import { StatePanel } from "@/components/core/state-panel";
 import { StatusPill } from "@/components/core/status-pill";
-import { ApiError, acceptInvite, getInvite, registerUser } from "@/lib/api";
+import { ApiError, acceptInvite, getInvite, loginUser } from "@/lib/api";
 import { formatDateLabel } from "@/lib/ui-copy";
 import type { InvitePreview } from "@/lib/types";
 
@@ -28,9 +28,9 @@ type Props = { token: string };
 export function InviteAcceptScreen({ token }: Props) {
   const router = useRouter();
   const [screenState, setScreenState] = useState<ScreenState>({ kind: "loading" });
-  const [registerError, setRegisterError] = useState<string | null>(null);
+  const [loginError, setLoginError] = useState<string | null>(null);
   const [isAccepting, startAcceptTransition] = useTransition();
-  const [isRegistering, startRegisterTransition] = useTransition();
+  const [isLoggingIn, startLoginTransition] = useTransition();
 
   const loadInvite = useCallback(async () => {
     try {
@@ -58,67 +58,76 @@ export function InviteAcceptScreen({ token }: Props) {
     void loadInvite();
   }, [loadInvite]);
 
+  async function finishAcceptance(
+    onForbidden: (message: string) => void,
+    onUnauthorized?: () => void,
+  ) {
+    try {
+      await acceptInvite(token);
+      setScreenState({ kind: "accepted" });
+      setTimeout(() => router.push("/dashboard"), 1500);
+      return true;
+    } catch (error) {
+      if (error instanceof ApiError && error.status === 401) {
+        if (onUnauthorized) {
+          onUnauthorized();
+          return false;
+        }
+      }
+      if (error instanceof ApiError && error.status === 410) {
+        setScreenState({ kind: "expired" });
+        return false;
+      }
+      if (error instanceof ApiError && error.status === 409) {
+        setScreenState({ kind: "already_accepted" });
+        return false;
+      }
+      if (error instanceof ApiError && error.status === 403) {
+        onForbidden("Email должен совпадать с адресом, на который отправлено приглашение.");
+        return false;
+      }
+      setScreenState({
+        kind: "error",
+        message: error instanceof Error ? error.message : "Не удалось принять приглашение.",
+      });
+      return false;
+    }
+  }
+
   function handleAccept() {
     startAcceptTransition(async () => {
-      try {
-        await acceptInvite(token);
-        setScreenState({ kind: "accepted" });
-        setTimeout(() => router.push("/dashboard"), 1500);
-      } catch (error) {
-        if (error instanceof ApiError && error.status === 401) {
+      await finishAcceptance(
+        (message) => {
+          setScreenState({
+            kind: "error",
+            message,
+          });
+        },
+        () => {
           setScreenState((prev) =>
             prev.kind === "ready" ? { kind: "needs_auth", invite: prev.invite } : prev,
           );
-          return;
-        }
-        if (error instanceof ApiError && error.status === 410) {
-          setScreenState({ kind: "expired" });
-          return;
-        }
-        if (error instanceof ApiError && error.status === 409) {
-          setScreenState({ kind: "already_accepted" });
-          return;
-        }
-        if (error instanceof ApiError && error.status === 403) {
-          setScreenState((prev) =>
-            prev.kind === "ready"
-              ? {
-                  kind: "error",
-                  message: "Этот инвайт предназначен другому пользователю.",
-                }
-              : prev,
-          );
-          return;
-        }
-        setScreenState({
-          kind: "error",
-          message: error instanceof Error ? error.message : "Не удалось принять приглашение.",
-        });
-      }
+        },
+      );
     });
   }
 
-  function handleRegisterAndAccept(event: FormEvent<HTMLFormElement>) {
+  function handleLoginAndAccept(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
-    setRegisterError(null);
+    setLoginError(null);
     const formData = new FormData(event.currentTarget);
-    startRegisterTransition(async () => {
+    const email = String(formData.get("email") ?? "");
+
+    startLoginTransition(async () => {
       try {
-        await registerUser({
-          email: String(formData.get("email") ?? ""),
-          display_name: String(formData.get("display_name") ?? ""),
-        });
-        await acceptInvite(token);
-        setScreenState({ kind: "accepted" });
-        setTimeout(() => router.push("/dashboard"), 1500);
+        await loginUser(email);
+        await finishAcceptance(setLoginError);
       } catch (error) {
-        if (error instanceof ApiError && error.status === 403) {
-          setRegisterError("Email должен совпадать с адресом, на который отправлен инвайт.");
+        if (error instanceof ApiError && error.status === 404) {
+          setLoginError("Не удалось найти приглашённый аккаунт. Попросите владельца цели отправить приглашение заново.");
           return;
         }
-        setRegisterError(
-          error instanceof Error ? error.message : "Не удалось зарегистрироваться.",
-        );
+        setLoginError(error instanceof Error ? error.message : "Не удалось войти.");
       }
     });
   }
@@ -218,32 +227,22 @@ export function InviteAcceptScreen({ token }: Props) {
         <InviteHeader status="pending" label="Нужно подтвердить личность" />
         <div className={styles.grid}>
           <InviteCard invite={invite} />
-          <SectionShell eyebrow="Вход или регистрация" title="Подтвердите участие">
+          <SectionShell eyebrow="Подтверждение личности" title="Войти и принять приглашение">
             <p className={styles.authHint}>
-              Чтобы принять приглашение, войдите или создайте аккаунт с адресом{" "}
-              <strong>{invite.invitee_email}</strong>.
+              Приглашение уже привязано к адресу <strong>{invite.invitee_email}</strong>. Подтвердите этот адрес, и система сразу подключит вас к цели.
             </p>
-            <form className={styles.form} onSubmit={handleRegisterAndAccept}>
-              <label className={styles.field}>
-                <span>Ваше имя</span>
-                <input name="display_name" placeholder="Как вас зовут" required />
-              </label>
+            <form className={styles.form} onSubmit={handleLoginAndAccept}>
               <label className={styles.field}>
                 <span>Email</span>
-                <input
-                  name="email"
-                  type="email"
-                  defaultValue={invite.invitee_email}
-                  required
-                />
+                <input name="email" type="email" defaultValue={invite.invitee_email} required />
               </label>
-              {registerError ? (
+              {loginError ? (
                 <p className={styles.formError} role="alert">
-                  {registerError}
+                  {loginError}
                 </p>
               ) : null}
-              <Button type="submit" disabled={isRegistering}>
-                {isRegistering ? "Подключаем..." : "Войти и принять приглашение"}
+              <Button type="submit" disabled={isLoggingIn}>
+                {isLoggingIn ? "Подключаем..." : "Войти и принять приглашение"}
               </Button>
             </form>
           </SectionShell>

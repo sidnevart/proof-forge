@@ -201,10 +201,12 @@ export function DashboardScreen() {
   }
 
   const { dashboard } = screenState;
-  const goals = dashboard.goals ?? [];
-  const primaryGoal = pickPrimaryGoal(goals);
+  const allGoals = dashboard.goals ?? [];
+  const ownerGoals = allGoals.filter((g) => g.role === "owner");
+  const buddyGoals = allGoals.filter((g) => g.role === "buddy");
+  const primaryGoal = pickPrimaryGoal(ownerGoals);
   const otherGoals = primaryGoal
-    ? goals.filter((goal) => goal.goal.id !== primaryGoal.goal.id)
+    ? ownerGoals.filter((goal) => goal.goal.id !== primaryGoal.goal.id)
     : [];
 
   return (
@@ -235,8 +237,11 @@ export function DashboardScreen() {
                   <Link className={styles.primaryLink} href={getNextStep(primaryGoal).href}>
                     {getNextStep(primaryGoal).action}
                   </Link>
+                  <Link className={styles.secondaryLink} href={`/goals/${primaryGoal.goal.id}`}>
+                    Открыть цель
+                  </Link>
                   <Link className={styles.secondaryLink} href="/goals/new">
-                    Добавить ещё одну цель
+                    Новая цель
                   </Link>
                 </div>
               </div>
@@ -293,7 +298,7 @@ export function DashboardScreen() {
             </SectionShell>
 
             {primaryGoal.goal.status === "active" ? (
-              <StakePanel goalID={primaryGoal.goal.id} isOwner={true} isBuddy={false} />
+              <StakePanel goalID={primaryGoal.goal.id} role="owner" />
             ) : null}
 
             <SectionShell eyebrow="История подтверждений" title="Последние сигналы">
@@ -333,14 +338,14 @@ export function DashboardScreen() {
               <SectionShell eyebrow="Остальные цели" title="Что ещё идёт параллельно">
                 <div className={styles.otherGoals}>
                   {otherGoals.map((goal) => (
-                    <article className={styles.goalListCard} key={goal.goal.id}>
+                    <Link key={goal.goal.id} href={`/goals/${goal.goal.id}`} className={styles.goalListCard}>
                       <strong>{goal.goal.title}</strong>
                       <p>{goal.goal.description || "Описание пока не заполнено."}</p>
                       <StatusPill
                         status={goal.goal.status === "active" ? "active" : "pending"}
                         label={goal.goal.status === "active" ? "Активна" : "Ждёт принятия"}
                       />
-                    </article>
+                    </Link>
                   ))}
                 </div>
               </SectionShell>
@@ -406,6 +411,32 @@ export function DashboardScreen() {
           </section>
         </>
       )}
+
+      {buddyGoals.length > 0 ? (
+        <section>
+          <SectionShell
+            eyebrow="Где вы партнёр"
+            title={`Цели партнёров (${buddyGoals.length})`}
+          >
+            <div className={styles.otherGoals}>
+              {buddyGoals.map((g) => (
+                <Link
+                  key={g.goal.id}
+                  href={`/goals/${g.goal.id}`}
+                  className={styles.goalListCard}
+                >
+                  <strong>{g.goal.title}</strong>
+                  <p>Владелец: {g.owner.display_name}</p>
+                  <StatusPill
+                    status={g.goal.status === "active" ? "active" : "pending"}
+                    label={g.goal.status === "active" ? "В работе" : "Ждёт принятия"}
+                  />
+                </Link>
+              ))}
+            </div>
+          </SectionShell>
+        </section>
+      ) : null}
     </main>
   );
 }

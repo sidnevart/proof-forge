@@ -5,6 +5,7 @@ import (
 	"errors"
 	"log/slog"
 	"net/http"
+	"strconv"
 
 	"github.com/go-chi/chi/v5"
 
@@ -32,6 +33,7 @@ func (h *Handler) RegisterPublicRoutes(r chi.Router) {
 func (h *Handler) RegisterRoutes(r chi.Router) {
 	r.Post("/goals", h.handleCreateGoal)
 	r.Get("/goals", h.handleListGoals)
+	r.Get("/goals/{goalID}", h.handleGetGoal)
 	r.Get("/dashboard", h.handleDashboard)
 	r.Post("/invites/{token}/accept", h.handleAcceptInvite)
 }
@@ -110,6 +112,37 @@ func (h *Handler) handleDashboard(w http.ResponseWriter, r *http.Request) {
 		"summary": dashboard.Summary,
 		"goals":   dashboard.Goals,
 	})
+}
+
+func (h *Handler) handleGetGoal(w http.ResponseWriter, r *http.Request) {
+	actor, ok := users.CurrentUser(r.Context())
+	if !ok {
+		writeError(w, http.StatusUnauthorized, "auth_required", "Authentication required")
+		return
+	}
+
+	rawID := chi.URLParam(r, "goalID")
+	id, err := strconv.ParseInt(rawID, 10, 64)
+	if err != nil || id <= 0 {
+		writeError(w, http.StatusBadRequest, "invalid_param", "goalID must be a positive integer")
+		return
+	}
+
+	view, err := h.service.GetGoal(r.Context(), actor, id)
+	if err != nil {
+		switch {
+		case errors.Is(err, ErrGoalNotFound):
+			writeError(w, http.StatusNotFound, "not_found", "Goal not found")
+		default:
+			if h.log != nil {
+				h.log.Error("get goal", "err", err)
+			}
+			writeError(w, http.StatusInternalServerError, "internal_error", "Could not load goal")
+		}
+		return
+	}
+
+	writeJSON(w, http.StatusOK, map[string]any{"goal": view})
 }
 
 func (h *Handler) handleGetInvite(w http.ResponseWriter, r *http.Request) {

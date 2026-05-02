@@ -1,4 +1,4 @@
-import type { CheckIn, CheckInDetail, DashboardResponse, EvidenceItem, GoalView, InvitePreview, ReviewRecord, StakeView, User, WeeklyRecap } from "@/lib/types";
+import type { CheckIn, CheckInDetail, DashboardResponse, EvidenceItem, GoalView, InvitePreview, Milestone, ReviewRecord, StakeView, User, WeeklyRecap } from "@/lib/types";
 
 // Production: empty string = same-origin requests through nginx.
 // Development: set NEXT_PUBLIC_API_BASE_URL=http://localhost:8080 in .env.local or compose.
@@ -94,6 +94,10 @@ export async function createGoal(input: CreateGoalInput): Promise<{ goal: GoalVi
     method: "POST",
     body: JSON.stringify(input),
   });
+}
+
+export async function getGoal(goalID: number): Promise<{ goal: GoalView }> {
+  return request<{ goal: GoalView }>(`/v1/goals/${goalID}`);
 }
 
 export async function createCheckIn(goalID: number): Promise<{ check_in: CheckIn }> {
@@ -204,4 +208,37 @@ export async function forfeitStake(stakeID: number, reason: string): Promise<{ s
     method: "POST",
     body: JSON.stringify({ reason }),
   });
+}
+
+export async function listMilestones(goalID: number): Promise<{ milestones: Milestone[] | null }> {
+  return request<{ milestones: Milestone[] | null }>(`/v1/goals/${goalID}/milestones`);
+}
+
+export async function createMilestone(goalID: number, title: string, description: string): Promise<{ milestone: Milestone }> {
+  return request<{ milestone: Milestone }>(`/v1/goals/${goalID}/milestones`, {
+    method: "POST",
+    body: JSON.stringify({ title, description }),
+  });
+}
+
+export async function updateMilestone(
+  milestoneID: number,
+  input: { title?: string; description?: string; sort_order?: number },
+): Promise<{ milestone: Milestone }> {
+  return request<{ milestone: Milestone }>(`/v1/milestones/${milestoneID}`, {
+    method: "PATCH",
+    body: JSON.stringify(input),
+  });
+}
+
+export async function deleteMilestone(milestoneID: number): Promise<void> {
+  return request<void>(`/v1/milestones/${milestoneID}`, { method: "DELETE" });
+}
+
+export async function completeMilestone(milestoneID: number): Promise<{ milestone: Milestone }> {
+  return request<{ milestone: Milestone }>(`/v1/milestones/${milestoneID}/complete`, { method: "POST" });
+}
+
+export async function reopenMilestone(milestoneID: number): Promise<{ milestone: Milestone }> {
+  return request<{ milestone: Milestone }>(`/v1/milestones/${milestoneID}/reopen`, { method: "POST" });
 }

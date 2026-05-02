@@ -124,6 +124,16 @@
   border: 1px solid var(--border);
 }
 
+.goalListCard {
+  display: grid;
+  gap: 6px;
+  transition: border-color 120ms ease;
+}
+
+.goalListCard:hover {
+  border-color: var(--text-dim);
+}
+
 .snapshotList dt,
 .goalMeta span,
 .posterStats span,

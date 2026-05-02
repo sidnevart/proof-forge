@@ -45,12 +45,18 @@ func (r *PostgresRepository) CreateGoalWithInvite(ctx context.Context, params Cr
 		return GoalView{}, err
 	}
 
+	owner, err := r.findUserByID(ctx, tx, params.OwnerID)
+	if err != nil {
+		return GoalView{}, err
+	}
+
 	if err := tx.Commit(ctx); err != nil {
 		return GoalView{}, fmt.Errorf("commit goal tx: %w", err)
 	}
 
 	return GoalView{
 		Goal:  goal,
+		Owner: owner,
 		Buddy: buddy,
 		Pact:  pact,
 		Invite: Invite{
@@ -58,80 +64,104 @@ func (r *PostgresRepository) CreateGoalWithInvite(ctx context.Context, params Cr
 			Status:    invite.Status,
 			ExpiresAt: invite.ExpiresAt,
 		},
+		Role: RoleOwner,
 	}, nil
 }
 
-func (r *PostgresRepository) ListGoalsByOwner(ctx context.Context, ownerID int64) ([]GoalView, error) {
-	const query = `
-		SELECT
-			g.id,
-			g.title,
-			g.description,
-			g.status,
-			g.current_progress_health,
-			g.current_streak_count,
-			g.created_at,
-			g.updated_at,
-			b.id,
-			b.email,
-			b.display_name,
-			p.id,
-			p.status,
-			p.accepted_at,
-			i.id,
-			i.status,
-			i.expires_at
-		FROM goals g
-		JOIN users b ON b.id = g.buddy_user_id
-		JOIN pacts p ON p.goal_id = g.id
-		JOIN invites i ON i.goal_id = g.id
-		WHERE g.owner_user_id = $1
+func (r *PostgresRepository) findUserByID(ctx context.Context, tx pgx.Tx, userID int64) (Buddy, error) {
+	const query = `SELECT id, email, display_name FROM users WHERE id = $1`
+	var u Buddy
+	if err := tx.QueryRow(ctx, query, userID).Scan(&u.ID, &u.Email, &u.DisplayName); err != nil {
+		return Buddy{}, fmt.Errorf("find user by id: %w", err)
+	}
+	return u, nil
+}
+
+// goalViewSelect is the shared projection for both list and single-goal queries.
+// Includes owner data, buddy data, pact, invite, and a computed role column.
+const goalViewSelect = `
+	SELECT
+		g.id, g.title, g.description, g.status,
+		g.current_progress_health, g.current_streak_count,
+		g.created_at, g.updated_at,
+		o.id, o.email, o.display_name,
+		b.id, b.email, b.display_name,
+		p.id, p.status, p.accepted_at,
+		i.id, i.status, i.expires_at,
+		CASE WHEN g.owner_user_id = $1 THEN 'owner' ELSE 'buddy' END AS role
+	FROM goals g
+	JOIN users o ON o.id = g.owner_user_id
+	JOIN users b ON b.id = g.buddy_user_id
+	JOIN pacts p ON p.goal_id = g.id
+	JOIN invites i ON i.goal_id = g.id
+`
+
+func scanGoalView(rows interface {
+	Scan(...any) error
+}) (GoalView, error) {
+	var item GoalView
+	var acceptedAt sql.NullTime
+	if err := rows.Scan(
+		&item.Goal.ID, &item.Goal.Title, &item.Goal.Description, &item.Goal.Status,
+		&item.Goal.CurrentProgressHealth, &item.Goal.CurrentStreakCount,
+		&item.Goal.CreatedAt, &item.Goal.UpdatedAt,
+		&item.Owner.ID, &item.Owner.Email, &item.Owner.DisplayName,
+		&item.Buddy.ID, &item.Buddy.Email, &item.Buddy.DisplayName,
+		&item.Pact.ID, &item.Pact.Status, &acceptedAt,
+		&item.Invite.ID, &item.Invite.Status, &item.Invite.ExpiresAt,
+		&item.Role,
+	); err != nil {
+		return GoalView{}, err
+	}
+	if acceptedAt.Valid {
+		value := acceptedAt.Time
+		item.Pact.AcceptedAt = &value
+	}
+	return item, nil
+}
+
+func (r *PostgresRepository) ListGoalsForUser(ctx context.Context, userID int64) ([]GoalView, error) {
+	query := goalViewSelect + `
+		WHERE g.owner_user_id = $1 OR g.buddy_user_id = $1
 		ORDER BY g.created_at DESC
 	`
 
-	rows, err := r.pool.Query(ctx, query, ownerID)
+	rows, err := r.pool.Query(ctx, query, userID)
 	if err != nil {
-		return nil, fmt.Errorf("query owner goals: %w", err)
+		return nil, fmt.Errorf("query user goals: %w", err)
 	}
 	defer rows.Close()
 
 	goals := make([]GoalView, 0)
 	for rows.Next() {
-		var item GoalView
-		var acceptedAt sql.NullTime
-		if err := rows.Scan(
-			&item.Goal.ID,
-			&item.Goal.Title,
-			&item.Goal.Description,
-			&item.Goal.Status,
-			&item.Goal.CurrentProgressHealth,
-			&item.Goal.CurrentStreakCount,
-			&item.Goal.CreatedAt,
-			&item.Goal.UpdatedAt,
-			&item.Buddy.ID,
-			&item.Buddy.Email,
-			&item.Buddy.DisplayName,
-			&item.Pact.ID,
-			&item.Pact.Status,
-			&acceptedAt,
-			&item.Invite.ID,
-			&item.Invite.Status,
-			&item.Invite.ExpiresAt,
-		); err != nil {
-			return nil, fmt.Errorf("scan owner goal: %w", err)
-		}
-		if acceptedAt.Valid {
-			value := acceptedAt.Time
-			item.Pact.AcceptedAt = &value
+		item, err := scanGoalView(rows)
+		if err != nil {
+			return nil, fmt.Errorf("scan user goal: %w", err)
 		}
 		goals = append(goals, item)
 	}
 
 	if err := rows.Err(); err != nil {
-		return nil, fmt.Errorf("iterate owner goals: %w", err)
+		return nil, fmt.Errorf("iterate user goals: %w", err)
 	}
 
 	return goals, nil
+}
+
+func (r *PostgresRepository) FindGoalForUser(ctx context.Context, goalID, userID int64) (GoalView, error) {
+	query := goalViewSelect + `
+		WHERE g.id = $2 AND (g.owner_user_id = $1 OR g.buddy_user_id = $1)
+	`
+
+	row := r.pool.QueryRow(ctx, query, userID, goalID)
+	item, err := scanGoalView(row)
+	if err != nil {
+		if errors.Is(err, pgx.ErrNoRows) {
+			return GoalView{}, ErrGoalNotFound
+		}
+		return GoalView{}, fmt.Errorf("find goal for user: %w", err)
+	}
+	return item, nil
 }
 
 func (r *PostgresRepository) FindInviteByToken(ctx context.Context, tokenHash string) (InviteRecord, error) {

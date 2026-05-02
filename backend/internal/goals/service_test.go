@@ -19,6 +19,7 @@ func (noopEmailSender) SendBuddyInvite(_ context.Context, _ email.BuddyInvitePar
 type repositoryStub struct {
 	createGoal   func(context.Context, CreateGoalParams) (GoalView, error)
 	listGoals    func(context.Context, int64) ([]GoalView, error)
+	findGoal     func(context.Context, int64, int64) (GoalView, error)
 	findInvite   func(context.Context, string) (InviteRecord, error)
 	acceptInvite func(context.Context, AcceptInviteParams) error
 }
@@ -27,8 +28,15 @@ func (s repositoryStub) CreateGoalWithInvite(ctx context.Context, params CreateG
 	return s.createGoal(ctx, params)
 }
 
-func (s repositoryStub) ListGoalsByOwner(ctx context.Context, ownerID int64) ([]GoalView, error) {
-	return s.listGoals(ctx, ownerID)
+func (s repositoryStub) ListGoalsForUser(ctx context.Context, userID int64) ([]GoalView, error) {
+	return s.listGoals(ctx, userID)
+}
+
+func (s repositoryStub) FindGoalForUser(ctx context.Context, goalID, userID int64) (GoalView, error) {
+	if s.findGoal == nil {
+		return GoalView{}, ErrGoalNotFound
+	}
+	return s.findGoal(ctx, goalID, userID)
 }
 
 func (s repositoryStub) FindInviteByToken(ctx context.Context, tokenHash string) (InviteRecord, error) {
@@ -72,8 +80,9 @@ func TestServiceDashboardBuildsSummary(t *testing.T) {
 	stub := newTestStub()
 	stub.listGoals = func(context.Context, int64) ([]GoalView, error) {
 		return []GoalView{
-			{Goal: Goal{Status: GoalStatusPendingBuddyAcceptance}},
-			{Goal: Goal{Status: GoalStatusActive}},
+			{Goal: Goal{Status: GoalStatusPendingBuddyAcceptance}, Role: RoleOwner},
+			{Goal: Goal{Status: GoalStatusActive}, Role: RoleOwner},
+			{Goal: Goal{Status: GoalStatusActive}, Role: RoleBuddy},
 		}, nil
 	}
 	service := NewService(stub, noopEmailSender{}, "", nil, 7*24*time.Hour)

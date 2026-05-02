@@ -49,6 +49,7 @@ func TestE2E_CriticalRoutesExist(t *testing.T) {
 		{http.MethodGet, "/v1/dashboard"},
 		{http.MethodGet, "/v1/goals"},
 		{http.MethodPost, "/v1/goals"},
+		{http.MethodGet, "/v1/goals/1"},
 		{http.MethodPost, "/v1/invites/some-token/accept"},
 		{http.MethodPost, "/v1/goals/1/check-ins"},
 		{http.MethodGet, "/v1/goals/1/check-ins"},
@@ -57,6 +58,12 @@ func TestE2E_CriticalRoutesExist(t *testing.T) {
 		{http.MethodGet, "/v1/goals/1/stakes"},
 		{http.MethodDelete, "/v1/stakes/1"},
 		{http.MethodPost, "/v1/stakes/1/forfeit"},
+		{http.MethodPost, "/v1/goals/1/milestones"},
+		{http.MethodGet, "/v1/goals/1/milestones"},
+		{http.MethodPatch, "/v1/milestones/1"},
+		{http.MethodDelete, "/v1/milestones/1"},
+		{http.MethodPost, "/v1/milestones/1/complete"},
+		{http.MethodPost, "/v1/milestones/1/reopen"},
 	}
 
 	for _, rc := range publicRoutes {
@@ -128,6 +135,39 @@ func TestE2E_FullAccountabilityFlow(t *testing.T) {
 	stakeID := createStake(t, router, ownerCookie, goalID, "5000₽ на благотворительность")
 	if stakeID <= 0 {
 		t.Fatalf("expected positive stake ID, got %d", stakeID)
+	}
+
+	// Owner creates two milestones
+	m1ID := createMilestone(t, router, ownerCookie, goalID, "Изучить корутины")
+	m2ID := createMilestone(t, router, ownerCookie, goalID, "Запушить side-project")
+	if m1ID <= 0 || m2ID <= 0 {
+		t.Fatalf("expected positive milestone IDs, got %d %d", m1ID, m2ID)
+	}
+
+	// Owner cannot complete milestone — buddy only
+	if !milestoneCompleteForbidden(t, router, ownerCookie, m1ID) {
+		t.Errorf("expected owner forbidden from completing milestone")
+	}
+
+	// Buddy completes m1
+	completeMilestone(t, router, buddyCookie, m1ID)
+
+	// Verify buddy can see goal via /v1/goals/{goalID}
+	view := getGoalView(t, router, buddyCookie, goalID)
+	if view.Role != "buddy" {
+		t.Errorf("expected buddy role, got %q", view.Role)
+	}
+	if view.Owner.Email != "owner@example.com" {
+		t.Errorf("expected owner email in view, got %q", view.Owner.Email)
+	}
+
+	// Verify buddy goal appears in buddy's dashboard
+	buddyDashboard := getDashboard(t, router, buddyCookie)
+	if len(buddyDashboard.Goals) != 1 {
+		t.Fatalf("expected buddy dashboard to show 1 goal (as buddy), got %d", len(buddyDashboard.Goals))
+	}
+	if buddyDashboard.Goals[0]["role"] != "buddy" {
+		t.Errorf("expected role 'buddy' in buddy dashboard, got %v", buddyDashboard.Goals[0]["role"])
 	}
 
 	checkInID := createCheckIn(t, router, ownerCookie, goalID)
@@ -502,4 +542,77 @@ func approveCheckIn(t *testing.T, router *chi.Mux, cookie *http.Cookie, checkInI
 func sanitize(path string) string {
 	r := strings.NewReplacer("/", "_", "{", "", "}", "", "-", "_")
 	return r.Replace(path)
+}
+
+func createMilestone(t *testing.T, router *chi.Mux, cookie *http.Cookie, goalID int64, title string) int64 {
+	t.Helper()
+	body, _ := json.Marshal(map[string]any{"title": title})
+	req := httptest.NewRequest(http.MethodPost, fmt.Sprintf("/v1/goals/%d/milestones", goalID), bytes.NewReader(body))
+	req.Header.Set("Content-Type", "application/json")
+	req.AddCookie(cookie)
+	rec := httptest.NewRecorder()
+	router.ServeHTTP(rec, req)
+	if rec.Code != http.StatusCreated {
+		t.Fatalf("create milestone: expected 201, got %d (body: %s)", rec.Code, rec.Body.String())
+	}
+	var resp struct {
+		Milestone struct {
+			ID int64 `json:"id"`
+		} `json:"milestone"`
+	}
+	if err := json.NewDecoder(rec.Body).Decode(&resp); err != nil {
+		t.Fatalf("decode milestone: %v", err)
+	}
+	return resp.Milestone.ID
+}
+
+func completeMilestone(t *testing.T, router *chi.Mux, cookie *http.Cookie, milestoneID int64) {
+	t.Helper()
+	req := httptest.NewRequest(http.MethodPost, fmt.Sprintf("/v1/milestones/%d/complete", milestoneID), nil)
+	req.AddCookie(cookie)
+	rec := httptest.NewRecorder()
+	router.ServeHTTP(rec, req)
+	if rec.Code != http.StatusOK {
+		t.Fatalf("complete milestone: expected 200, got %d (body: %s)", rec.Code, rec.Body.String())
+	}
+}
+
+func milestoneCompleteForbidden(t *testing.T, router *chi.Mux, cookie *http.Cookie, milestoneID int64) bool {
+	t.Helper()
+	req := httptest.NewRequest(http.MethodPost, fmt.Sprintf("/v1/milestones/%d/complete", milestoneID), nil)
+	req.AddCookie(cookie)
+	rec := httptest.NewRecorder()
+	router.ServeHTTP(rec, req)
+	return rec.Code == http.StatusForbidden
+}
+
+type goalViewResponse struct {
+	Goal struct {
+		ID int64 `json:"id"`
+	} `json:"goal"`
+	Owner struct {
+		Email string `json:"email"`
+	} `json:"owner"`
+	Buddy struct {
+		Email string `json:"email"`
+	} `json:"buddy"`
+	Role string `json:"role"`
+}
+
+func getGoalView(t *testing.T, router *chi.Mux, cookie *http.Cookie, goalID int64) goalViewResponse {
+	t.Helper()
+	req := httptest.NewRequest(http.MethodGet, fmt.Sprintf("/v1/goals/%d", goalID), nil)
+	req.AddCookie(cookie)
+	rec := httptest.NewRecorder()
+	router.ServeHTTP(rec, req)
+	if rec.Code != http.StatusOK {
+		t.Fatalf("get goal: expected 200, got %d (body: %s)", rec.Code, rec.Body.String())
+	}
+	var resp struct {
+		Goal goalViewResponse `json:"goal"`
+	}
+	if err := json.NewDecoder(rec.Body).Decode(&resp); err != nil {
+		t.Fatalf("decode goal view: %v", err)
+	}
+	return resp.Goal
 }

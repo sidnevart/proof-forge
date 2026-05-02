@@ -8,7 +8,7 @@ import { StatePanel } from "@/components/core/state-panel";
 import { StatusPill } from "@/components/core/status-pill";
 import { ApiError, cancelStake, createStake, forfeitStake, listStakes } from "@/lib/api";
 import { cn } from "@/lib/cn";
-import type { StakeView } from "@/lib/types";
+import type { GoalRole, StakeView } from "@/lib/types";
 
 import styles from "./stake-panel.module.css";
 
@@ -19,11 +19,12 @@ type ScreenState =
 
 type Props = {
   goalID: number;
-  isOwner: boolean;
-  isBuddy: boolean;
+  role: GoalRole;
 };
 
-export function StakePanel({ goalID, isOwner, isBuddy }: Props) {
+export function StakePanel({ goalID, role }: Props) {
+  const isOwner = role === "owner";
+  const isBuddy = role === "buddy";
   const [state, setState] = useState<ScreenState>({ kind: "loading" });
   const [description, setDescription] = useState("");
   const [formError, setFormError] = useState<string | null>(null);

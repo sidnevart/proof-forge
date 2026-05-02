@@ -1,0 +1,130 @@
+.progress {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  margin-bottom: 16px;
+  font-size: 13px;
+  color: var(--text-muted);
+}
+
+.progressBar {
+  position: relative;
+  flex: 1;
+  height: 4px;
+  background: var(--border);
+  border-radius: 999px;
+  overflow: hidden;
+}
+
+.progressFill {
+  position: absolute;
+  inset: 0;
+  background: var(--accent);
+  transition: width 200ms ease;
+}
+
+.list {
+  display: grid;
+  gap: 8px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.card {
+  display: grid;
+  gap: 6px;
+  padding: 14px 16px;
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--border);
+  position: relative;
+}
+
+.card.completed {
+  border-left: 2px solid var(--fn-green);
+}
+
+.cardHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.title {
+  margin: 0;
+  font-size: 14px;
+  font-weight: 500;
+  color: var(--text);
+}
+
+.titleCompleted {
+  text-decoration: line-through;
+  color: var(--text-muted);
+}
+
+.description {
+  margin: 0;
+  font-size: 13px;
+  line-height: 1.4;
+  color: var(--text-muted);
+}
+
+.completedMeta {
+  font-size: 11px;
+  color: var(--text-dim);
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+
+.actions {
+  display: flex;
+  gap: 6px;
+  margin-top: 4px;
+}
+
+.addForm {
+  display: grid;
+  gap: 8px;
+  margin-top: 12px;
+  padding-top: 16px;
+  border-top: 1px solid var(--border);
+}
+
+.addRow {
+  display: flex;
+  gap: 8px;
+}
+
+.addInput {
+  flex: 1;
+  padding: 8px 12px;
+  font: inherit;
+  font-size: 14px;
+  color: var(--text);
+  background: var(--bg);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+}
+
+.addInput::placeholder {
+  color: var(--text-dim);
+}
+
+.addInput:focus {
+  outline: none;
+  border-color: var(--accent);
+}
+
+.error {
+  margin: 0;
+  font-size: 13px;
+  color: var(--fn-red);
+}
+
+.empty {
+  margin: 0;
+  font-size: 14px;
+  color: var(--text-dim);
+}

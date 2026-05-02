@@ -86,16 +86,21 @@ func (s *Service) CreateGoal(ctx context.Context, owner users.User, input Create
 	return goal, nil
 }
 
-func (s *Service) Dashboard(ctx context.Context, owner users.User) (Dashboard, error) {
-	goalViews, err := s.repo.ListGoalsByOwner(ctx, owner.ID)
+func (s *Service) Dashboard(ctx context.Context, actor users.User) (Dashboard, error) {
+	goalViews, err := s.repo.ListGoalsForUser(ctx, actor.ID)
 	if err != nil {
-		return Dashboard{}, fmt.Errorf("list goals by owner: %w", err)
+		return Dashboard{}, fmt.Errorf("list goals for user: %w", err)
 	}
 
-	summary := DashboardSummary{
-		TotalGoals: len(goalViews),
-	}
+	// Summary counts only goals where the user is the owner — keeps the
+	// "your goals" mental model. Buddy goals are still in the Goals slice
+	// for the UI to render in a separate section.
+	summary := DashboardSummary{}
 	for _, item := range goalViews {
+		if item.Role != RoleOwner {
+			continue
+		}
+		summary.TotalGoals++
 		switch item.Goal.Status {
 		case GoalStatusPendingBuddyAcceptance:
 			summary.PendingBuddyAcceptance++
@@ -108,6 +113,14 @@ func (s *Service) Dashboard(ctx context.Context, owner users.User) (Dashboard, e
 		Summary: summary,
 		Goals:   goalViews,
 	}, nil
+}
+
+func (s *Service) GetGoal(ctx context.Context, actor users.User, goalID int64) (GoalView, error) {
+	view, err := s.repo.FindGoalForUser(ctx, goalID, actor.ID)
+	if err != nil {
+		return GoalView{}, err
+	}
+	return view, nil
 }
 
 // GetInvitePreview looks up an invite by its raw token and returns the preview

@@ -7,7 +7,8 @@ import (
 
 type Repository interface {
 	CreateGoalWithInvite(context.Context, CreateGoalParams) (GoalView, error)
-	ListGoalsByOwner(context.Context, int64) ([]GoalView, error)
+	ListGoalsForUser(ctx context.Context, userID int64) ([]GoalView, error)
+	FindGoalForUser(ctx context.Context, goalID, userID int64) (GoalView, error)
 	FindInviteByToken(ctx context.Context, tokenHash string) (InviteRecord, error)
 	AcceptInvite(ctx context.Context, params AcceptInviteParams) error
 }
@@ -20,16 +21,16 @@ type AcceptInviteParams struct {
 }
 
 type CreateGoalParams struct {
-	OwnerID          int64
-	OwnerEmail       string
-	Title            string
-	Description      string
-	BuddyName        string
-	BuddyEmail       string
-	GoalStatus       GoalStatus
-	PactStatus       PactStatus
-	InviteStatus     InviteStatus
-	ProgressHealth   ProgressHealth
-	InviteTokenHash  string
-	InviteExpiresAt  time.Time
+	OwnerID         int64
+	OwnerEmail      string
+	Title           string
+	Description     string
+	BuddyName       string
+	BuddyEmail      string
+	GoalStatus      GoalStatus
+	PactStatus      PactStatus
+	InviteStatus    InviteStatus
+	ProgressHealth  ProgressHealth
+	InviteTokenHash string
+	InviteExpiresAt time.Time
 }

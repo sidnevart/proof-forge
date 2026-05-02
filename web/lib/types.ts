@@ -10,6 +10,13 @@ export type GoalStatus = "pending_buddy_acceptance" | "active";
 export type PactStatus = "invited" | "active";
 export type InviteStatus = "pending" | "accepted";
 export type ProgressHealth = "unknown" | "stable" | "at_risk";
+export type GoalRole = "owner" | "buddy";
+
+export type Person = {
+  id: number;
+  email: string;
+  display_name: string;
+};
 
 export type GoalView = {
   goal: {
@@ -22,11 +29,8 @@ export type GoalView = {
     created_at: string;
     updated_at: string;
   };
-  buddy: {
-    id: number;
-    email: string;
-    display_name: string;
-  };
+  owner: Person;
+  buddy: Person;
   pact: {
     id: number;
     status: PactStatus;
@@ -38,6 +42,7 @@ export type GoalView = {
     expires_at: string;
     acceptance_token?: string;
   };
+  role: GoalRole;
 };
 
 export type CheckInStatus =
@@ -111,6 +116,21 @@ export type WeeklyRecap = {
   model_name?: string;
   generated_at?: string | null;
   created_at: string;
+};
+
+export type MilestoneStatus = "pending" | "completed";
+
+export type Milestone = {
+  id: number;
+  goal_id: number;
+  title: string;
+  description: string;
+  status: MilestoneStatus;
+  sort_order: number;
+  completed_at?: string | null;
+  completed_by_user_id?: number | null;
+  created_at: string;
+  updated_at: string;
 };
 
 export type StakeStatus = "active" | "forfeited" | "completed" | "cancelled";

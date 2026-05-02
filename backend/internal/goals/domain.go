@@ -32,6 +32,12 @@ var (
 	ErrInviteExpired          = errors.New("invite expired")
 	ErrInviteAlreadyAccepted  = errors.New("invite already accepted")
 	ErrUnauthorizedAcceptance = errors.New("only the invited buddy can accept this invite")
+	ErrGoalNotFound           = errors.New("goal not found")
+)
+
+const (
+	RoleOwner = "owner"
+	RoleBuddy = "buddy"
 )
 
 // InviteRecord is the read model returned when looking up an invite by token.
@@ -89,15 +95,17 @@ type Invite struct {
 
 type GoalView struct {
 	Goal   Goal   `json:"goal"`
+	Owner  Buddy  `json:"owner"`
 	Buddy  Buddy  `json:"buddy"`
 	Pact   Pact   `json:"pact"`
 	Invite Invite `json:"invite"`
+	Role   string `json:"role"`
 }
 
 type DashboardSummary struct {
-	TotalGoals              int `json:"total_goals"`
-	PendingBuddyAcceptance  int `json:"pending_buddy_acceptance"`
-	ActiveGoals             int `json:"active_goals"`
+	TotalGoals             int `json:"total_goals"`
+	PendingBuddyAcceptance int `json:"pending_buddy_acceptance"`
+	ActiveGoals            int `json:"active_goals"`
 }
 
 type Dashboard struct {

@@ -12,6 +12,7 @@ import (
 
 	"github.com/sidnevart/proof-forge/backend/internal/checkins"
 	"github.com/sidnevart/proof-forge/backend/internal/goals"
+	"github.com/sidnevart/proof-forge/backend/internal/milestones"
 	platformconfig "github.com/sidnevart/proof-forge/backend/internal/platform/config"
 	"github.com/sidnevart/proof-forge/backend/internal/platform/email"
 	"github.com/sidnevart/proof-forge/backend/internal/platform/httpx"
@@ -136,6 +137,11 @@ func registerAPIRoutes(router *chi.Mux, log *slog.Logger, pool *pgxpool.Pool, cf
 		stakes.NewService(stakes.NewPostgresRepository(pool)),
 	)
 
+	milestonesHandler := milestones.NewHandler(
+		platformlogger.WithComponent(log, "milestones"),
+		milestones.NewService(milestones.NewPostgresRepository(pool)),
+	)
+
 	if cfg.Telegram.Enabled {
 		telegramHandler := telegram.NewHandler(
 			cfg.Telegram.WebhookSecret,
@@ -154,6 +160,7 @@ func registerAPIRoutes(router *chi.Mux, log *slog.Logger, pool *pgxpool.Pool, cf
 			checkinsHandler.RegisterRoutes(r)
 			recapsHandler.RegisterRoutes(r)
 			stakesHandler.RegisterRoutes(r)
+			milestonesHandler.RegisterRoutes(r)
 		})
 	})
 }

@@ -39,6 +39,10 @@ type RegisterInput struct {
 	DisplayName string `json:"display_name"`
 }
 
+type LoginInput struct {
+	Email string `json:"email"`
+}
+
 type RegistrationResult struct {
 	User         User
 	SessionToken string

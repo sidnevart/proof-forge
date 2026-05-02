@@ -122,5 +122,5 @@ export type DashboardSummary = {
 export type DashboardResponse = {
   user: User;
   summary: DashboardSummary;
-  goals: GoalView[];
+  goals: GoalView[] | null;
 };

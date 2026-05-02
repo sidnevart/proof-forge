@@ -82,6 +82,13 @@ export async function registerUser(input: RegisterInput): Promise<{ user: User }
   });
 }
 
+export async function loginUser(email: string): Promise<{ user: User }> {
+  return request<{ user: User }>("/v1/login", {
+    method: "POST",
+    body: JSON.stringify({ email }),
+  });
+}
+
 export async function createGoal(input: CreateGoalInput): Promise<{ goal: GoalView }> {
   return request<{ goal: GoalView }>("/v1/goals", {
     method: "POST",

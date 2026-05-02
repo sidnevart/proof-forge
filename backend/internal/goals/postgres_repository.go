@@ -95,7 +95,7 @@ func (r *PostgresRepository) ListGoalsByOwner(ctx context.Context, ownerID int64
 	}
 	defer rows.Close()
 
-	var goals []GoalView
+	goals := make([]GoalView, 0)
 	for rows.Next() {
 		var item GoalView
 		var acceptedAt sql.NullTime

@@ -6,7 +6,7 @@ import { Button } from "@/components/core/button";
 import { SectionShell } from "@/components/core/section-shell";
 import { StatePanel } from "@/components/core/state-panel";
 import { StatusPill } from "@/components/core/status-pill";
-import { ApiError, createGoal, getDashboard, registerUser } from "@/lib/api";
+import { ApiError, createGoal, getDashboard, loginUser, registerUser } from "@/lib/api";
 import type { DashboardResponse, GoalView } from "@/lib/types";
 
 import styles from "./dashboard-screen.module.css";
@@ -20,8 +20,10 @@ type ScreenState =
 export function DashboardScreen() {
   const [screenState, setScreenState] = useState<ScreenState>({ kind: "loading" });
   const [registerError, setRegisterError] = useState<string | null>(null);
+  const [loginError, setLoginError] = useState<string | null>(null);
   const [goalError, setGoalError] = useState<string | null>(null);
   const [isRegistering, startRegisterTransition] = useTransition();
+  const [isLoggingIn, startLoginTransition] = useTransition();
   const [isCreatingGoal, startCreateGoalTransition] = useTransition();
 
   useEffect(() => {
@@ -61,6 +63,25 @@ export function DashboardScreen() {
         setRegisterError(
           error instanceof Error ? error.message : "Не удалось зарегистрировать пользователя.",
         );
+      }
+    });
+  }
+
+  function handleLoginSubmit(event: FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+    setLoginError(null);
+
+    const formData = new FormData(event.currentTarget);
+    startLoginTransition(async () => {
+      try {
+        await loginUser(String(formData.get("email") ?? ""));
+        await loadDashboard();
+      } catch (error) {
+        if (error instanceof ApiError && error.status === 404) {
+          setLoginError("Аккаунт с таким email не найден. Зарегистрируйтесь.");
+        } else {
+          setLoginError(error instanceof Error ? error.message : "Не удалось войти.");
+        }
       }
     });
   }
@@ -142,6 +163,23 @@ export function DashboardScreen() {
         </header>
 
         <section className={styles.authGrid}>
+          <SectionShell eyebrow="Войти" title="Уже есть аккаунт">
+            <form className={styles.form} onSubmit={handleLoginSubmit}>
+              <label className={styles.field}>
+                <span>Email</span>
+                <input name="email" type="email" placeholder="you@example.com" required />
+              </label>
+              {loginError ? (
+                <p className={styles.formError} role="alert">
+                  {loginError}
+                </p>
+              ) : null}
+              <Button type="submit" disabled={isLoggingIn}>
+                {isLoggingIn ? "Входим..." : "Войти"}
+              </Button>
+            </form>
+          </SectionShell>
+
           <SectionShell eyebrow="Registration" title="Создайте рабочий контур">
             <form className={styles.form} onSubmit={handleRegisterSubmit}>
               <label className={styles.field}>
@@ -263,7 +301,7 @@ export function DashboardScreen() {
 
       <section className={styles.middleGrid}>
         <SectionShell eyebrow="Pact Cards" title="Текущие accountability goals">
-          {dashboard.goals.length === 0 ? (
+          {(dashboard.goals ?? []).length === 0 ? (
             <StatePanel
               tone="empty"
               title="Пока нет ни одного goal"
@@ -271,7 +309,7 @@ export function DashboardScreen() {
             />
           ) : (
             <div className={styles.goalList}>
-              {dashboard.goals.map((item) => (
+              {(dashboard.goals ?? []).map((item) => (
                 <GoalCard key={item.goal.id} goal={item} />
               ))}
             </div>

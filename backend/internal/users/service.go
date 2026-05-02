@@ -7,6 +7,7 @@ import (
 	"encoding/hex"
 	"errors"
 	"fmt"
+	"strings"
 	"time"
 )
 
@@ -48,6 +49,44 @@ func (s *Service) Register(ctx context.Context, input RegisterInput) (Registrati
 	user, err := s.users.Create(ctx, input)
 	if err != nil {
 		return RegistrationResult{}, fmt.Errorf("create user: %w", err)
+	}
+
+	rawToken, err := s.tokenGenerate()
+	if err != nil {
+		return RegistrationResult{}, fmt.Errorf("generate session token: %w", err)
+	}
+
+	now := s.clock().UTC()
+	expiresAt := now.Add(s.sessionTTL)
+	session := Session{
+		UserID:    user.ID,
+		TokenHash: hashToken(rawToken),
+		ExpiresAt: expiresAt,
+		CreatedAt: now,
+	}
+	if err := s.sessions.CreateSession(ctx, session); err != nil {
+		return RegistrationResult{}, fmt.Errorf("%w: %v", ErrSessionFailed, err)
+	}
+
+	return RegistrationResult{
+		User:         user,
+		SessionToken: rawToken,
+		ExpiresAt:    expiresAt,
+	}, nil
+}
+
+func (s *Service) Login(ctx context.Context, input LoginInput) (RegistrationResult, error) {
+	email := strings.ToLower(strings.TrimSpace(input.Email))
+	if email == "" || !strings.Contains(email, "@") {
+		return RegistrationResult{}, errors.Join(ErrInvalidInput, errors.New("valid email is required"))
+	}
+
+	user, err := s.users.FindByEmail(ctx, email)
+	if err != nil {
+		if errors.Is(err, ErrNotFound) {
+			return RegistrationResult{}, ErrNotFound
+		}
+		return RegistrationResult{}, fmt.Errorf("find user by email: %w", err)
 	}
 
 	rawToken, err := s.tokenGenerate()

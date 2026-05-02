@@ -28,6 +28,7 @@ func NewHandler(log *slog.Logger, service *Service, cookieName string, secureCoo
 
 func (h *Handler) RegisterPublicRoutes(r chi.Router) {
 	r.Post("/register", h.handleRegister)
+	r.Post("/login", h.handleLogin)
 }
 
 func (h *Handler) RegisterProtectedRoutes(r chi.Router) {
@@ -95,6 +96,45 @@ func (h *Handler) handleRegister(w http.ResponseWriter, r *http.Request) {
 	})
 
 	writeJSON(w, http.StatusCreated, map[string]any{
+		"user": result.User,
+	})
+}
+
+func (h *Handler) handleLogin(w http.ResponseWriter, r *http.Request) {
+	var input LoginInput
+	if err := json.NewDecoder(r.Body).Decode(&input); err != nil {
+		writeError(w, http.StatusBadRequest, "invalid_json", "Request body must be valid JSON")
+		return
+	}
+
+	result, err := h.service.Login(r.Context(), input)
+	if err != nil {
+		switch {
+		case errors.Is(err, ErrInvalidInput):
+			writeError(w, http.StatusBadRequest, "invalid_input", err.Error())
+		case errors.Is(err, ErrNotFound):
+			writeError(w, http.StatusNotFound, "user_not_found", "No account found for this email")
+		default:
+			if h.log != nil {
+				h.log.Error("login user", "err", err)
+			}
+			writeError(w, http.StatusInternalServerError, "internal_error", "Could not create session")
+		}
+		return
+	}
+
+	http.SetCookie(w, &http.Cookie{
+		Name:     h.cookieName,
+		Value:    result.SessionToken,
+		Path:     "/",
+		HttpOnly: true,
+		SameSite: http.SameSiteLaxMode,
+		Secure:   h.secureCookie,
+		Expires:  result.ExpiresAt,
+		MaxAge:   int(time.Until(result.ExpiresAt).Seconds()),
+	})
+
+	writeJSON(w, http.StatusOK, map[string]any{
 		"user": result.User,
 	})
 }

@@ -10,6 +10,7 @@ type Repository interface {
 	ListGoalsForUser(ctx context.Context, userID int64) ([]GoalView, error)
 	FindGoalForUser(ctx context.Context, goalID, userID int64) (GoalView, error)
 	FindInviteByToken(ctx context.Context, tokenHash string) (InviteRecord, error)
+	FindInviteByGoal(ctx context.Context, goalID int64) (InviteRecord, error)
 	AcceptInvite(ctx context.Context, params AcceptInviteParams) error
 }
 

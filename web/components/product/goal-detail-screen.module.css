@@ -149,8 +149,33 @@
 }
 
 .checkInDate {
-  font-size: 13px;
+  font-size: 12px;
+  color: var(--text-dim);
+}
+
+.acceptBlock {
+  display: grid;
+  gap: 16px;
+}
+
+.acceptBlock p {
+  margin: 0;
   color: var(--text-muted);
+  font-size: 14px;
+  line-height: 1.5;
+  max-width: 64ch;
+}
+
+.acceptError {
+  margin: 0;
+  color: var(--fn-red);
+  font-size: 13px;
+}
+
+.checkInTitle {
+  font-size: 14px;
+  font-weight: 500;
+  color: var(--text);
 }
 
 .checkInComment {

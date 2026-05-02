@@ -140,7 +140,22 @@ func (s *Service) AcceptInvite(ctx context.Context, actor users.User, rawToken s
 	if err != nil {
 		return err
 	}
+	return s.acceptRecord(ctx, actor, record, true)
+}
 
+// AcceptInviteForGoal lets an already-authenticated buddy accept the invite
+// from inside the app (e.g. from the goal detail page) without needing the
+// raw token. The session itself is the credential — we only verify the actor
+// is the goal's invitee.
+func (s *Service) AcceptInviteForGoal(ctx context.Context, actor users.User, goalID int64) error {
+	record, err := s.repo.FindInviteByGoal(ctx, goalID)
+	if err != nil {
+		return err
+	}
+	return s.acceptRecord(ctx, actor, record, false)
+}
+
+func (s *Service) acceptRecord(ctx context.Context, actor users.User, record InviteRecord, matchByEmail bool) error {
 	if record.InviteStatus == InviteStatusAccepted {
 		return ErrInviteAlreadyAccepted
 	}
@@ -150,7 +165,12 @@ func (s *Service) AcceptInvite(ctx context.Context, actor users.User, rawToken s
 	if s.clock().After(record.ExpiresAt) {
 		return ErrInviteExpired
 	}
-	if !strings.EqualFold(actor.Email, record.InviteeEmail) {
+
+	authorized := actor.ID == record.InviteeID
+	if matchByEmail && !authorized {
+		authorized = strings.EqualFold(actor.Email, record.InviteeEmail)
+	}
+	if !authorized {
 		return ErrUnauthorizedAcceptance
 	}
 

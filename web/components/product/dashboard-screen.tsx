@@ -590,30 +590,60 @@ function CheckInEventItem({ checkIn, goalID }: { checkIn: CheckIn; goalID: numbe
   const date = checkIn.submitted_at ?? checkIn.created_at;
   const status =
     checkIn.status === "approved"
-      ? { label: "Подтверждён", tone: "approved" as const, detail: "Партнёр подтвердил движение по цели." }
+      ? {
+          label: "Подтверждён",
+          tone: "approved" as const,
+          detail: "Партнёр подтвердил движение по цели.",
+          cta: "Открыть цель",
+          href: `/goals/${goalID}`,
+        }
       : checkIn.status === "rejected"
-        ? { label: "Отклонён", tone: "rejected" as const, detail: "Партнёр отклонил это подтверждение." }
+        ? {
+            label: "Отклонён",
+            tone: "rejected" as const,
+            detail: "Партнёр отклонил это подтверждение.",
+            cta: "Открыть цель",
+            href: `/goals/${goalID}`,
+          }
         : checkIn.status === "submitted"
-          ? { label: "На ревью", tone: "pending" as const, detail: "Партнёр получил материалы и принимает решение." }
+          ? {
+              label: "На ревью",
+              tone: "pending" as const,
+              detail: "Партнёр получил материалы и принимает решение.",
+              cta: "Открыть цель",
+              href: `/goals/${goalID}`,
+            }
           : checkIn.status === "changes_requested"
-            ? { label: "Нужны правки", tone: "changes_requested" as const, detail: "Партнёр вернул на доработку — откройте цель и посмотрите комментарий." }
-            : { label: "Черновик", tone: "active" as const, detail: "Идёт сборка материалов." };
-
-  const href =
-    checkIn.status === "draft" || checkIn.status === "changes_requested"
-      ? `/goals/${goalID}/check-in`
-      : `/goals/${goalID}`;
+            ? {
+                label: "Нужны правки",
+                tone: "changes_requested" as const,
+                detail: "Партнёр вернул на доработку — откройте чекин и посмотрите комментарий.",
+                cta: "Доработать чекин",
+                href: `/goals/${goalID}/check-in`,
+              }
+            : {
+                label: "Черновик",
+                tone: "active" as const,
+                detail: "Черновик в работе — соберите материалы.",
+                cta: "Продолжить черновик",
+                href: `/goals/${goalID}/check-in`,
+              };
 
   return (
     <li className={styles.eventItem}>
       <div className={styles.eventHeader}>
         <strong>
-          <Link href={href}>Чекин #{checkIn.id}</Link>
+          <Link href={status.href}>Чекин #{checkIn.id}</Link>
         </strong>
         <StatusPill status={status.tone} label={status.label} />
       </div>
       <p>{status.detail}</p>
-      <span>{formatDateLabel(date, { month: "short", day: "numeric" })}</span>
+      <div className={styles.eventFooter}>
+        <span>{formatDateLabel(date, { month: "short", day: "numeric" })}</span>
+        <Link className={styles.eventLink} href={status.href}>
+          {status.cta} →
+        </Link>
+      </div>
     </li>
   );
 }

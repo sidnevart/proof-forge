@@ -17,11 +17,12 @@ func (noopEmailSender) SendBuddyInvite(_ context.Context, _ email.BuddyInvitePar
 }
 
 type repositoryStub struct {
-	createGoal   func(context.Context, CreateGoalParams) (GoalView, error)
-	listGoals    func(context.Context, int64) ([]GoalView, error)
-	findGoal     func(context.Context, int64, int64) (GoalView, error)
-	findInvite   func(context.Context, string) (InviteRecord, error)
-	acceptInvite func(context.Context, AcceptInviteParams) error
+	createGoal       func(context.Context, CreateGoalParams) (GoalView, error)
+	listGoals        func(context.Context, int64) ([]GoalView, error)
+	findGoal         func(context.Context, int64, int64) (GoalView, error)
+	findInvite       func(context.Context, string) (InviteRecord, error)
+	findInviteByGoal func(context.Context, int64) (InviteRecord, error)
+	acceptInvite     func(context.Context, AcceptInviteParams) error
 }
 
 func (s repositoryStub) CreateGoalWithInvite(ctx context.Context, params CreateGoalParams) (GoalView, error) {
@@ -44,6 +45,13 @@ func (s repositoryStub) FindInviteByToken(ctx context.Context, tokenHash string)
 		return InviteRecord{}, ErrInviteNotFound
 	}
 	return s.findInvite(ctx, tokenHash)
+}
+
+func (s repositoryStub) FindInviteByGoal(ctx context.Context, goalID int64) (InviteRecord, error) {
+	if s.findInviteByGoal == nil {
+		return InviteRecord{}, ErrInviteNotFound
+	}
+	return s.findInviteByGoal(ctx, goalID)
 }
 
 func (s repositoryStub) AcceptInvite(ctx context.Context, params AcceptInviteParams) error {

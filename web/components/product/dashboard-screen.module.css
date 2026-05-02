@@ -221,6 +221,41 @@
   font-weight: 500;
 }
 
+.eventHeader strong a {
+  color: var(--text);
+  border-bottom: 1px dashed var(--border-strong);
+  transition: color 120ms ease, border-color 120ms ease;
+}
+
+.eventHeader strong a:hover {
+  color: var(--accent);
+  border-color: var(--accent);
+}
+
+.eventFooter {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 12px;
+}
+
+.eventFooter span {
+  font-size: 11px;
+  color: var(--text-dim);
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+
+.eventLink {
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--accent);
+}
+
+.eventLink:hover {
+  color: var(--accent-hover);
+}
+
 .field {
   display: grid;
   gap: 6px;

@@ -165,28 +165,53 @@ func (r *PostgresRepository) FindGoalForUser(ctx context.Context, goalID, userID
 }
 
 func (r *PostgresRepository) FindInviteByToken(ctx context.Context, tokenHash string) (InviteRecord, error) {
-	const query = `
-		SELECT
-			i.id,
-			i.status,
-			i.expires_at,
-			i.goal_id,
-			i.pact_id,
-			i.inviter_user_id,
-			i.invitee_user_id,
-			invitee.email,
-			g.title,
-			g.status,
-			owner.display_name
-		FROM invites i
-		JOIN users invitee ON invitee.id = i.invitee_user_id
-		JOIN goals g ON g.id = i.goal_id
-		JOIN users owner ON owner.id = i.inviter_user_id
-		WHERE i.token_hash = $1
-	`
+	const query = inviteSelect + ` WHERE i.token_hash = $1`
 
+	rec, err := scanInvite(r.pool.QueryRow(ctx, query, tokenHash))
+	if err != nil {
+		if errors.Is(err, pgx.ErrNoRows) {
+			return InviteRecord{}, ErrInviteNotFound
+		}
+		return InviteRecord{}, fmt.Errorf("find invite by token: %w", err)
+	}
+	return rec, nil
+}
+
+func (r *PostgresRepository) FindInviteByGoal(ctx context.Context, goalID int64) (InviteRecord, error) {
+	const query = inviteSelect + ` WHERE i.goal_id = $1 ORDER BY i.id DESC LIMIT 1`
+
+	rec, err := scanInvite(r.pool.QueryRow(ctx, query, goalID))
+	if err != nil {
+		if errors.Is(err, pgx.ErrNoRows) {
+			return InviteRecord{}, ErrInviteNotFound
+		}
+		return InviteRecord{}, fmt.Errorf("find invite by goal: %w", err)
+	}
+	return rec, nil
+}
+
+const inviteSelect = `
+	SELECT
+		i.id,
+		i.status,
+		i.expires_at,
+		i.goal_id,
+		i.pact_id,
+		i.inviter_user_id,
+		i.invitee_user_id,
+		invitee.email,
+		g.title,
+		g.status,
+		owner.display_name
+	FROM invites i
+	JOIN users invitee ON invitee.id = i.invitee_user_id
+	JOIN goals g ON g.id = i.goal_id
+	JOIN users owner ON owner.id = i.inviter_user_id
+`
+
+func scanInvite(row pgx.Row) (InviteRecord, error) {
 	var rec InviteRecord
-	err := r.pool.QueryRow(ctx, query, tokenHash).Scan(
+	err := row.Scan(
 		&rec.InviteID,
 		&rec.InviteStatus,
 		&rec.ExpiresAt,
@@ -199,14 +224,7 @@ func (r *PostgresRepository) FindInviteByToken(ctx context.Context, tokenHash st
 		&rec.GoalStatus,
 		&rec.OwnerName,
 	)
-	if err != nil {
-		if errors.Is(err, pgx.ErrNoRows) {
-			return InviteRecord{}, ErrInviteNotFound
-		}
-		return InviteRecord{}, fmt.Errorf("find invite by token: %w", err)
-	}
-
-	return rec, nil
+	return rec, err
 }
 
 func (r *PostgresRepository) AcceptInvite(ctx context.Context, params AcceptInviteParams) error {

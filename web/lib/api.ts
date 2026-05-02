@@ -155,6 +155,12 @@ export async function acceptInvite(token: string): Promise<{ accepted: boolean }
   });
 }
 
+export async function acceptGoalInvite(goalID: number): Promise<{ accepted: boolean }> {
+  return request<{ accepted: boolean }>(`/v1/goals/${goalID}/accept-invite`, {
+    method: "POST",
+  });
+}
+
 export async function getCheckIn(checkInID: number): Promise<CheckInDetail> {
   return request<CheckInDetail>(`/v1/check-ins/${checkInID}`);
 }

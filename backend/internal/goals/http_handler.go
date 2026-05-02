@@ -34,6 +34,7 @@ func (h *Handler) RegisterRoutes(r chi.Router) {
 	r.Post("/goals", h.handleCreateGoal)
 	r.Get("/goals", h.handleListGoals)
 	r.Get("/goals/{goalID}", h.handleGetGoal)
+	r.Post("/goals/{goalID}/accept-invite", h.handleAcceptInviteForGoal)
 	r.Get("/dashboard", h.handleDashboard)
 	r.Post("/invites/{token}/accept", h.handleAcceptInvite)
 }
@@ -175,6 +176,42 @@ func (h *Handler) handleGetInvite(w http.ResponseWriter, r *http.Request) {
 			"expires_at":    record.ExpiresAt,
 		},
 	})
+}
+
+func (h *Handler) handleAcceptInviteForGoal(w http.ResponseWriter, r *http.Request) {
+	actor, ok := users.CurrentUser(r.Context())
+	if !ok {
+		writeError(w, http.StatusUnauthorized, "auth_required", "Authentication required")
+		return
+	}
+
+	rawID := chi.URLParam(r, "goalID")
+	id, err := strconv.ParseInt(rawID, 10, 64)
+	if err != nil || id <= 0 {
+		writeError(w, http.StatusBadRequest, "invalid_param", "goalID must be a positive integer")
+		return
+	}
+
+	if err := h.service.AcceptInviteForGoal(r.Context(), actor, id); err != nil {
+		switch {
+		case errors.Is(err, ErrInviteNotFound):
+			writeError(w, http.StatusNotFound, "invite_not_found", "Invite not found")
+		case errors.Is(err, ErrInviteExpired):
+			writeError(w, http.StatusGone, "invite_expired", "This invite has expired")
+		case errors.Is(err, ErrInviteAlreadyAccepted):
+			writeError(w, http.StatusConflict, "invite_already_accepted", "This invite has already been accepted")
+		case errors.Is(err, ErrUnauthorizedAcceptance):
+			writeError(w, http.StatusForbidden, "forbidden", "Only the invited buddy can accept this invite")
+		default:
+			if h.log != nil {
+				h.log.Error("accept invite for goal", "err", err)
+			}
+			writeError(w, http.StatusInternalServerError, "internal_error", "Could not accept invite")
+		}
+		return
+	}
+
+	writeJSON(w, http.StatusOK, map[string]any{"accepted": true})
 }
 
 func (h *Handler) handleAcceptInvite(w http.ResponseWriter, r *http.Request) {

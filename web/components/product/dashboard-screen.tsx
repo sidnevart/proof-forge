@@ -167,7 +167,7 @@ export function DashboardScreen() {
             <form className={styles.form} onSubmit={handleLoginSubmit}>
               <label className={styles.field}>
                 <span>Email</span>
-                <input name="email" type="email" placeholder="you@example.com" required />
+                <input name="email" type="email" placeholder="your@email.com" required />
               </label>
               {loginError ? (
                 <p className={styles.formError} role="alert">

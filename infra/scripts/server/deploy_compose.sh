@@ -22,5 +22,6 @@ trap 'docker logout ghcr.io >/dev/null 2>&1 || true' EXIT
 
 docker compose "${COMPOSE_ARGS[@]}" pull
 docker compose "${COMPOSE_ARGS[@]}" up -d
+docker compose "${COMPOSE_ARGS[@]}" restart nginx
 
 "$DEPLOY_PATH/scripts/smoke_check.sh"

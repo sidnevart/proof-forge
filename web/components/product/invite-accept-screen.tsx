@@ -8,6 +8,7 @@ import { SectionShell } from "@/components/core/section-shell";
 import { StatePanel } from "@/components/core/state-panel";
 import { StatusPill } from "@/components/core/status-pill";
 import { ApiError, acceptInvite, getInvite, registerUser } from "@/lib/api";
+import { formatDateLabel } from "@/lib/ui-copy";
 import type { InvitePreview } from "@/lib/types";
 
 import styles from "./invite-accept-screen.module.css";
@@ -48,7 +49,7 @@ export function InviteAcceptScreen({ token }: Props) {
       }
       setScreenState({
         kind: "error",
-        message: error instanceof Error ? error.message : "Не удалось загрузить invite.",
+        message: error instanceof Error ? error.message : "Не удалось загрузить приглашение.",
       });
     }
   }, [token]);
@@ -91,7 +92,7 @@ export function InviteAcceptScreen({ token }: Props) {
         }
         setScreenState({
           kind: "error",
-          message: error instanceof Error ? error.message : "Не удалось принять invite.",
+          message: error instanceof Error ? error.message : "Не удалось принять приглашение.",
         });
       }
     });
@@ -125,11 +126,11 @@ export function InviteAcceptScreen({ token }: Props) {
   if (screenState.kind === "loading") {
     return (
       <main className={styles.page}>
-        <InviteHeader status="pending" label="Loading invite" />
+        <InviteHeader status="pending" label="Загружаем приглашение" />
         <StatePanel
           tone="loading"
-          title="Загружаем данные pact"
-          description="Проверяем токен и загружаем контекст accountability связки."
+          title="Загружаем приглашение"
+          description="Проверяем ссылку и собираем контекст по цели."
         />
       </main>
     );
@@ -138,11 +139,11 @@ export function InviteAcceptScreen({ token }: Props) {
   if (screenState.kind === "not_found") {
     return (
       <main className={styles.page}>
-        <InviteHeader status="rejected" label="Invite not found" />
+        <InviteHeader status="rejected" label="Приглашение не найдено" />
         <StatePanel
           tone="error"
-          title="Invite не найден"
-          description="Ссылка недействительна или инвайт уже был отозван."
+          title="Приглашение не найдено"
+          description="Ссылка недействительна или приглашение уже было отозвано."
         />
       </main>
     );
@@ -151,11 +152,11 @@ export function InviteAcceptScreen({ token }: Props) {
   if (screenState.kind === "expired") {
     return (
       <main className={styles.page}>
-        <InviteHeader status="rejected" label="Invite expired" />
+        <InviteHeader status="rejected" label="Срок приглашения истёк" />
         <StatePanel
           tone="error"
-          title="Invite истёк"
-          description="Срок действия этой ссылки закончился. Попросите владельца goal создать новый invite."
+          title="Срок приглашения истёк"
+          description="Ссылка больше не действует. Попросите владельца цели отправить новое приглашение."
         />
       </main>
     );
@@ -164,14 +165,14 @@ export function InviteAcceptScreen({ token }: Props) {
   if (screenState.kind === "already_accepted") {
     return (
       <main className={styles.page}>
-        <InviteHeader status="active" label="Already accepted" />
+        <InviteHeader status="active" label="Уже принято" />
         <StatePanel
           tone="success"
-          title="Pact уже принят"
-          description="Вы уже приняли этот invite. Перейдите в dashboard, чтобы увидеть активный pact."
+          title="Приглашение уже принято"
+          description="Вы уже подключены к этой цели. Вернитесь в центр управления, чтобы увидеть активный цикл."
           meta={
             <Button variant="secondary" onClick={() => router.push("/dashboard")}>
-              Открыть dashboard
+              Открыть центр управления
             </Button>
           }
         />
@@ -182,11 +183,11 @@ export function InviteAcceptScreen({ token }: Props) {
   if (screenState.kind === "accepted") {
     return (
       <main className={styles.page}>
-        <InviteHeader status="active" label="Pact accepted" />
+        <InviteHeader status="active" label="Принято" />
         <StatePanel
           tone="success"
-          title="Pact принят — контур активирован"
-          description="Вы вошли в accountability loop. Переходим на dashboard..."
+          title="Приглашение принято"
+          description="Вы подключены к цели. Переходим в центр управления..."
         />
       </main>
     );
@@ -195,7 +196,7 @@ export function InviteAcceptScreen({ token }: Props) {
   if (screenState.kind === "error") {
     return (
       <main className={styles.page}>
-        <InviteHeader status="rejected" label="Error" />
+        <InviteHeader status="rejected" label="Ошибка" />
         <StatePanel
           tone="error"
           title="Ошибка"
@@ -214,12 +215,12 @@ export function InviteAcceptScreen({ token }: Props) {
     const { invite } = screenState;
     return (
       <main className={styles.page}>
-        <InviteHeader status="pending" label="Auth required" />
+        <InviteHeader status="pending" label="Нужно подтвердить личность" />
         <div className={styles.grid}>
           <InviteCard invite={invite} />
-          <SectionShell eyebrow="Identity required" title="Подтвердите участие">
+          <SectionShell eyebrow="Вход или регистрация" title="Подтвердите участие">
             <p className={styles.authHint}>
-              Чтобы принять pact, нужно войти или создать аккаунт с адресом{" "}
+              Чтобы принять приглашение, войдите или создайте аккаунт с адресом{" "}
               <strong>{invite.invitee_email}</strong>.
             </p>
             <form className={styles.form} onSubmit={handleRegisterAndAccept}>
@@ -242,7 +243,7 @@ export function InviteAcceptScreen({ token }: Props) {
                 </p>
               ) : null}
               <Button type="submit" disabled={isRegistering}>
-                {isRegistering ? "Регистрируем и принимаем..." : "Войти и принять pact"}
+                {isRegistering ? "Подключаем..." : "Войти и принять приглашение"}
               </Button>
             </form>
           </SectionShell>
@@ -254,22 +255,23 @@ export function InviteAcceptScreen({ token }: Props) {
   const { invite } = screenState;
   return (
     <main className={styles.page}>
-      <InviteHeader status="pending" label="Invite pending" />
+      <InviteHeader status="pending" label="Ожидает принятия" />
       <div className={styles.grid}>
         <InviteCard invite={invite} />
-        <SectionShell eyebrow="Your decision" title="Принять accountability контур">
+        <SectionShell eyebrow="Ваше решение" title="Принять приглашение к цели">
           <div className={styles.acceptBlock}>
             <p>
-              <strong>{invite.owner_name}</strong> приглашает вас стать buddy для серьёзной цели. Вы
-              будете подтверждать прогресс, а не просто наблюдать.
+              <strong>{invite.owner_name}</strong> приглашает вас участвовать в цели как
+              внешний проверяющий. Вы будете видеть подтверждения движения и принимать
+              решение по прогрессу.
             </p>
             <ul className={styles.ruleList}>
-              <li>Buddy review остаётся единственным источником правды о прогрессе.</li>
-              <li>Принятие pact — это обязательство, а не мягкое согласие.</li>
-              <li>Вы сможете запрашивать доработку или отклонять недостаточный check-in.</li>
+              <li>Вы подтверждаете, что движение по цели действительно произошло.</li>
+              <li>Если подтверждения недостаточно, вы можете вернуть его на доработку.</li>
+              <li>Если движение не подтверждается, вы можете отклонить результат.</li>
             </ul>
             <Button onClick={handleAccept} disabled={isAccepting}>
-              {isAccepting ? "Принимаем pact..." : "Принять pact"}
+              {isAccepting ? "Принимаем приглашение..." : "Принять приглашение"}
             </Button>
           </div>
         </SectionShell>
@@ -282,8 +284,8 @@ function InviteHeader({ status, label }: { status: string; label: string }) {
   return (
     <header className={styles.header}>
       <div>
-        <span className="eyebrow">Buddy invite</span>
-        <h1>Вход в accountability loop</h1>
+        <span className="eyebrow">Приглашение к цели</span>
+        <h1>Присоединиться к цели</h1>
       </div>
       <StatusPill status={status as Parameters<typeof StatusPill>[0]["status"]} label={label} />
     </header>
@@ -291,8 +293,11 @@ function InviteHeader({ status, label }: { status: string; label: string }) {
 }
 
 function InviteCard({ invite }: { invite: InvitePreview }) {
+  const sectionTitle =
+    invite.status === "pending" ? "Карточка приглашения" : "Приглашение принято";
+
   return (
-    <SectionShell eyebrow="Pact details" title={invite.goal_title}>
+    <SectionShell eyebrow="Детали цели" title={invite.goal_title}>
       <dl className={styles.inviteMeta}>
         <div>
           <dt>От кого</dt>
@@ -303,12 +308,12 @@ function InviteCard({ invite }: { invite: InvitePreview }) {
           <dd>{invite.invitee_email}</dd>
         </div>
         <div>
-          <dt>Invite истекает</dt>
-          <dd>{formatDate(invite.expires_at)}</dd>
+          <dt>{sectionTitle}</dt>
+          <dd>{invite.status === "pending" ? "Ожидает вашего решения" : "Участие подтверждено"}</dd>
         </div>
         <div>
-          <dt>Статус</dt>
-          <dd>{invite.status === "pending" ? "Ожидает принятия" : "Принят"}</dd>
+          <dt>Действует до</dt>
+          <dd>{formatDate(invite.expires_at)}</dd>
         </div>
       </dl>
     </SectionShell>
@@ -316,9 +321,5 @@ function InviteCard({ invite }: { invite: InvitePreview }) {
 }
 
 function formatDate(value: string) {
-  return new Intl.DateTimeFormat("ru-RU", {
-    day: "2-digit",
-    month: "long",
-    year: "numeric",
-  }).format(new Date(value));
+  return formatDateLabel(value, { year: "numeric" });
 }

@@ -5,8 +5,8 @@ export default function Loading() {
     <div className="page-shell" style={{ paddingTop: 24, paddingBottom: 64 }}>
       <StatePanel
         tone="loading"
-        title="Loading surfaces"
-        description="Frontend shell собирает status layers и proof surfaces before paint."
+        title="Подготавливаем интерфейс"
+        description="Собираем рабочие блоки и актуальное состояние по целям."
       />
     </div>
   );

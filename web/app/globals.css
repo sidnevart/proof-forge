@@ -1,3 +1,5 @@
+@import url("https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@500;600&family=Manrope:wght@400;500;600;700;800&display=swap&subset=cyrillic");
+
 :root {
   --bg: #0c1016;
   --bg-elevated: #131a22;
@@ -19,8 +21,8 @@
   --radius-md: 24px;
   --radius-lg: 36px;
   --max-width: 1240px;
-  --font-heading: "Space Grotesk", "IBM Plex Sans", "Avenir Next", sans-serif;
-  --font-body: "IBM Plex Sans", "Inter", "Avenir Next", sans-serif;
+  --font-heading: "Manrope", "IBM Plex Sans", "Avenir Next", sans-serif;
+  --font-body: "Manrope", "IBM Plex Sans", "Avenir Next", sans-serif;
   --font-mono: "IBM Plex Mono", "SFMono-Regular", ui-monospace, monospace;
 }
 
@@ -41,6 +43,7 @@ body {
     linear-gradient(180deg, #081018 0%, #0a1219 100%);
   color: var(--text);
   font-family: var(--font-body);
+  font-feature-settings: "ss01" 1, "cv02" 1, "cv03" 1;
 }
 
 a {
@@ -72,9 +75,9 @@ textarea {
   border: 1px solid var(--border);
   background: rgba(255, 255, 255, 0.04);
   color: var(--text-muted);
-  letter-spacing: 0.08em;
-  text-transform: uppercase;
+  letter-spacing: 0.06em;
   font-size: 12px;
+  font-weight: 700;
 }
 
 .grid-lines {

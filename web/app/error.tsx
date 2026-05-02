@@ -13,9 +13,9 @@ export default function Error({
     <div className="page-shell" style={{ paddingTop: 24, paddingBottom: 64 }}>
       <StatePanel
         tone="error"
-        title="Shell error"
-        description="Something broke in the frontend shell. Reset and inspect the current surface state."
-        meta={<Button onClick={reset}>Retry shell</Button>}
+        title="Ошибка интерфейса"
+        description="Не удалось собрать текущий экран. Перезапустите интерфейс и повторите действие."
+        meta={<Button onClick={reset}>Перезапустить экран</Button>}
       />
     </div>
   );

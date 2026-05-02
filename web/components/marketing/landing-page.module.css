@@ -1,12 +1,12 @@
 .page {
   display: grid;
   gap: 28px;
-  padding: 24px 0 64px;
+  padding: 28px 0 72px;
 }
 
 .hero {
   display: grid;
-  grid-template-columns: 1.1fr 0.9fr;
+  grid-template-columns: 1.04fr 0.96fr;
   gap: 24px;
   align-items: stretch;
 }
@@ -15,32 +15,34 @@
 .heroPanel {
   border: 1px solid var(--border);
   border-radius: var(--radius-lg);
-  background: rgba(14, 19, 27, 0.82);
+  background:
+    linear-gradient(180deg, rgba(255, 255, 255, 0.05), rgba(255, 255, 255, 0.02)),
+    rgba(14, 19, 27, 0.84);
   box-shadow: var(--shadow);
-  padding: 32px;
+  padding: 34px;
 }
 
 .heroCopy h1 {
-  margin: 18px 0 16px;
+  margin: 18px 0 18px;
+  max-width: 11ch;
   font-family: var(--font-heading);
-  font-size: clamp(42px, 7vw, 84px);
-  line-height: 0.95;
-  max-width: 10ch;
+  font-size: clamp(44px, 7vw, 82px);
+  line-height: 0.92;
 }
 
 .heroCopy p {
   margin: 0;
-  max-width: 60ch;
+  max-width: 58ch;
   color: var(--text-muted);
   font-size: 18px;
-  line-height: 1.6;
+  line-height: 1.65;
 }
 
 .actions {
   display: flex;
   flex-wrap: wrap;
   gap: 14px;
-  margin-top: 28px;
+  margin-top: 30px;
 }
 
 .commandBar {
@@ -52,61 +54,75 @@
   color: var(--text-muted);
 }
 
-.signalGrid {
+.signalGrid,
+.roleGrid,
+.sections {
   display: grid;
-  gap: 14px;
+  gap: 16px;
 }
 
-.signalCard {
+.signalCard,
+.roleCard,
+.scenarioCard {
   display: grid;
   gap: 10px;
   padding: 18px;
   border-radius: var(--radius-sm);
-  background: linear-gradient(180deg, rgba(77, 178, 255, 0.12), rgba(255, 255, 255, 0.03));
-  border: 1px solid rgba(77, 178, 255, 0.18);
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid var(--border);
+}
+
+.signalCard {
+  background: linear-gradient(180deg, rgba(77, 178, 255, 0.14), rgba(255, 255, 255, 0.03));
+  border-color: rgba(77, 178, 255, 0.2);
 }
 
 .signalLabel {
   color: var(--text-dim);
   font-size: 12px;
-  text-transform: uppercase;
+  font-weight: 700;
   letter-spacing: 0.08em;
+  text-transform: uppercase;
 }
 
-.signalCard strong {
+.signalCard strong,
+.scenarioCard strong {
   font-size: 18px;
-  line-height: 1.4;
+  line-height: 1.45;
 }
 
-.sections {
-  display: grid;
-  gap: 22px;
-}
-
+.roleGrid,
+.scenarioGrid,
 .copyGrid {
   display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: 18px;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 16px;
 }
 
+.roleCard p,
+.scenarioCard p,
 .copyGrid p,
 .loop li {
+  margin: 0;
   color: var(--text-muted);
   line-height: 1.6;
 }
 
 .loop {
   display: grid;
-  gap: 12px;
+  gap: 14px;
   margin: 0;
   padding-left: 18px;
 }
 
-@media (max-width: 960px) {
-  .hero {
-    grid-template-columns: 1fr;
-  }
+.copyGrid {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
 
+@media (max-width: 960px) {
+  .hero,
+  .roleGrid,
+  .scenarioGrid,
   .copyGrid {
     grid-template-columns: 1fr;
   }
@@ -115,10 +131,14 @@
 @media (max-width: 720px) {
   .heroCopy,
   .heroPanel {
-    padding: 22px;
+    padding: 24px;
   }
 
   .heroCopy h1 {
-    max-width: 12ch;
+    max-width: 100%;
+  }
+
+  .actions {
+    flex-direction: column;
   }
 }

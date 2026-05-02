@@ -1,12 +1,15 @@
 "use client";
 
+import Link from "next/link";
 import { type FormEvent, useEffect, useState, useTransition } from "react";
 
 import { Button } from "@/components/core/button";
 import { SectionShell } from "@/components/core/section-shell";
 import { StatePanel } from "@/components/core/state-panel";
 import { StatusPill } from "@/components/core/status-pill";
-import { ApiError, createGoal, getDashboard, loginUser, registerUser } from "@/lib/api";
+import { proofEvents, weeklyPosterStats } from "@/lib/demo-data";
+import { ApiError, getDashboard, loginUser, registerUser } from "@/lib/api";
+import { formatDateLabel } from "@/lib/ui-copy";
 import type { DashboardResponse, GoalView } from "@/lib/types";
 
 import styles from "./dashboard-screen.module.css";
@@ -21,10 +24,8 @@ export function DashboardScreen() {
   const [screenState, setScreenState] = useState<ScreenState>({ kind: "loading" });
   const [registerError, setRegisterError] = useState<string | null>(null);
   const [loginError, setLoginError] = useState<string | null>(null);
-  const [goalError, setGoalError] = useState<string | null>(null);
   const [isRegistering, startRegisterTransition] = useTransition();
   const [isLoggingIn, startLoginTransition] = useTransition();
-  const [isCreatingGoal, startCreateGoalTransition] = useTransition();
 
   useEffect(() => {
     void loadDashboard();
@@ -42,7 +43,7 @@ export function DashboardScreen() {
 
       setScreenState({
         kind: "error",
-        message: error instanceof Error ? error.message : "Не удалось загрузить dashboard.",
+        message: error instanceof Error ? error.message : "Не удалось загрузить экран целей.",
       });
     }
   }
@@ -78,32 +79,10 @@ export function DashboardScreen() {
         await loadDashboard();
       } catch (error) {
         if (error instanceof ApiError && error.status === 404) {
-          setLoginError("Аккаунт с таким email не найден. Зарегистрируйтесь.");
+          setLoginError("Аккаунт с таким адресом не найден. Создайте его ниже.");
         } else {
           setLoginError(error instanceof Error ? error.message : "Не удалось войти.");
         }
-      }
-    });
-  }
-
-  function handleGoalSubmit(event: FormEvent<HTMLFormElement>) {
-    event.preventDefault();
-    setGoalError(null);
-
-    const form = event.currentTarget;
-    const formData = new FormData(form);
-    startCreateGoalTransition(async () => {
-      try {
-        await createGoal({
-          title: String(formData.get("title") ?? ""),
-          description: String(formData.get("description") ?? ""),
-          buddy_name: String(formData.get("buddy_name") ?? ""),
-          buddy_email: String(formData.get("buddy_email") ?? ""),
-        });
-        form.reset();
-        await loadDashboard();
-      } catch (error) {
-        setGoalError(error instanceof Error ? error.message : "Не удалось создать goal.");
       }
     });
   }
@@ -113,15 +92,15 @@ export function DashboardScreen() {
       <main className={styles.page}>
         <header className={styles.header}>
           <div>
-            <span className="eyebrow">Dashboard bootstrap</span>
-            <h1>Checkpoint control room</h1>
+            <span className="eyebrow">Операционный центр</span>
+            <h1>Собираем состояние вашей цели</h1>
           </div>
-          <StatusPill status="pending" label="Loading surface" />
+          <StatusPill status="pending" label="Загружаем данные" />
         </header>
         <StatePanel
           tone="loading"
-          title="Поднимаем внешний контур"
-          description="Система проверяет сессию и загружает реальный goals dashboard."
+          title="Поднимаем контекст"
+          description="Проверяем сессию и собираем текущее состояние по целям."
         />
       </main>
     );
@@ -132,14 +111,14 @@ export function DashboardScreen() {
       <main className={styles.page}>
         <header className={styles.header}>
           <div>
-            <span className="eyebrow">Dashboard fault</span>
-            <h1>Checkpoint control room</h1>
+            <span className="eyebrow">Операционный центр</span>
+            <h1>Экран целей временно недоступен</h1>
           </div>
-          <StatusPill status="rejected" label="Surface degraded" />
+          <StatusPill status="rejected" label="Нужна повторная попытка" />
         </header>
         <StatePanel
           tone="error"
-          title="Dashboard недоступен"
+          title="Не удалось собрать состояние"
           description={screenState.message}
           meta={
             <Button variant="secondary" onClick={() => void loadDashboard()}>
@@ -156,17 +135,17 @@ export function DashboardScreen() {
       <main className={styles.page}>
         <header className={styles.header}>
           <div>
-            <span className="eyebrow">Onboarding gate</span>
-            <h1>Войдите в accountability loop</h1>
+            <span className="eyebrow">Вход в систему</span>
+            <h1>Войдите, чтобы держать цель под контролем</h1>
           </div>
-          <StatusPill status="pending" label="Session required" />
+          <StatusPill status="pending" label="Нужна сессия" />
         </header>
 
         <section className={styles.authGrid}>
-          <SectionShell eyebrow="Войти" title="Уже есть аккаунт">
+          <SectionShell eyebrow="Вход" title="Уже есть аккаунт">
             <form className={styles.form} onSubmit={handleLoginSubmit}>
               <label className={styles.field}>
-                <span>Email</span>
+                <span>Электронная почта</span>
                 <input name="email" type="email" placeholder="your@email.com" required />
               </label>
               {loginError ? (
@@ -180,14 +159,14 @@ export function DashboardScreen() {
             </form>
           </SectionShell>
 
-          <SectionShell eyebrow="Registration" title="Создайте рабочий контур">
+          <SectionShell eyebrow="Регистрация" title="Создать рабочий контур">
             <form className={styles.form} onSubmit={handleRegisterSubmit}>
               <label className={styles.field}>
                 <span>Ваше имя</span>
                 <input name="display_name" placeholder="Например, Артём" required />
               </label>
               <label className={styles.field}>
-                <span>Email</span>
+                <span>Электронная почта</span>
                 <input name="email" type="email" placeholder="you@example.com" required />
               </label>
               {registerError ? (
@@ -196,21 +175,22 @@ export function DashboardScreen() {
                 </p>
               ) : null}
               <Button type="submit" disabled={isRegistering}>
-                {isRegistering ? "Регистрируем..." : "Создать аккаунт"}
+                {isRegistering ? "Создаём аккаунт..." : "Создать аккаунт"}
               </Button>
             </form>
           </SectionShell>
 
-          <SectionShell eyebrow="Why this exists" title="Не трекер привычек">
+          <SectionShell eyebrow="Что происходит дальше" title="Как устроен рабочий цикл">
             <div className={styles.copyBlock}>
               <p>
-                ProofForge нужен не для мягкого self-tracking, а для фиксации серьёзной
-                цели с обязательным buddy и наблюдаемым статусом движения.
+                После входа вы создаёте цель, приглашаете партнёра и ведёте её через
+                подтверждения прогресса. Главный экран всегда показывает одно следующее
+                действие, а не сваливает всё в одну панель.
               </p>
               <ul className={styles.ruleList}>
-                <li>Цель создаётся вместе с accountability partner.</li>
-                <li>Buddy approval остаётся будущим источником правды.</li>
-                <li>Dashboard должен показывать систему, а не motivational feed.</li>
+                <li>Цель создаётся отдельно от обзорного экрана.</li>
+                <li>Партнёр принимает приглашение и проверяет подтверждения.</li>
+                <li>Еженедельная сводка собирает ритм движения по цели.</li>
               </ul>
             </div>
           </SectionShell>
@@ -220,157 +200,207 @@ export function DashboardScreen() {
   }
 
   const { dashboard } = screenState;
-  const pendingCount = dashboard.summary.pending_buddy_acceptance;
+  const goals = dashboard.goals ?? [];
+  const primaryGoal = pickPrimaryGoal(goals);
+  const otherGoals = primaryGoal
+    ? goals.filter((goal) => goal.goal.id !== primaryGoal.goal.id)
+    : [];
 
   return (
     <main className={styles.page}>
       <header className={styles.header}>
         <div>
-          <span className="eyebrow">Goals dashboard</span>
-          <h1>{dashboard.user.display_name}, держите контур под наблюдением</h1>
+          <span className="eyebrow">Операционный центр</span>
+          <h1>{dashboard.user.display_name}, держите цель под контролем</h1>
         </div>
         <StatusPill
-          status={pendingCount > 0 ? "pending" : "active"}
-          label={pendingCount > 0 ? "Buddy confirmation pending" : "Loop online"}
+          status={primaryGoal?.goal.status === "pending_buddy_acceptance" ? "pending" : "active"}
+          label={
+            primaryGoal?.goal.status === "pending_buddy_acceptance"
+              ? "Ждём ответа партнёра"
+              : "Цель в работе"
+          }
         />
       </header>
 
-      <section className={styles.topGrid}>
-        <SectionShell eyebrow="Progress Health" title="Сигнал движения">
-          <div className={styles.progressPanel}>
-            <div className={styles.healthValue}>{formatHealthScore(dashboard.summary)}</div>
-            <p>
-              {dashboard.summary.total_goals === 0
-                ? "Контур ещё не запущен. Первый шаг — создать goal и сразу назначить buddy."
-                : pendingCount > 0
-                  ? `Сейчас ${pendingCount} goal ждёт принятия buddy. Подтверждённый progress начнётся после acceptance.`
-                  : "Все текущие goals в активном контуре. Дальше продукт должен перевести это в proof и approval loop."}
-            </p>
-          </div>
-        </SectionShell>
+      {primaryGoal ? (
+        <>
+          <section className={styles.heroGrid}>
+            <SectionShell eyebrow="Следующий шаг" title={getNextStep(primaryGoal).title}>
+              <div className={styles.nextStepBlock}>
+                <strong className={styles.focusGoal}>{primaryGoal.goal.title}</strong>
+                <p>{getNextStep(primaryGoal).description}</p>
+                <div className={styles.actionRow}>
+                  <Link className={styles.primaryLink} href={getNextStep(primaryGoal).href}>
+                    {getNextStep(primaryGoal).action}
+                  </Link>
+                  <Link className={styles.secondaryLink} href="/goals/new">
+                    Добавить ещё одну цель
+                  </Link>
+                </div>
+              </div>
+            </SectionShell>
 
-        <SectionShell eyebrow="Buddy Status" title="Статус peer contour">
-          <div className={styles.buddyGrid}>
-            <StatePanel
-              tone={pendingCount > 0 ? "pending" : "success"}
-              title={pendingCount > 0 ? "Buddy acceptance pending" : "Buddy loop armed"}
-              description={
-                pendingCount > 0
-                  ? "Инвайт уже создан, но goal ещё не перешёл в активный pact."
-                  : "Все текущие buddies приняты и контур готов к check-in flow."
-              }
-            />
-          </div>
-        </SectionShell>
+            <SectionShell eyebrow="Состояние контура" title="Что происходит сейчас">
+              <dl className={styles.snapshotList}>
+                <div>
+                  <dt>Главная цель</dt>
+                  <dd>{primaryGoal.goal.title}</dd>
+                </div>
+                <div>
+                  <dt>Партнёр</dt>
+                  <dd>{primaryGoal.buddy.display_name}</dd>
+                </div>
+                <div>
+                  <dt>Статус цели</dt>
+                  <dd>{primaryGoal.goal.status === "active" ? "Активна" : "Ждёт принятия"}</dd>
+                </div>
+                <div>
+                  <dt>Следующая точка</dt>
+                  <dd>{getNextStep(primaryGoal).shortLabel}</dd>
+                </div>
+              </dl>
+            </SectionShell>
+          </section>
 
-        <SectionShell eyebrow="Goal Creation" title="Запустить новый pact">
-          <form className={styles.form} onSubmit={handleGoalSubmit}>
-            <label className={styles.field}>
-              <span>Goal title</span>
-              <input name="title" placeholder="Ship first customer-ready slice" required />
-            </label>
-            <label className={styles.field}>
-              <span>Описание</span>
-              <textarea
-                name="description"
-                placeholder="Что именно должно быть доведено до результата"
-                rows={4}
+          <section className={styles.surfaceGrid}>
+            <SectionShell eyebrow="Главная цель" title="Карточка цели">
+              <GoalCard goal={primaryGoal} />
+            </SectionShell>
+
+            <SectionShell eyebrow="Состояние прогресса" title="Движение по цели">
+              <div className={styles.progressPanel}>
+                <div className={styles.healthValue}>{formatHealthScore(dashboard.summary)}</div>
+                <p>{getProgressText(primaryGoal, dashboard.summary)}</p>
+              </div>
+            </SectionShell>
+
+            <SectionShell eyebrow="Статус партнёра" title="Кто подтверждает движение">
+              <StatePanel
+                tone={primaryGoal.goal.status === "pending_buddy_acceptance" ? "pending" : "success"}
+                title={
+                  primaryGoal.goal.status === "pending_buddy_acceptance"
+                    ? "Партнёр ещё не принял приглашение"
+                    : "Партнёр готов к проверке"
+                }
+                description={
+                  primaryGoal.goal.status === "pending_buddy_acceptance"
+                    ? `Приглашение активно до ${formatShortDate(primaryGoal.invite.expires_at)}. Пока партнёр не подтвердит участие, прогресс по цели не может перейти в рабочий цикл.`
+                    : "Подтверждения можно отправлять на проверку. Решение по прогрессу принимает партнёр."
+                }
               />
-            </label>
-            <div className={styles.inlineFields}>
-              <label className={styles.field}>
-                <span>Buddy name</span>
-                <input name="buddy_name" placeholder="Serious peer" required />
-              </label>
-              <label className={styles.field}>
-                <span>Buddy email</span>
-                <input name="buddy_email" type="email" placeholder="peer@example.com" required />
-              </label>
-            </div>
-            {goalError ? (
-              <p className={styles.formError} role="alert">
-                {goalError}
-              </p>
+            </SectionShell>
+
+            <SectionShell eyebrow="История подтверждений" title="Последние сигналы">
+              <ol className={styles.eventList}>
+                {proofEvents.map((event) => (
+                  <li className={styles.eventItem} key={`${event.title}-${event.time}`}>
+                    <div className={styles.eventHeader}>
+                      <strong>{event.title}</strong>
+                      <StatusPill status={event.status} />
+                    </div>
+                    <p>{event.detail}</p>
+                    <span>{event.time}</span>
+                  </li>
+                ))}
+              </ol>
+            </SectionShell>
+
+            <SectionShell eyebrow="Еженедельная сводка" title="Недельная сводка">
+              <div className={styles.poster}>
+                <div className={styles.posterStats}>
+                  {weeklyPosterStats.map((item) => (
+                    <div key={item.label}>
+                      <span>{item.label}</span>
+                      <strong>{item.value}</strong>
+                    </div>
+                  ))}
+                </div>
+                <p>
+                  {primaryGoal.goal.status === "pending_buddy_acceptance"
+                    ? "Пока неделе не хватает принятого приглашения: как только партнёр войдёт в цикл, сводка начнёт отражать подтверждённое движение."
+                    : "Неделя читается через подтверждения и решения по ним. Здесь собирается не мотивация, а фактический ритм выполнения цели."}
+                </p>
+              </div>
+            </SectionShell>
+
+            {otherGoals.length > 0 ? (
+              <SectionShell eyebrow="Остальные цели" title="Что ещё идёт параллельно">
+                <div className={styles.otherGoals}>
+                  {otherGoals.map((goal) => (
+                    <article className={styles.goalListCard} key={goal.goal.id}>
+                      <strong>{goal.goal.title}</strong>
+                      <p>{goal.goal.description || "Описание пока не заполнено."}</p>
+                      <StatusPill
+                        status={goal.goal.status === "active" ? "active" : "pending"}
+                        label={goal.goal.status === "active" ? "Активна" : "Ждёт принятия"}
+                      />
+                    </article>
+                  ))}
+                </div>
+              </SectionShell>
             ) : null}
-            <Button type="submit" disabled={isCreatingGoal}>
-              {isCreatingGoal ? "Фиксируем pact..." : "Создать goal"}
-            </Button>
-          </form>
-        </SectionShell>
-      </section>
-
-      <section className={styles.middleGrid}>
-        <SectionShell eyebrow="Pact Cards" title="Текущие accountability goals">
-          {(dashboard.goals ?? []).length === 0 ? (
-            <StatePanel
-              tone="empty"
-              title="Пока нет ни одного goal"
-              description="Система уже готова к работе, но первый pact ещё не зафиксирован."
-            />
-          ) : (
-            <div className={styles.goalList}>
-              {(dashboard.goals ?? []).map((item) => (
-                <GoalCard key={item.goal.id} goal={item} />
-              ))}
-            </div>
-          )}
-        </SectionShell>
-
-        <SectionShell eyebrow="Proof Wall" title="Архив proof появится здесь">
-          <StatePanel
-            tone="empty"
-            title="Proof wall пока пуст"
-            description="Этот slice довёл систему только до регистрации и goal setup. Следующий слой добавит check-ins и реальные proof artifacts."
-          />
-        </SectionShell>
-
-        <SectionShell eyebrow="Weekly Poster" title="Недельная сводка">
-          <div className={styles.poster}>
-            <div className={styles.posterStats}>
-              <div>
-                <span>Всего goals</span>
-                <strong>{padStat(dashboard.summary.total_goals)}</strong>
+          </section>
+        </>
+      ) : (
+        <>
+          <section className={styles.heroGrid}>
+            <SectionShell eyebrow="Следующий шаг" title="Создайте первую цель">
+              <div className={styles.nextStepBlock}>
+                <strong className={styles.focusGoal}>Рабочий контур ещё не запущен</strong>
+                <p>
+                  Пока у вас нет ни одной цели, поэтому главный экран не может вести вас
+                  по циклу. Начните с формулировки цели и приглашения партнёра.
+                </p>
+                <div className={styles.actionRow}>
+                  <Link className={styles.primaryLink} href="/goals/new">
+                    Создать первую цель
+                  </Link>
+                </div>
               </div>
-              <div>
-                <span>Ждут buddy</span>
-                <strong>{padStat(dashboard.summary.pending_buddy_acceptance)}</strong>
-              </div>
-              <div>
-                <span>Активны</span>
-                <strong>{padStat(dashboard.summary.active_goals)}</strong>
-              </div>
-            </div>
-            <p>
-              {dashboard.summary.total_goals === 0
-                ? "Пока weekly poster фиксирует только готовность системы. Следующее наблюдаемое событие — создание первого goal."
-                : `Система уже видит ${dashboard.summary.total_goals} зафиксированный goal. Ближайшее узкое место сейчас — перевести pending invites в принятый buddy loop.`}
-            </p>
-          </div>
-        </SectionShell>
-      </section>
+            </SectionShell>
 
-      <section className={styles.statesGrid}>
-        <StatePanel
-          tone="loading"
-          title="Loading state"
-          description="Состояние загрузки остаётся обязательным даже для operational dashboard."
-        />
-        <StatePanel
-          tone="error"
-          title="Error state"
-          description="Если API недоступен, пользователь должен видеть fault, а не фальшивую успешность."
-        />
-        <StatePanel
-          tone="empty"
-          title="Empty state"
-          description="Пустой экран здесь недопустим: система должна объяснять, какого артефакта или шага не хватает."
-        />
-        <StatePanel
-          tone="success"
-          title="Success state"
-          description="Даже успех читается как подтверждённый операционный статус, а не как motivational celebration."
-        />
-      </section>
+            <SectionShell eyebrow="Что появится дальше" title="Будущие поверхности">
+              <div className={styles.snapshotList}>
+                <div>
+                  <dt>Главная цель</dt>
+                  <dd>Станет центром экрана</dd>
+                </div>
+                <div>
+                  <dt>Партнёр</dt>
+                  <dd>Получит приглашение к участию</dd>
+                </div>
+                <div>
+                  <dt>Подтверждения</dt>
+                  <dd>Появятся в истории сигналов</dd>
+                </div>
+                <div>
+                  <dt>Сводка</dt>
+                  <dd>Соберёт картину недели</dd>
+                </div>
+              </div>
+            </SectionShell>
+          </section>
+
+          <section className={styles.surfaceGrid}>
+            <SectionShell eyebrow="Главная цель" title="Цель появится здесь">
+              <StatePanel
+                tone="empty"
+                title="Пока ничего не зафиксировано"
+                description="После создания цели здесь появится карточка с описанием, статусом и данными партнёра."
+              />
+            </SectionShell>
+
+            <SectionShell eyebrow="История подтверждений" title="Журнал пока пуст">
+              <StatePanel
+                tone="empty"
+                title="Нет подтверждений"
+                description="Как только по цели появятся первые материалы, они будут складываться в этот журнал."
+              />
+            </SectionShell>
+          </section>
+        </>
+      )}
     </main>
   );
 }
@@ -381,38 +411,70 @@ function GoalCard({ goal }: { goal: GoalView }) {
       <div className={styles.goalCardHeader}>
         <div>
           <strong>{goal.goal.title}</strong>
-          <p>{goal.goal.description || "Описание ещё не расширено, но pact уже зафиксирован."}</p>
+          <p>{goal.goal.description || "Описание пока не заполнено."}</p>
         </div>
         <StatusPill
           status={goal.goal.status === "active" ? "active" : "pending"}
-          label={goal.goal.status === "active" ? "Goal active" : "Waiting for buddy"}
+          label={goal.goal.status === "active" ? "Активна" : "Ждёт принятия"}
         />
       </div>
 
       <div className={styles.goalMeta}>
         <div>
-          <span>Buddy</span>
+          <span>Партнёр</span>
           <strong>{goal.buddy.display_name}</strong>
         </div>
         <div>
-          <span>Email</span>
+          <span>Почта</span>
           <strong>{goal.buddy.email}</strong>
         </div>
         <div>
-          <span>Pact</span>
-          <strong>{goal.pact.status}</strong>
+          <span>Приглашение действует до</span>
+          <strong>{formatShortDate(goal.invite.expires_at)}</strong>
         </div>
         <div>
-          <span>Invite expires</span>
-          <strong>{formatDate(goal.invite.expires_at)}</strong>
+          <span>Последнее изменение</span>
+          <strong>{formatShortDate(goal.goal.updated_at)}</strong>
         </div>
       </div>
     </article>
   );
 }
 
-function padStat(value: number) {
-  return value.toString().padStart(2, "0");
+function pickPrimaryGoal(goals: GoalView[]) {
+  return goals.find((goal) => goal.goal.status === "pending_buddy_acceptance") ?? goals[0];
+}
+
+function getNextStep(goal: GoalView) {
+  if (goal.goal.status === "pending_buddy_acceptance") {
+    return {
+      title: "Дождитесь ответа партнёра",
+      description:
+        "Приглашение уже отправлено. Как только партнёр примет участие, цель перейдёт в рабочий цикл, и вы сможете отправлять подтверждения прогресса.",
+      action: "Создать ещё одну цель",
+      href: "/goals/new",
+      shortLabel: "Ждём принятия приглашения",
+    };
+  }
+
+  return {
+    title: "Подготовьте новое подтверждение",
+    description:
+      "Следующая задача — собрать материалы по цели и отправить их партнёру на проверку.",
+    action: "Перейти к подтверждению",
+    href: `/goals/${goal.goal.id}/check-in`,
+    shortLabel: "Собрать подтверждение",
+  };
+}
+
+function getProgressText(goal: GoalView, summary: DashboardResponse["summary"]) {
+  if (goal.goal.status === "pending_buddy_acceptance") {
+    return `Сейчас в системе ${summary.pending_buddy_acceptance} ${
+      summary.pending_buddy_acceptance === 1 ? "цель ждёт" : "цели ждут"
+    } ответа партнёра. Подтверждённый прогресс начнётся после принятия приглашения.`;
+  }
+
+  return "Цель находится в рабочем цикле. Следующий шаг — собрать подтверждение и отправить его партнёру на проверку.";
 }
 
 function formatHealthScore(summary: DashboardResponse["summary"]) {
@@ -425,9 +487,6 @@ function formatHealthScore(summary: DashboardResponse["summary"]) {
   return `${Math.round((activeWeight + pendingWeight) / summary.total_goals)}%`;
 }
 
-function formatDate(value: string) {
-  return new Intl.DateTimeFormat("ru-RU", {
-    day: "2-digit",
-    month: "short",
-  }).format(new Date(value));
+function formatShortDate(value: string) {
+  return formatDateLabel(value, { month: "short" });
 }

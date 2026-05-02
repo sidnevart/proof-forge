@@ -1,4 +1,4 @@
-import { cleanup, fireEvent, render, screen, waitFor } from "@testing-library/react";
+import { cleanup, fireEvent, render, screen } from "@testing-library/react";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 import { DashboardScreen } from "./dashboard-screen";
@@ -29,7 +29,7 @@ describe("DashboardScreen", () => {
     render(<DashboardScreen />);
 
     expect(await screen.findByRole("button", { name: "Создать аккаунт" })).toBeInTheDocument();
-    expect(screen.getByText("Войдите в accountability loop")).toBeInTheDocument();
+    expect(screen.getByText("Войдите, чтобы держать цель под контролем")).toBeInTheDocument();
   });
 
   it("renders real dashboard surfaces for authenticated user", async () => {
@@ -83,12 +83,17 @@ describe("DashboardScreen", () => {
 
     render(<DashboardScreen />);
 
-    expect(await screen.findByText("Ship MVP vertical slice")).toBeInTheDocument();
-    expect(screen.getByText("Архив proof появится здесь")).toBeInTheDocument();
+    expect((await screen.findAllByText("Ship MVP vertical slice")).length).toBeGreaterThan(0);
+    expect(screen.getByText("Следующий шаг")).toBeInTheDocument();
+    expect(screen.getAllByText("Главная цель").length).toBeGreaterThan(0);
+    expect(screen.getByText("История подтверждений")).toBeInTheDocument();
     expect(screen.getByText("Недельная сводка")).toBeInTheDocument();
+    expect(
+      screen.queryByRole("button", { name: "Создать goal" }),
+    ).not.toBeInTheDocument();
   });
 
-  it("completes registration and goal creation flow", async () => {
+  it("completes registration and opens the dedicated goal creation flow", async () => {
     fetchMock
       .mockResolvedValueOnce(
         new Response(
@@ -225,24 +230,8 @@ describe("DashboardScreen", () => {
     });
     fireEvent.submit(screen.getByRole("button", { name: "Создать аккаунт" }).closest("form")!);
 
-    expect(await screen.findByRole("button", { name: "Создать goal" })).toBeInTheDocument();
-
-    fireEvent.change(screen.getByPlaceholderText("Ship first customer-ready slice"), {
-      target: { value: "Ship MVP vertical slice" },
-    });
-    fireEvent.change(screen.getByPlaceholderText("Что именно должно быть доведено до результата"), {
-      target: { value: "Registration + goals dashboard" },
-    });
-    fireEvent.change(screen.getByPlaceholderText("Serious peer"), {
-      target: { value: "Peer" },
-    });
-    fireEvent.change(screen.getByPlaceholderText("peer@example.com"), {
-      target: { value: "peer@example.com" },
-    });
-    fireEvent.submit(screen.getByRole("button", { name: "Создать goal" }).closest("form")!);
-
-    await waitFor(() => {
-      expect(screen.getByText("Ship MVP vertical slice")).toBeInTheDocument();
-    });
+    expect(
+      await screen.findByRole("link", { name: "Создать первую цель" }),
+    ).toHaveAttribute("href", "/goals/new");
   });
 });

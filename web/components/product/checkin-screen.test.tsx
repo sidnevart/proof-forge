@@ -45,7 +45,7 @@ describe("CheckInScreen", () => {
 
     render(<CheckInScreen goalID={10} />);
 
-    expect(await screen.findByRole("button", { name: "Начать check-in" })).toBeInTheDocument();
+    expect(await screen.findByRole("button", { name: "Подготовить подтверждение" })).toBeInTheDocument();
   });
 
   it("creates draft check-in on Start click", async () => {
@@ -55,11 +55,11 @@ describe("CheckInScreen", () => {
 
     render(<CheckInScreen goalID={10} />);
 
-    const startBtn = await screen.findByRole("button", { name: "Начать check-in" });
+    const startBtn = await screen.findByRole("button", { name: "Подготовить подтверждение" });
     fireEvent.click(startBtn);
 
     await waitFor(() => {
-      expect(screen.getByRole("button", { name: "Отправить check-in" })).toBeInTheDocument();
+      expect(screen.getByRole("button", { name: "Отправить на проверку" })).toBeInTheDocument();
     });
   });
 
@@ -68,7 +68,7 @@ describe("CheckInScreen", () => {
 
     render(<CheckInScreen goalID={10} />);
 
-    expect(await screen.findByRole("button", { name: "Отправить check-in" })).toBeInTheDocument();
+    expect(await screen.findByRole("button", { name: "Отправить на проверку" })).toBeInTheDocument();
     expect(fetchMock).toHaveBeenCalledTimes(1);
   });
 
@@ -99,7 +99,7 @@ describe("CheckInScreen", () => {
       );
 
     render(<CheckInScreen goalID={10} />);
-    await screen.findByRole("button", { name: "Отправить check-in" });
+    await screen.findByRole("button", { name: "Отправить на проверку" });
 
     const textarea = screen.getByPlaceholderText("Опишите конкретный результат или сделанный шаг");
     fireEvent.change(textarea, { target: { value: "Shipped the feature" } });
@@ -129,7 +129,7 @@ describe("CheckInScreen", () => {
       );
 
     render(<CheckInScreen goalID={10} />);
-    await screen.findByRole("button", { name: "Отправить check-in" });
+    await screen.findByRole("button", { name: "Отправить на проверку" });
 
     const input = screen.getByPlaceholderText("https://github.com/...");
     fireEvent.change(input, { target: { value: "https://github.com/pr/123" } });
@@ -145,7 +145,7 @@ describe("CheckInScreen", () => {
 
     render(<CheckInScreen goalID={10} />);
 
-    const submitBtn = await screen.findByRole("button", { name: "Отправить check-in" });
+    const submitBtn = await screen.findByRole("button", { name: "Отправить на проверку" });
     expect(submitBtn).toBeDisabled();
   });
 
@@ -168,17 +168,17 @@ describe("CheckInScreen", () => {
       .mockResolvedValueOnce(json({ submitted: true }));
 
     render(<CheckInScreen goalID={10} />);
-    await screen.findByRole("button", { name: "Отправить check-in" });
+    await screen.findByRole("button", { name: "Отправить на проверку" });
 
     const textarea = screen.getByPlaceholderText("Опишите конкретный результат или сделанный шаг");
     fireEvent.change(textarea, { target: { value: "Done" } });
     fireEvent.submit(screen.getByRole("button", { name: "Добавить текст" }).closest("form")!);
 
-    const submitBtn = await screen.findByRole("button", { name: "Отправить check-in" });
+    const submitBtn = await screen.findByRole("button", { name: "Отправить на проверку" });
     fireEvent.click(submitBtn);
 
     await waitFor(() => {
-      expect(screen.getByText("Check-in отправлен на buddy review")).toBeInTheDocument();
+      expect(screen.getByText("Подтверждение отправлено на проверку")).toBeInTheDocument();
     });
   });
 
@@ -189,6 +189,6 @@ describe("CheckInScreen", () => {
 
     render(<CheckInScreen goalID={10} />);
 
-    expect(await screen.findByText("Buddy запросил доработку")).toBeInTheDocument();
+    expect(await screen.findByText("Нужно дополнить подтверждение")).toBeInTheDocument();
   });
 });

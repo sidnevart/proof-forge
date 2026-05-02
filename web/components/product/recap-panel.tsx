@@ -29,7 +29,7 @@ export function RecapPanel({ goalID }: { goalID: number }) {
       }
       setState({
         kind: "error",
-        message: error instanceof Error ? error.message : "Не удалось загрузить recaps.",
+        message: error instanceof Error ? error.message : "Не удалось загрузить недельные сводки.",
       });
     }
   }, [goalID]);
@@ -39,7 +39,13 @@ export function RecapPanel({ goalID }: { goalID: number }) {
   }, [load]);
 
   if (state.kind === "loading") {
-    return <StatePanel tone="loading" title="Загружаем recaps" description="Получаем недельные сводки." />;
+    return (
+      <StatePanel
+        tone="loading"
+        title="Загружаем недельные сводки"
+        description="Получаем последние итоги по цели."
+      />
+    );
   }
 
   if (state.kind === "error") {
@@ -52,14 +58,14 @@ export function RecapPanel({ goalID }: { goalID: number }) {
     return (
       <StatePanel
         tone="empty"
-        title="Пока нет recaps"
-        description="Недельные сводки появятся после того, как buddy одобрит первый check-in."
+        title="Пока нет недельных сводок"
+        description="Недельные сводки появятся после того, как партнёр подтвердит первое отправленное подтверждение."
       />
     );
   }
 
   return (
-    <SectionShell eyebrow="AI recap" title={`Недельные сводки (${recaps.length})`}>
+    <SectionShell eyebrow="Итоги недели" title={`Недельные сводки (${recaps.length})`}>
       <ol className={styles.list}>
         {recaps.map((recap) => (
           <RecapCard key={recap.id} recap={recap} />
@@ -72,12 +78,20 @@ export function RecapPanel({ goalID }: { goalID: number }) {
 function RecapCard({ recap }: { recap: WeeklyRecap }) {
   const period = `${formatDate(recap.period_start)} – ${formatDate(recap.period_end)}`;
   const statusTone = recap.status === "done" ? "approved" : recap.status === "failed" ? "rejected" : "pending";
+  const statusLabel =
+    recap.status === "done"
+      ? "Готово"
+      : recap.status === "failed"
+        ? "Ошибка"
+        : recap.status === "generating"
+          ? "Готовится"
+          : "В очереди";
 
   return (
     <li className={styles.card}>
       <div className={styles.cardHeader}>
         <span className={styles.period}>{period}</span>
-        <StatusPill status={statusTone} label={recap.status} />
+        <StatusPill status={statusTone} label={statusLabel} />
       </div>
 
       {recap.status === "done" && recap.summary_text && (
@@ -97,7 +111,7 @@ function RecapCard({ recap }: { recap: WeeklyRecap }) {
       )}
 
       {recap.model_name && recap.model_name !== "noop" && (
-        <p className={styles.model}>Model: {recap.model_name}</p>
+        <p className={styles.model}>Модель: {recap.model_name}</p>
       )}
     </li>
   );

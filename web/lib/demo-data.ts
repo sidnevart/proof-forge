@@ -1,32 +1,47 @@
-export const landingHighlights = [
-  "Proof-backed accountability instead of habit tracking",
-  "Buddy approval as the source of truth",
-  "Weekly recap as a system report, not motivation content",
+export const landingSignals = [
+  "Подтверждённый прогресс вместо личных отметок",
+  "Партнёр остаётся источником решения по движению цели",
+  "Еженедельная сводка собирает картину, а не подменяет проверку",
+];
+
+export const landingScenarios = [
+  {
+    title: "Довести side project до результата",
+    detail: "Когда важно не просто работать, а регулярно подтверждать, что продукт реально движется.",
+  },
+  {
+    title: "Не сорваться с ритма по deliverable",
+    detail: "Когда нужна внешняя дисциплина вокруг конкретных шагов, а не очередной список привычек.",
+  },
+  {
+    title: "Держать цель под наблюдением вместе с партнёром",
+    detail: "Когда нужен человек, который видит подтверждения и выносит решение по прогрессу.",
+  },
 ];
 
 export const proofEvents = [
   {
-    title: "Prototype shipped",
-    detail: "Uploaded build screenshots and deployment link",
+    title: "Макет лендинга отправлен на проверку",
+    detail: "Загружены ссылки на экран и описание изменений по главной цели.",
     status: "approved",
-    time: "2h ago",
+    time: "2 часа назад",
   },
   {
-    title: "Landing copy revised",
-    detail: "Buddy requested a clearer proof artifact",
+    title: "Партнёр запросил доработку подтверждения",
+    detail: "Нужно добавить скриншоты мобильной версии и пояснить, что именно изменилось.",
     status: "changes_requested",
-    time: "Yesterday",
+    time: "Вчера",
   },
   {
-    title: "Research sprint blocked",
-    detail: "No evidence uploaded yet",
+    title: "Новое подтверждение ещё не отправлено",
+    detail: "Следующий шаг — собрать материалы и отправить их на проверку.",
     status: "pending",
-    time: "Friday",
+    time: "Сейчас",
   },
 ];
 
 export const weeklyPosterStats = [
-  { label: "Approved checkpoints", value: "04" },
-  { label: "Pending review", value: "01" },
-  { label: "Signals recovered", value: "83%" },
+  { label: "Подтверждено", value: "04" },
+  { label: "Ждут проверки", value: "01" },
+  { label: "Ритм недели", value: "83%" },
 ];

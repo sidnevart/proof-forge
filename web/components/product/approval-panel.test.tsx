@@ -60,9 +60,9 @@ describe("ApprovalPanel", () => {
 
     render(<ApprovalPanel checkInID={1} />);
 
-    expect(await screen.findByRole("button", { name: "Approve" })).toBeInTheDocument();
-    expect(screen.getByRole("button", { name: "Reject" })).toBeInTheDocument();
-    expect(screen.getByRole("button", { name: "Request Changes" })).toBeInTheDocument();
+    expect(await screen.findByRole("button", { name: "Подтвердить" })).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "Отклонить" })).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "Вернуть на доработку" })).toBeInTheDocument();
   });
 
   it("shows approved state after approve click", async () => {
@@ -73,11 +73,11 @@ describe("ApprovalPanel", () => {
       );
 
     render(<ApprovalPanel checkInID={1} />);
-    const approveBtn = await screen.findByRole("button", { name: "Approve" });
+    const approveBtn = await screen.findByRole("button", { name: "Подтвердить" });
     fireEvent.click(approveBtn);
 
     await waitFor(() => {
-      expect(screen.getByText("Check-in одобрен")).toBeInTheDocument();
+      expect(screen.getByText("Подтверждение принято")).toBeInTheDocument();
     });
   });
 
@@ -89,11 +89,11 @@ describe("ApprovalPanel", () => {
       );
 
     render(<ApprovalPanel checkInID={1} />);
-    const rejectBtn = await screen.findByRole("button", { name: "Reject" });
+    const rejectBtn = await screen.findByRole("button", { name: "Отклонить" });
     fireEvent.click(rejectBtn);
 
     await waitFor(() => {
-      expect(screen.getByText("Check-in отклонён")).toBeInTheDocument();
+      expect(screen.getByText("Подтверждение отклонено")).toBeInTheDocument();
     });
   });
 
@@ -105,7 +105,7 @@ describe("ApprovalPanel", () => {
       );
 
     render(<ApprovalPanel checkInID={1} />);
-    const reqBtn = await screen.findByRole("button", { name: "Request Changes" });
+    const reqBtn = await screen.findByRole("button", { name: "Вернуть на доработку" });
     fireEvent.click(reqBtn);
 
     await waitFor(() => {
@@ -120,7 +120,7 @@ describe("ApprovalPanel", () => {
 
     render(<ApprovalPanel checkInID={1} />);
 
-    expect(await screen.findByText("Check-in ещё не отправлен")).toBeInTheDocument();
+    expect(await screen.findByText("Подтверждение ещё не отправлено")).toBeInTheDocument();
   });
 
   it("shows unauthenticated state on 401", async () => {
@@ -136,7 +136,7 @@ describe("ApprovalPanel", () => {
 
     render(<ApprovalPanel checkInID={999} />);
 
-    expect(await screen.findByText("Ошибка")).toBeInTheDocument();
+    expect((await screen.findAllByText("Ошибка")).length).toBeGreaterThan(0);
   });
 
   it("passes comment to approve request", async () => {
@@ -147,11 +147,11 @@ describe("ApprovalPanel", () => {
       );
 
     render(<ApprovalPanel checkInID={1} />);
-    await screen.findByRole("button", { name: "Approve" });
+    await screen.findByRole("button", { name: "Подтвердить" });
 
-    const textarea = screen.getByPlaceholderText("Поясните решение для owner");
+    const textarea = screen.getByPlaceholderText("Поясните решение для владельца");
     fireEvent.change(textarea, { target: { value: "Excellent work" } });
-    fireEvent.click(screen.getByRole("button", { name: "Approve" }));
+    fireEvent.click(screen.getByRole("button", { name: "Подтвердить" }));
 
     await waitFor(() => {
       const body = JSON.parse(fetchMock.mock.calls[1][1]?.body as string);

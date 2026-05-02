@@ -61,7 +61,7 @@ export function CheckInScreen({ goalID }: { goalID: number }) {
       }
       setState({
         kind: "error",
-        message: error instanceof Error ? error.message : "Не удалось загрузить check-in.",
+        message: error instanceof Error ? error.message : "Не удалось загрузить подтверждение.",
       });
     }
   }, [goalID]);
@@ -78,7 +78,7 @@ export function CheckInScreen({ goalID }: { goalID: number }) {
       } catch (error) {
         setState({
           kind: "error",
-          message: error instanceof Error ? error.message : "Не удалось создать check-in.",
+          message: error instanceof Error ? error.message : "Не удалось открыть черновик подтверждения.",
         });
       }
     });
@@ -169,7 +169,7 @@ export function CheckInScreen({ goalID }: { goalID: number }) {
         setState({ kind: "submitted" });
         setTimeout(() => router.push("/dashboard"), 2000);
       } catch (error) {
-        setEvidenceError(error instanceof Error ? error.message : "Не удалось отправить check-in.");
+        setEvidenceError(error instanceof Error ? error.message : "Не удалось отправить подтверждение.");
       }
     });
   }
@@ -177,8 +177,12 @@ export function CheckInScreen({ goalID }: { goalID: number }) {
   if (state.kind === "loading") {
     return (
       <main className={styles.page}>
-        <CheckInHeader status="pending" label="Loading" />
-        <StatePanel tone="loading" title="Загружаем черновик" description="Проверяем, есть ли активный check-in для этого goal." />
+        <CheckInHeader status="pending" label="Загрузка" />
+        <StatePanel
+          tone="loading"
+          title="Загружаем черновик"
+          description="Проверяем, есть ли активное подтверждение по этой цели."
+        />
       </main>
     );
   }
@@ -186,11 +190,11 @@ export function CheckInScreen({ goalID }: { goalID: number }) {
   if (state.kind === "unauthenticated") {
     return (
       <main className={styles.page}>
-        <CheckInHeader status="rejected" label="Auth required" />
+        <CheckInHeader status="rejected" label="Нужен вход" />
         <StatePanel
           tone="error"
           title="Сессия не найдена"
-          description="Войдите в систему, чтобы создать check-in."
+          description="Войдите в систему, чтобы подготовить подтверждение."
           meta={<Button variant="secondary" onClick={() => router.push("/dashboard")}>Перейти ко входу</Button>}
         />
       </main>
@@ -200,7 +204,7 @@ export function CheckInScreen({ goalID }: { goalID: number }) {
   if (state.kind === "error") {
     return (
       <main className={styles.page}>
-        <CheckInHeader status="rejected" label="Error" />
+        <CheckInHeader status="rejected" label="Ошибка" />
         <StatePanel
           tone="error"
           title="Ошибка"
@@ -214,11 +218,11 @@ export function CheckInScreen({ goalID }: { goalID: number }) {
   if (state.kind === "submitted") {
     return (
       <main className={styles.page}>
-        <CheckInHeader status="active" label="Submitted" />
+        <CheckInHeader status="active" label="Отправлено" />
         <StatePanel
           tone="success"
-          title="Check-in отправлен на buddy review"
-          description="Buddy получит proof и вынесет решение. Возвращаемся на dashboard..."
+          title="Подтверждение отправлено на проверку"
+          description="Партнёр получит материалы и вынесет решение. Возвращаемся в центр управления..."
         />
       </main>
     );
@@ -227,15 +231,15 @@ export function CheckInScreen({ goalID }: { goalID: number }) {
   if (state.kind === "no_draft") {
     return (
       <main className={styles.page}>
-        <CheckInHeader status="pending" label="Ready" />
-        <SectionShell eyebrow="New check-in" title="Зафиксировать движение по goal">
+        <CheckInHeader status="pending" label="Можно начинать" />
+        <SectionShell eyebrow="Новое подтверждение" title="Подготовьте материалы по цели">
           <div className={styles.startBlock}>
             <p>
-              Check-in — это конкретный proof-артефакт, который buddy должен рассмотреть и
-              подтвердить. Он не обновляет progress автоматически — только через явное approval.
+              Подтверждение должно показать, что по цели действительно произошло движение.
+              После отправки партнёр проверит материалы и примет решение.
             </p>
             <Button onClick={handleStartCheckIn} disabled={isStarting}>
-              {isStarting ? "Создаём черновик..." : "Начать check-in"}
+              {isStarting ? "Открываем черновик..." : "Подготовить подтверждение"}
             </Button>
           </div>
         </SectionShell>
@@ -244,7 +248,7 @@ export function CheckInScreen({ goalID }: { goalID: number }) {
   }
 
   const { checkIn, evidence } = state;
-  const statusLabel = checkIn.status === "changes_requested" ? "Changes requested" : "Draft";
+  const statusLabel = checkIn.status === "changes_requested" ? "Нужна доработка" : "Черновик";
 
   return (
     <main className={styles.page}>
@@ -253,14 +257,14 @@ export function CheckInScreen({ goalID }: { goalID: number }) {
       {checkIn.status === "changes_requested" && (
         <StatePanel
           tone="pending"
-          title="Buddy запросил доработку"
-          description="Добавьте или уточните proof-артефакты, затем отправьте check-in повторно."
+          title="Нужно дополнить подтверждение"
+          description="Добавьте или уточните материалы, затем отправьте их на проверку повторно."
         />
       )}
 
       <div className={styles.grid}>
         <div className={styles.forms}>
-          <SectionShell eyebrow="Text evidence" title="Текстовое доказательство">
+          <SectionShell eyebrow="Текст" title="Опишите сделанное">
             <form className={styles.form} onSubmit={handleAddText}>
               <label className={styles.field}>
                 <span>Что именно было сделано</span>
@@ -278,7 +282,7 @@ export function CheckInScreen({ goalID }: { goalID: number }) {
             </form>
           </SectionShell>
 
-          <SectionShell eyebrow="Link evidence" title="Внешняя ссылка">
+          <SectionShell eyebrow="Ссылка" title="Добавьте внешний материал">
             <form className={styles.form} onSubmit={handleAddLink}>
               <label className={styles.field}>
                 <span>URL</span>
@@ -296,7 +300,7 @@ export function CheckInScreen({ goalID }: { goalID: number }) {
             </form>
           </SectionShell>
 
-          <SectionShell eyebrow="File evidence" title="Файл или скриншот">
+          <SectionShell eyebrow="Файл" title="Загрузите изображение или документ">
             <div className={styles.form}>
               <label className={styles.field}>
                 <span>Файл (до 10 МБ · PNG, JPG, GIF, WEBP, PDF, TXT)</span>
@@ -321,11 +325,11 @@ export function CheckInScreen({ goalID }: { goalID: number }) {
         </div>
 
         <div className={styles.sidebar}>
-          <SectionShell eyebrow="Collected evidence" title={`Proof (${evidence.length})`}>
+          <SectionShell eyebrow="Собранные материалы" title={`Подтверждение (${evidence.length})`}>
             {evidence.length === 0 ? (
               <StatePanel
                 tone="empty"
-                title="Пока нет proof-артефактов"
+                title="Пока нет материалов"
                 description="Добавьте хотя бы один текст, ссылку или файл перед отправкой."
               />
             ) : (
@@ -337,14 +341,14 @@ export function CheckInScreen({ goalID }: { goalID: number }) {
             )}
           </SectionShell>
 
-          <SectionShell eyebrow="Submit" title="Отправить на buddy review">
+          <SectionShell eyebrow="Отправка" title="Передать партнёру на проверку">
             <div className={styles.submitBlock}>
               <p>
-                После отправки buddy получит уведомление и вынесет решение. Вы не сможете добавить
-                новый артефакт пока check-in на review.
+                После отправки партнёр получит уведомление и вынесет решение. Пока
+                подтверждение на проверке, новые материалы добавить нельзя.
               </p>
               <Button onClick={handleSubmit} disabled={isSubmitting || evidence.length === 0}>
-                {isSubmitting ? "Отправляем..." : "Отправить check-in"}
+                {isSubmitting ? "Отправляем..." : "Отправить на проверку"}
               </Button>
             </div>
           </SectionShell>
@@ -358,8 +362,8 @@ function CheckInHeader({ status, label }: { status: string; label: string }) {
   return (
     <header className={styles.header}>
       <div>
-        <span className="eyebrow">Proof check-in</span>
-        <h1>Зафиксируйте подтверждаемый прогресс</h1>
+        <span className="eyebrow">Подтверждение прогресса</span>
+        <h1>Соберите материалы для проверки</h1>
       </div>
       <StatusPill status={status as Parameters<typeof StatusPill>[0]["status"]} label={label} />
     </header>

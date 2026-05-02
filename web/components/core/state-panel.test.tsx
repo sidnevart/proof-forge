@@ -16,4 +16,13 @@ describe("StatePanel", () => {
     expect(screen.getByText("No proof yet")).toBeInTheDocument();
     expect(screen.getByText("Upload the first artifact.")).toBeInTheDocument();
   });
+
+  it("renders russian tone label instead of raw tone key", () => {
+    render(
+      <StatePanel tone="loading" title="Загружаем экран" description="Проверяем состояние." />,
+    );
+
+    expect(screen.getByText("Загрузка")).toBeInTheDocument();
+    expect(screen.queryByText("loading")).not.toBeInTheDocument();
+  });
 });

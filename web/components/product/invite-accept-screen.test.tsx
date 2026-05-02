@@ -50,7 +50,7 @@ describe("InviteAcceptScreen", () => {
     expect(await screen.findByText("Ship MVP")).toBeInTheDocument();
     expect(screen.getAllByText("Alice").length).toBeGreaterThan(0);
     expect(screen.getAllByText("buddy@example.com").length).toBeGreaterThan(0);
-    expect(screen.getByRole("button", { name: "Принять pact" })).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "Принять приглашение" })).toBeInTheDocument();
   });
 
   it("shows not found state when invite does not exist", async () => {
@@ -60,7 +60,7 @@ describe("InviteAcceptScreen", () => {
 
     render(<InviteAcceptScreen token="bad-token" />);
 
-    expect(await screen.findByText("Invite не найден")).toBeInTheDocument();
+    expect((await screen.findAllByText("Приглашение не найдено")).length).toBeGreaterThan(0);
   });
 
   it("shows expired state when server returns 410", async () => {
@@ -70,7 +70,7 @@ describe("InviteAcceptScreen", () => {
 
     render(<InviteAcceptScreen token="old-token" />);
 
-    expect(await screen.findByText("Invite истёк")).toBeInTheDocument();
+    expect((await screen.findAllByText("Срок приглашения истёк")).length).toBeGreaterThan(0);
   });
 
   it("transitions to accepted state on successful pact acceptance", async () => {
@@ -85,11 +85,11 @@ describe("InviteAcceptScreen", () => {
 
     render(<InviteAcceptScreen token="valid-token" />);
 
-    const button = await screen.findByRole("button", { name: "Принять pact" });
+    const button = await screen.findByRole("button", { name: "Принять приглашение" });
     fireEvent.click(button);
 
     await waitFor(() => {
-      expect(screen.getByText("Pact принят — контур активирован")).toBeInTheDocument();
+      expect(screen.getByText("Приглашение принято")).toBeInTheDocument();
     });
   });
 
@@ -102,12 +102,12 @@ describe("InviteAcceptScreen", () => {
 
     render(<InviteAcceptScreen token="valid-token" />);
 
-    const button = await screen.findByRole("button", { name: "Принять pact" });
+    const button = await screen.findByRole("button", { name: "Принять приглашение" });
     fireEvent.click(button);
 
     await waitFor(() => {
       expect(
-        screen.getByRole("button", { name: "Войти и принять pact" }),
+        screen.getByRole("button", { name: "Войти и принять приглашение" }),
       ).toBeInTheDocument();
     });
 
@@ -125,11 +125,11 @@ describe("InviteAcceptScreen", () => {
 
     render(<InviteAcceptScreen token="valid-token" />);
 
-    const button = await screen.findByRole("button", { name: "Принять pact" });
+    const button = await screen.findByRole("button", { name: "Принять приглашение" });
     fireEvent.click(button);
 
     await waitFor(() => {
-      expect(screen.getByText("Pact уже принят")).toBeInTheDocument();
+      expect(screen.getByText("Приглашение уже принято")).toBeInTheDocument();
     });
   });
 });

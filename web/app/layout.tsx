@@ -5,7 +5,7 @@ import "./globals.css";
 
 export const metadata: Metadata = {
   title: "ProofForge",
-  description: "Proof-based social accountability for serious commitments.",
+  description: "Система внешней ответственности для серьёзных целей и подтверждённого прогресса.",
 };
 
 export default function RootLayout({ children }: { children: ReactNode }) {

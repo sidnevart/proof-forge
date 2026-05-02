@@ -59,7 +59,7 @@ describe("RecapPanel", () => {
 
     render(<RecapPanel goalID={10} />);
 
-    expect(await screen.findByText("Пока нет recaps")).toBeInTheDocument();
+    expect(await screen.findByText("Пока нет недельных сводок")).toBeInTheDocument();
   });
 
   it("shows generating state for in-progress recap", async () => {
@@ -89,7 +89,7 @@ describe("RecapPanel", () => {
 
     render(<RecapPanel goalID={10} />);
 
-    expect(await screen.findByText("Ошибка")).toBeInTheDocument();
+    expect((await screen.findAllByText("Ошибка")).length).toBeGreaterThan(0);
   });
 
   it("shows multiple recaps", async () => {

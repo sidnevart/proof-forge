@@ -42,7 +42,7 @@ export function ApprovalPanel({ checkInID }: { checkInID: number }) {
       }
       setState({
         kind: "error",
-        message: error instanceof Error ? error.message : "Не удалось загрузить check-in.",
+        message: error instanceof Error ? error.message : "Не удалось загрузить подтверждение.",
       });
     }
   }, [checkInID]);
@@ -58,7 +58,7 @@ export function ApprovalPanel({ checkInID }: { checkInID: number }) {
         await approveCheckIn(checkInID, comment.trim() || undefined);
         setState({ kind: "decided", decision: "approved" });
       } catch (error) {
-        setActionError(error instanceof Error ? error.message : "Не удалось одобрить check-in.");
+        setActionError(error instanceof Error ? error.message : "Не удалось подтвердить результат.");
       }
     });
   }
@@ -70,7 +70,7 @@ export function ApprovalPanel({ checkInID }: { checkInID: number }) {
         await rejectCheckIn(checkInID, comment.trim() || undefined);
         setState({ kind: "decided", decision: "rejected" });
       } catch (error) {
-        setActionError(error instanceof Error ? error.message : "Не удалось отклонить check-in.");
+        setActionError(error instanceof Error ? error.message : "Не удалось отклонить результат.");
       }
     });
   }
@@ -93,7 +93,7 @@ export function ApprovalPanel({ checkInID }: { checkInID: number }) {
     return (
       <main className={styles.page}>
         <ApprovalHeader />
-        <StatePanel tone="loading" title="Загружаем check-in" description="Получаем proof-артефакты для review." />
+        <StatePanel tone="loading" title="Загружаем подтверждение" description="Получаем материалы для проверки." />
       </main>
     );
   }
@@ -102,7 +102,7 @@ export function ApprovalPanel({ checkInID }: { checkInID: number }) {
     return (
       <main className={styles.page}>
         <ApprovalHeader />
-        <StatePanel tone="error" title="Сессия не найдена" description="Войдите в систему, чтобы просмотреть check-in." />
+        <StatePanel tone="error" title="Сессия не найдена" description="Войдите в систему, чтобы просмотреть подтверждение." />
       </main>
     );
   }
@@ -127,8 +127,8 @@ export function ApprovalPanel({ checkInID }: { checkInID: number }) {
         <ApprovalHeader />
         <StatePanel
           tone="empty"
-          title="Check-in ещё не отправлен"
-          description="Owner не отправил check-in на review. Вы получите уведомление, когда он будет готов."
+          title="Подтверждение ещё не отправлено"
+          description="Владелец цели ещё не отправил материалы на проверку. Как только они появятся, вы сможете вынести решение."
         />
       </main>
     );
@@ -136,14 +136,14 @@ export function ApprovalPanel({ checkInID }: { checkInID: number }) {
 
   if (state.kind === "decided") {
     const titles: Record<typeof state.decision, string> = {
-      approved: "Check-in одобрен",
-      rejected: "Check-in отклонён",
+      approved: "Подтверждение принято",
+      rejected: "Подтверждение отклонено",
       changes_requested: "Запрошена доработка",
     };
     const descs: Record<typeof state.decision, string> = {
-      approved: "Streak и прогресс goal обновлены. Owner получит уведомление.",
-      rejected: "Streak сброшен. Owner получит уведомление.",
-      changes_requested: "Owner получит запрос на уточнение proof-артефактов.",
+      approved: "Владелец цели получит подтверждение, что результат принят.",
+      rejected: "Владелец цели получит отклонение и сможет начать новый цикл позже.",
+      changes_requested: "Владелец цели получит запрос на уточнение материалов.",
     };
     const tones: Record<typeof state.decision, "success" | "error" | "pending"> = {
       approved: "success",
@@ -165,9 +165,9 @@ export function ApprovalPanel({ checkInID }: { checkInID: number }) {
       <ApprovalHeader />
 
       <div className={styles.grid}>
-        <SectionShell eyebrow="Proof evidence" title={`Артефакты (${evidence.length})`}>
+        <SectionShell eyebrow="Подтверждение" title={`Артефакты (${evidence.length})`}>
           {evidence.length === 0 ? (
-            <StatePanel tone="empty" title="Нет артефактов" description="Owner не добавил proof-артефакты." />
+            <StatePanel tone="empty" title="Нет материалов" description="Владелец цели пока не добавил подтверждения." />
           ) : (
             <ol className={styles.evidenceList}>
               {evidence.map((item) => (
@@ -177,11 +177,12 @@ export function ApprovalPanel({ checkInID }: { checkInID: number }) {
           )}
         </SectionShell>
 
-        <SectionShell eyebrow="Buddy review" title="Вынести решение">
+        <SectionShell eyebrow="Проверка" title="Вынести решение">
           <div className={styles.actions}>
             <p>
-              Проверьте proof-артефакты и вынесите решение. Только approve обновляет streak и прогресс goal.
-              Reject сбрасывает streak. Request changes возвращает owner на доработку.
+              Проверьте материалы и вынесите решение. Подтверждение фиксирует движение
+              по цели, возврат на доработку просит уточнить материалы, отклонение
+              завершает этот цикл без подтверждения результата.
             </p>
 
             <label className={styles.commentField}>
@@ -189,7 +190,7 @@ export function ApprovalPanel({ checkInID }: { checkInID: number }) {
               <textarea
                 value={comment}
                 onChange={(e) => setComment(e.target.value)}
-                placeholder="Поясните решение для owner"
+                placeholder="Поясните решение для владельца"
                 rows={3}
                 disabled={busy}
               />
@@ -197,13 +198,13 @@ export function ApprovalPanel({ checkInID }: { checkInID: number }) {
 
             <div className={styles.buttonRow}>
               <Button onClick={handleApprove} disabled={busy}>
-                {isApproving ? "Одобряем..." : "Approve"}
+                {isApproving ? "Подтверждаем..." : "Подтвердить"}
               </Button>
               <Button variant="secondary" onClick={handleRequestChanges} disabled={busy}>
-                {isRequesting ? "Отправляем..." : "Request Changes"}
+                {isRequesting ? "Отправляем..." : "Вернуть на доработку"}
               </Button>
               <Button variant="ghost" onClick={handleReject} disabled={busy}>
-                {isRejecting ? "Отклоняем..." : "Reject"}
+                {isRejecting ? "Отклоняем..." : "Отклонить"}
               </Button>
             </div>
 
@@ -215,7 +216,7 @@ export function ApprovalPanel({ checkInID }: { checkInID: number }) {
 
             <div>
               <p style={{ margin: 0, fontSize: 13, color: "var(--text-dim)" }}>
-                Submitted: {checkIn.submitted_at ? new Date(checkIn.submitted_at).toLocaleString("ru-RU") : "—"}
+                Отправлено: {checkIn.submitted_at ? new Date(checkIn.submitted_at).toLocaleString("ru-RU") : "—"}
               </p>
             </div>
           </div>
@@ -229,10 +230,10 @@ function ApprovalHeader() {
   return (
     <header className={styles.header}>
       <div>
-        <span className="eyebrow">Buddy review</span>
-        <h1>Проверить proof check-in</h1>
+        <span className="eyebrow">Проверка партнёром</span>
+        <h1>Проверьте подтверждение по цели</h1>
       </div>
-      <StatusPill status="pending" label="Submitted" />
+      <StatusPill status="pending" label="Ожидает решения" />
     </header>
   );
 }

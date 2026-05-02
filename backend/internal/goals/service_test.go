@@ -6,8 +6,15 @@ import (
 	"testing"
 	"time"
 
+	"github.com/sidnevart/proof-forge/backend/internal/platform/email"
 	"github.com/sidnevart/proof-forge/backend/internal/users"
 )
+
+type noopEmailSender struct{}
+
+func (noopEmailSender) SendBuddyInvite(_ context.Context, _ email.BuddyInviteParams) error {
+	return nil
+}
 
 type repositoryStub struct {
 	createGoal   func(context.Context, CreateGoalParams) (GoalView, error)
@@ -46,7 +53,7 @@ func newTestStub() repositoryStub {
 }
 
 func TestServiceCreateGoalRejectsSelfBuddy(t *testing.T) {
-	service := NewService(newTestStub(), 7*24*time.Hour)
+	service := NewService(newTestStub(), noopEmailSender{}, "", nil, 7*24*time.Hour)
 
 	_, err := service.CreateGoal(context.Background(), users.User{
 		ID:    1,
@@ -69,7 +76,7 @@ func TestServiceDashboardBuildsSummary(t *testing.T) {
 			{Goal: Goal{Status: GoalStatusActive}},
 		}, nil
 	}
-	service := NewService(stub, 7*24*time.Hour)
+	service := NewService(stub, noopEmailSender{}, "", nil, 7*24*time.Hour)
 
 	dashboard, err := service.Dashboard(context.Background(), users.User{ID: 1})
 	if err != nil {
@@ -105,7 +112,7 @@ func TestAcceptInviteHappyPath(t *testing.T) {
 		return nil
 	}
 
-	service := NewService(stub, 7*24*time.Hour)
+	service := NewService(stub, noopEmailSender{}, "", nil, 7*24*time.Hour)
 	err := service.AcceptInvite(context.Background(), users.User{
 		ID:    2,
 		Email: "buddy@example.com",
@@ -130,7 +137,7 @@ func TestAcceptInviteExpiredReturnsErrInviteExpired(t *testing.T) {
 		}, nil
 	}
 
-	service := NewService(stub, 7*24*time.Hour)
+	service := NewService(stub, noopEmailSender{}, "", nil, 7*24*time.Hour)
 	err := service.AcceptInvite(context.Background(), users.User{
 		ID:    2,
 		Email: "buddy@example.com",
@@ -152,7 +159,7 @@ func TestAcceptInviteAlreadyAcceptedReturnsError(t *testing.T) {
 		}, nil
 	}
 
-	service := NewService(stub, 7*24*time.Hour)
+	service := NewService(stub, noopEmailSender{}, "", nil, 7*24*time.Hour)
 	err := service.AcceptInvite(context.Background(), users.User{
 		ID:    2,
 		Email: "buddy@example.com",
@@ -174,7 +181,7 @@ func TestAcceptInviteWrongEmailReturnsUnauthorized(t *testing.T) {
 		}, nil
 	}
 
-	service := NewService(stub, 7*24*time.Hour)
+	service := NewService(stub, noopEmailSender{}, "", nil, 7*24*time.Hour)
 	err := service.AcceptInvite(context.Background(), users.User{
 		ID:    99,
 		Email: "impostor@example.com",
@@ -186,7 +193,7 @@ func TestAcceptInviteWrongEmailReturnsUnauthorized(t *testing.T) {
 }
 
 func TestAcceptInviteNotFoundReturnsError(t *testing.T) {
-	service := NewService(newTestStub(), 7*24*time.Hour)
+	service := NewService(newTestStub(), noopEmailSender{}, "", nil, 7*24*time.Hour)
 	err := service.AcceptInvite(context.Background(), users.User{
 		ID:    2,
 		Email: "buddy@example.com",
@@ -198,7 +205,7 @@ func TestAcceptInviteNotFoundReturnsError(t *testing.T) {
 }
 
 func TestGetInvitePreviewNotFoundReturnsError(t *testing.T) {
-	service := NewService(newTestStub(), 7*24*time.Hour)
+	service := NewService(newTestStub(), noopEmailSender{}, "", nil, 7*24*time.Hour)
 	_, err := service.GetInvitePreview(context.Background(), "badtoken")
 	if !errors.Is(err, ErrInviteNotFound) {
 		t.Fatalf("expected ErrInviteNotFound, got %v", err)

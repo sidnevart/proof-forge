@@ -13,12 +13,13 @@ import (
 	"github.com/sidnevart/proof-forge/backend/internal/checkins"
 	"github.com/sidnevart/proof-forge/backend/internal/goals"
 	platformconfig "github.com/sidnevart/proof-forge/backend/internal/platform/config"
-	"github.com/sidnevart/proof-forge/backend/internal/recaps"
-	"github.com/sidnevart/proof-forge/backend/internal/telegram"
+	"github.com/sidnevart/proof-forge/backend/internal/platform/email"
 	"github.com/sidnevart/proof-forge/backend/internal/platform/httpx"
 	platformlogger "github.com/sidnevart/proof-forge/backend/internal/platform/logger"
 	"github.com/sidnevart/proof-forge/backend/internal/platform/postgres"
 	"github.com/sidnevart/proof-forge/backend/internal/platform/readiness"
+	"github.com/sidnevart/proof-forge/backend/internal/recaps"
+	"github.com/sidnevart/proof-forge/backend/internal/telegram"
 	"github.com/sidnevart/proof-forge/backend/internal/users"
 )
 
@@ -88,9 +89,16 @@ func registerAPIRoutes(router *chi.Mux, log *slog.Logger, pool *pgxpool.Pool, cf
 		cfg.Session.CookieName,
 		cfg.App.Env == "production",
 	)
+	var emailSender email.Sender
+	if cfg.SMTP.Enabled {
+		emailSender = email.NewSMTPSender(cfg.SMTP)
+	} else {
+		emailSender = email.NoopSender{}
+	}
+
 	goalsHandler := goals.NewHandler(
 		platformlogger.WithComponent(log, "goals"),
-		goals.NewService(goals.NewPostgresRepository(pool), cfg.Invite.TTL),
+		goals.NewService(goals.NewPostgresRepository(pool), emailSender, cfg.App.WebOrigin, platformlogger.WithComponent(log, "goals"), cfg.Invite.TTL),
 	)
 
 	var objStorage checkins.Storage

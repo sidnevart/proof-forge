@@ -33,7 +33,7 @@ func TestCreateGoalRoute(t *testing.T) {
 		}, nil
 	}
 
-	service := NewService(stub, 7*24*time.Hour)
+	service := NewService(stub, noopEmailSender{}, "", nil, 7*24*time.Hour)
 	service.tokenGenerate = func() (string, error) { return "invite-token", nil }
 
 	router := newTestRouter(service)
@@ -69,7 +69,7 @@ func TestGetInviteRouteReturnsPreview(t *testing.T) {
 		}, nil
 	}
 
-	service := NewService(stub, 7*24*time.Hour)
+	service := NewService(stub, noopEmailSender{}, "", nil, 7*24*time.Hour)
 	router := newTestRouter(service)
 
 	req := httptest.NewRequest(http.MethodGet, "/invites/validtoken", nil)
@@ -94,7 +94,7 @@ func TestGetInviteRouteReturnsPreview(t *testing.T) {
 }
 
 func TestGetInviteRouteNotFoundReturns404(t *testing.T) {
-	service := NewService(newTestStub(), 7*24*time.Hour)
+	service := NewService(newTestStub(), noopEmailSender{}, "", nil, 7*24*time.Hour)
 	router := newTestRouter(service)
 
 	req := httptest.NewRequest(http.MethodGet, "/invites/badtoken", nil)
@@ -119,7 +119,7 @@ func TestAcceptInviteRouteHappyPath(t *testing.T) {
 		}, nil
 	}
 
-	service := NewService(stub, 7*24*time.Hour)
+	service := NewService(stub, noopEmailSender{}, "", nil, 7*24*time.Hour)
 	router := newTestRouter(service)
 
 	req := httptest.NewRequest(http.MethodPost, "/invites/validtoken/accept", nil)
@@ -136,7 +136,7 @@ func TestAcceptInviteRouteHappyPath(t *testing.T) {
 }
 
 func TestAcceptInviteRouteUnauthenticatedReturns401(t *testing.T) {
-	service := NewService(newTestStub(), 7*24*time.Hour)
+	service := NewService(newTestStub(), noopEmailSender{}, "", nil, 7*24*time.Hour)
 	router := newTestRouter(service)
 
 	req := httptest.NewRequest(http.MethodPost, "/invites/sometoken/accept", nil)
@@ -159,7 +159,7 @@ func TestAcceptInviteRouteWrongEmailReturns403(t *testing.T) {
 		}, nil
 	}
 
-	service := NewService(stub, 7*24*time.Hour)
+	service := NewService(stub, noopEmailSender{}, "", nil, 7*24*time.Hour)
 	router := newTestRouter(service)
 
 	req := httptest.NewRequest(http.MethodPost, "/invites/validtoken/accept", nil)
@@ -186,7 +186,7 @@ func TestAcceptInviteRouteExpiredReturns410(t *testing.T) {
 		}, nil
 	}
 
-	service := NewService(stub, 7*24*time.Hour)
+	service := NewService(stub, noopEmailSender{}, "", nil, 7*24*time.Hour)
 	router := newTestRouter(service)
 
 	req := httptest.NewRequest(http.MethodPost, "/invites/expiredtoken/accept", nil)

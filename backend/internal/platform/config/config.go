@@ -20,6 +20,7 @@ type Config struct {
 	Storage  StorageConfig
 	AI       AIConfig
 	Telegram TelegramConfig
+	SMTP     SMTPConfig
 }
 
 type AppConfig struct {
@@ -94,6 +95,15 @@ type TelegramConfig struct {
 	Enabled       bool
 }
 
+type SMTPConfig struct {
+	Host     string
+	Port     int
+	Username string
+	Password string
+	From     string
+	Enabled  bool
+}
+
 func Load() (Config, error) {
 	cfg := Config{
 		App: AppConfig{
@@ -147,6 +157,14 @@ func Load() (Config, error) {
 			APIKey:  getEnv("OPENAI_API_KEY", ""),
 			Model:   getEnv("OPENAI_MODEL", "gpt-4o-mini"),
 			Enabled: getEnv("OPENAI_API_KEY", "") != "",
+		},
+		SMTP: SMTPConfig{
+			Host:     getEnv("SMTP_HOST", ""),
+			Port:     mustInt("SMTP_PORT", 587),
+			Username: getEnv("SMTP_USERNAME", ""),
+			Password: getEnv("SMTP_PASSWORD", ""),
+			From:     getEnv("SMTP_FROM", "noreply@proof-forge.local"),
+			Enabled:  getEnv("SMTP_HOST", "") != "",
 		},
 		Telegram: TelegramConfig{
 			BotToken:      getEnv("TELEGRAM_BOT_TOKEN", ""),

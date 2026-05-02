@@ -6,9 +6,11 @@ import (
 	"crypto/sha256"
 	"encoding/hex"
 	"fmt"
+	"log/slog"
 	"strings"
 	"time"
 
+	"github.com/sidnevart/proof-forge/backend/internal/platform/email"
 	"github.com/sidnevart/proof-forge/backend/internal/users"
 )
 
@@ -17,14 +19,20 @@ type Clock func() time.Time
 
 type Service struct {
 	repo          Repository
+	emailSender   email.Sender
+	webOrigin     string
+	log           *slog.Logger
 	inviteTTL     time.Duration
 	tokenGenerate TokenGenerator
 	clock         Clock
 }
 
-func NewService(repo Repository, inviteTTL time.Duration) *Service {
+func NewService(repo Repository, emailSender email.Sender, webOrigin string, log *slog.Logger, inviteTTL time.Duration) *Service {
 	return &Service{
 		repo:          repo,
+		emailSender:   emailSender,
+		webOrigin:     webOrigin,
+		log:           log,
 		inviteTTL:     inviteTTL,
 		tokenGenerate: randomInviteToken,
 		clock:         time.Now,
@@ -61,6 +69,19 @@ func (s *Service) CreateGoal(ctx context.Context, owner users.User, input Create
 	}
 
 	goal.Invite.AcceptanceToken = rawToken
+
+	ownerName := owner.DisplayName
+	if ownerName == "" {
+		ownerName = owner.Email
+	}
+	if err := s.emailSender.SendBuddyInvite(ctx, email.BuddyInviteParams{
+		To:        input.BuddyEmail,
+		OwnerName: ownerName,
+		GoalTitle: input.Title,
+		InviteURL: s.webOrigin + "/invites/" + rawToken,
+	}); err != nil && s.log != nil {
+		s.log.Warn("send buddy invite email", "to", input.BuddyEmail, "err", err)
+	}
 
 	return goal, nil
 }

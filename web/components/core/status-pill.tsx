@@ -1,12 +1,10 @@
 import { cn } from "@/lib/cn";
-import { STATUS_LABELS } from "@/lib/ui-copy";
+import { STATUS_LABELS, type UIStatus } from "@/lib/ui-copy";
 
 import styles from "./status-pill.module.css";
 
-type Status = "approved" | "pending" | "changes_requested" | "rejected" | "active";
-
 type Props = {
-  status: Status;
+  status: UIStatus;
   label?: string;
 };
 

@@ -6,6 +6,8 @@ export const STATUS_LABELS = {
   rejected: "Отклонено",
 } as const;
 
+export type UIStatus = keyof typeof STATUS_LABELS;
+
 export const TONE_LABELS = {
   loading: "Загрузка",
   error: "Ошибка",

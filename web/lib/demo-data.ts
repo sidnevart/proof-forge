@@ -1,3 +1,12 @@
+import type { UIStatus } from "@/lib/ui-copy";
+
+type ProofEvent = {
+  title: string;
+  detail: string;
+  status: UIStatus;
+  time: string;
+};
+
 export const landingSignals = [
   "Подтверждённый прогресс вместо личных отметок",
   "Партнёр остаётся источником решения по движению цели",
@@ -19,7 +28,7 @@ export const landingScenarios = [
   },
 ];
 
-export const proofEvents = [
+export const proofEvents: ProofEvent[] = [
   {
     title: "Макет лендинга отправлен на проверку",
     detail: "Загружены ссылки на экран и описание изменений по главной цели.",

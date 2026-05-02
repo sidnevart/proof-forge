@@ -13,10 +13,11 @@ import {
   addLinkEvidence,
   addTextEvidence,
   createCheckIn,
+  getCheckIn,
   listCheckIns,
   submitCheckIn,
 } from "@/lib/api";
-import type { CheckIn, EvidenceItem } from "@/lib/types";
+import type { CheckIn, EvidenceItem, ReviewRecord } from "@/lib/types";
 
 import styles from "./checkin-screen.module.css";
 
@@ -25,7 +26,7 @@ type ScreenState =
   | { kind: "unauthenticated" }
   | { kind: "error"; message: string }
   | { kind: "no_draft" }
-  | { kind: "draft"; checkIn: CheckIn; evidence: EvidenceItem[] }
+  | { kind: "draft"; checkIn: CheckIn; evidence: EvidenceItem[]; reviews: ReviewRecord[] }
   | { kind: "submitted" };
 
 const ALLOWED_TYPES = ["image/jpeg", "image/png", "image/gif", "image/webp", "text/plain", "application/pdf"];
@@ -49,11 +50,17 @@ export function CheckInScreen({ goalID }: { goalID: number }) {
       const drafts = (data.check_ins ?? []).filter(
         (ci) => ci.status === "draft" || ci.status === "changes_requested",
       );
-      if (drafts.length > 0) {
-        setState({ kind: "draft", checkIn: drafts[0], evidence: [] });
-      } else {
+      if (drafts.length === 0) {
         setState({ kind: "no_draft" });
+        return;
       }
+      const detail = await getCheckIn(drafts[0].id);
+      setState({
+        kind: "draft",
+        checkIn: detail.check_in,
+        evidence: detail.evidence ?? [],
+        reviews: detail.reviews ?? [],
+      });
     } catch (error) {
       if (error instanceof ApiError && error.status === 401) {
         setState({ kind: "unauthenticated" });
@@ -74,7 +81,7 @@ export function CheckInScreen({ goalID }: { goalID: number }) {
     startCreate(async () => {
       try {
         const data = await createCheckIn(goalID);
-        setState({ kind: "draft", checkIn: data.check_in, evidence: [] });
+        setState({ kind: "draft", checkIn: data.check_in, evidence: [], reviews: [] });
       } catch (error) {
         setState({
           kind: "error",
@@ -247,8 +254,14 @@ export function CheckInScreen({ goalID }: { goalID: number }) {
     );
   }
 
-  const { checkIn, evidence } = state;
+  const { checkIn, evidence, reviews } = state;
   const statusLabel = checkIn.status === "changes_requested" ? "Нужна доработка" : "Черновик";
+  const latestChangesReview =
+    checkIn.status === "changes_requested"
+      ? [...reviews]
+          .reverse()
+          .find((r) => r.decision === "changes_requested")
+      : undefined;
 
   return (
     <main className={styles.page}>
@@ -258,9 +271,25 @@ export function CheckInScreen({ goalID }: { goalID: number }) {
         <StatePanel
           tone="pending"
           title="Нужно дополнить подтверждение"
-          description="Добавьте или уточните материалы, затем отправьте их на проверку повторно."
+          description="Партнёр вернул его на доработку. Добавьте или уточните материалы, затем отправьте на проверку повторно."
         />
       )}
+
+      {latestChangesReview && latestChangesReview.comment ? (
+        <div className={styles.reviewNote} role="note">
+          <span className={styles.reviewNoteLabel}>Комментарий партнёра</span>
+          <p className={styles.reviewNoteBody}>{latestChangesReview.comment}</p>
+          <p className={styles.reviewNoteMeta}>
+            {new Date(latestChangesReview.created_at).toLocaleString("ru-RU")}
+          </p>
+        </div>
+      ) : null}
+      {latestChangesReview && !latestChangesReview.comment ? (
+        <div className={styles.reviewNote} role="note">
+          <span className={styles.reviewNoteLabel}>Комментарий партнёра</span>
+          <p className={styles.reviewNoteBody}>Партнёр не оставил пояснения — уточните у него, что именно нужно доработать.</p>
+        </div>
+      ) : null}
 
       <div className={styles.grid}>
         <div className={styles.forms}>

@@ -1,11 +1,5 @@
-import type { UIStatus } from "@/lib/ui-copy";
-
-type ProofEvent = {
-  title: string;
-  detail: string;
-  status: UIStatus;
-  time: string;
-};
+// Marketing copy for the landing page. Anything else (recent check-ins,
+// weekly stats, etc.) is now driven by real API data — no fake fixtures.
 
 export const landingSignals = [
   "Подтверждённый прогресс вместо личных отметок",
@@ -28,29 +22,3 @@ export const landingScenarios = [
   },
 ];
 
-export const proofEvents: ProofEvent[] = [
-  {
-    title: "Макет лендинга отправлен на проверку",
-    detail: "Загружены ссылки на экран и описание изменений по главной цели.",
-    status: "approved",
-    time: "2 часа назад",
-  },
-  {
-    title: "Партнёр запросил доработку подтверждения",
-    detail: "Нужно добавить скриншоты мобильной версии и пояснить, что именно изменилось.",
-    status: "changes_requested",
-    time: "Вчера",
-  },
-  {
-    title: "Новое подтверждение ещё не отправлено",
-    detail: "Следующий шаг — собрать материалы и отправить их на проверку.",
-    status: "pending",
-    time: "Сейчас",
-  },
-];
-
-export const weeklyPosterStats = [
-  { label: "Подтверждено", value: "04" },
-  { label: "Ждут проверки", value: "01" },
-  { label: "Ритм недели", value: "83%" },
-];

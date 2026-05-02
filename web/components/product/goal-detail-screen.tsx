@@ -9,16 +9,21 @@ import { StatusPill } from "@/components/core/status-pill";
 import { MilestonePanel } from "@/components/product/milestone-panel";
 import { RecapPanel } from "@/components/product/recap-panel";
 import { StakePanel } from "@/components/product/stake-panel";
-import { ApiError, getGoal, listCheckIns } from "@/lib/api";
-import type { CheckIn, GoalView } from "@/lib/types";
+import { ApiError, getCheckIn, getGoal, listCheckIns } from "@/lib/api";
+import type { CheckIn, GoalView, ReviewRecord } from "@/lib/types";
 
 import styles from "./goal-detail-screen.module.css";
+
+type CheckInWithReview = {
+  checkIn: CheckIn;
+  latestReview?: ReviewRecord;
+};
 
 type ScreenState =
   | { kind: "loading" }
   | { kind: "unauthenticated" }
   | { kind: "error"; message: string }
-  | { kind: "ready"; view: GoalView; checkIns: CheckIn[] };
+  | { kind: "ready"; view: GoalView; rows: CheckInWithReview[] };
 
 export function GoalDetailScreen({ goalID }: { goalID: number }) {
   const [state, setState] = useState<ScreenState>({ kind: "loading" });
@@ -29,10 +34,33 @@ export function GoalDetailScreen({ goalID }: { goalID: number }) {
         getGoal(goalID),
         listCheckIns(goalID).catch(() => ({ check_ins: [] as CheckIn[] | null })),
       ]);
+      const checkIns = checkInsData.check_ins ?? [];
+      const recent = checkIns.slice(0, 5);
+      const detailed = await Promise.all(
+        recent.map(async (ci) => {
+          if (ci.status === "draft" || ci.status === "submitted") {
+            return { checkIn: ci } as CheckInWithReview;
+          }
+          try {
+            const detail = await getCheckIn(ci.id);
+            const reviews = detail.reviews ?? [];
+            return {
+              checkIn: detail.check_in,
+              latestReview: reviews.length > 0 ? reviews[reviews.length - 1] : undefined,
+            };
+          } catch {
+            return { checkIn: ci } as CheckInWithReview;
+          }
+        }),
+      );
+      const rows: CheckInWithReview[] = [
+        ...detailed,
+        ...checkIns.slice(5).map((ci) => ({ checkIn: ci })),
+      ];
       setState({
         kind: "ready",
         view: goalData.goal,
-        checkIns: checkInsData.check_ins ?? [],
+        rows,
       });
     } catch (err) {
       if (err instanceof ApiError && err.status === 401) {
@@ -82,12 +110,12 @@ export function GoalDetailScreen({ goalID }: { goalID: number }) {
     );
   }
 
-  const { view, checkIns } = state;
+  const { view, rows } = state;
   const counterpart = view.role === "owner" ? view.buddy : view.owner;
   const goalActive = view.goal.status === "active";
 
-  const submittedCount = checkIns.filter((ci) => ci.status === "submitted").length;
-  const recentCheckIns = checkIns.slice(0, 5);
+  const submittedCount = rows.filter((r) => r.checkIn.status === "submitted").length;
+  const recentRows = rows.slice(0, 5);
 
   return (
     <main className={styles.page}>
@@ -158,11 +186,17 @@ export function GoalDetailScreen({ goalID }: { goalID: number }) {
         />
       )}
 
-      {goalActive && checkIns.length > 0 ? (
-        <SectionShell eyebrow="История" title={`Чекины (${checkIns.length})`}>
+      {goalActive && rows.length > 0 ? (
+        <SectionShell eyebrow="История" title={`Чекины (${rows.length})`}>
           <ol className={styles.checkInList}>
-            {recentCheckIns.map((ci) => (
-              <CheckInRow key={ci.id} checkIn={ci} role={view.role} />
+            {recentRows.map((row) => (
+              <CheckInRow
+                key={row.checkIn.id}
+                checkIn={row.checkIn}
+                review={row.latestReview}
+                role={view.role}
+                goalID={goalID}
+              />
             ))}
           </ol>
         </SectionShell>
@@ -173,7 +207,17 @@ export function GoalDetailScreen({ goalID }: { goalID: number }) {
   );
 }
 
-function CheckInRow({ checkIn, role }: { checkIn: CheckIn; role: "owner" | "buddy" }) {
+function CheckInRow({
+  checkIn,
+  review,
+  role,
+  goalID,
+}: {
+  checkIn: CheckIn;
+  review?: ReviewRecord;
+  role: "owner" | "buddy";
+  goalID: number;
+}) {
   const date = checkIn.submitted_at ?? checkIn.created_at;
   const statusLabel =
     checkIn.status === "approved"
@@ -196,14 +240,36 @@ function CheckInRow({ checkIn, role }: { checkIn: CheckIn; role: "owner" | "budd
             ? "changes_requested"
             : "active";
 
+  const showFixCTA =
+    role === "owner" && checkIn.status === "changes_requested";
+
   return (
     <li className={styles.checkInItem}>
-      <div style={{ display: "flex", gap: 12, alignItems: "center" }}>
-        <span className={styles.checkInDate}>{formatDate(date)}</span>
-        <StatusPill status={statusTone} label={statusLabel} />
+      <div className={styles.checkInItemHeader}>
+        <div style={{ display: "flex", gap: 12, alignItems: "center" }}>
+          <span className={styles.checkInDate}>{formatDate(date)}</span>
+          <StatusPill status={statusTone} label={statusLabel} />
+        </div>
+        {role === "buddy" && checkIn.status === "submitted" ? (
+          <Link href={`/check-ins/${checkIn.id}/review`}>Проверить →</Link>
+        ) : null}
+        {showFixCTA ? (
+          <Link href={`/goals/${goalID}/check-in`} className={styles.checkInOpenLink}>
+            Доработать →
+          </Link>
+        ) : null}
       </div>
-      {role === "buddy" && checkIn.status === "submitted" ? (
-        <Link href={`/check-ins/${checkIn.id}/review`}>Проверить →</Link>
+      {review && review.comment ? (
+        <div className={styles.checkInComment}>
+          <span className={styles.checkInCommentLabel}>
+            {review.decision === "approved"
+              ? "Комментарий партнёра при подтверждении"
+              : review.decision === "rejected"
+                ? "Партнёр отклонил"
+                : "Партнёр просит доработать"}
+          </span>
+          <p className={styles.checkInCommentBody}>{review.comment}</p>
+        </div>
       ) : null}
     </li>
   );

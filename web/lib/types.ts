@@ -92,7 +92,8 @@ export type ReviewRecord = {
 
 export type CheckInDetail = {
   check_in: CheckIn;
-  evidence: EvidenceItem[];
+  evidence: EvidenceItem[] | null;
+  reviews: ReviewRecord[] | null;
 };
 
 export type InvitePreview = {

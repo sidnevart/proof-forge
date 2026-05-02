@@ -8,10 +8,9 @@ import { SectionShell } from "@/components/core/section-shell";
 import { StatePanel } from "@/components/core/state-panel";
 import { StatusPill } from "@/components/core/status-pill";
 import { StakePanel } from "@/components/product/stake-panel";
-import { proofEvents, weeklyPosterStats } from "@/lib/demo-data";
-import { ApiError, getDashboard, loginUser, registerUser } from "@/lib/api";
+import { ApiError, getDashboard, listCheckIns, loginUser, registerUser } from "@/lib/api";
 import { formatDateLabel } from "@/lib/ui-copy";
-import type { DashboardResponse, GoalView } from "@/lib/types";
+import type { CheckIn, DashboardResponse, GoalView } from "@/lib/types";
 
 import styles from "./dashboard-screen.module.css";
 
@@ -19,7 +18,7 @@ type ScreenState =
   | { kind: "loading" }
   | { kind: "unauthenticated" }
   | { kind: "error"; message: string }
-  | { kind: "ready"; dashboard: DashboardResponse };
+  | { kind: "ready"; dashboard: DashboardResponse; primaryCheckIns: CheckIn[] };
 
 export function DashboardScreen() {
   const [screenState, setScreenState] = useState<ScreenState>({ kind: "loading" });
@@ -35,7 +34,18 @@ export function DashboardScreen() {
   async function loadDashboard() {
     try {
       const dashboard = await getDashboard();
-      setScreenState({ kind: "ready", dashboard });
+      const ownerGoals = (dashboard.goals ?? []).filter((g) => g.role === "owner");
+      const primary = pickPrimaryGoal(ownerGoals);
+      let primaryCheckIns: CheckIn[] = [];
+      if (primary && primary.goal.status === "active") {
+        try {
+          const data = await listCheckIns(primary.goal.id);
+          primaryCheckIns = data.check_ins ?? [];
+        } catch {
+          primaryCheckIns = [];
+        }
+      }
+      setScreenState({ kind: "ready", dashboard, primaryCheckIns });
     } catch (error) {
       if (error instanceof ApiError && error.status === 401) {
         setScreenState({ kind: "unauthenticated" });
@@ -200,7 +210,7 @@ export function DashboardScreen() {
     );
   }
 
-  const { dashboard } = screenState;
+  const { dashboard, primaryCheckIns } = screenState;
   const allGoals = dashboard.goals ?? [];
   const ownerGoals = allGoals.filter((g) => g.role === "owner");
   const buddyGoals = allGoals.filter((g) => g.role === "buddy");
@@ -208,6 +218,9 @@ export function DashboardScreen() {
   const otherGoals = primaryGoal
     ? ownerGoals.filter((goal) => goal.goal.id !== primaryGoal.goal.id)
     : [];
+
+  const checkInStats = computeCheckInStats(primaryCheckIns);
+  const recentCheckIns = primaryCheckIns.slice(0, 5);
 
   return (
     <main className={styles.page}>
@@ -302,34 +315,62 @@ export function DashboardScreen() {
             ) : null}
 
             <SectionShell eyebrow="История подтверждений" title="Последние сигналы">
-              <ol className={styles.eventList}>
-                {proofEvents.map((event) => (
-                  <li className={styles.eventItem} key={`${event.title}-${event.time}`}>
-                    <div className={styles.eventHeader}>
-                      <strong>{event.title}</strong>
-                      <StatusPill status={event.status} />
-                    </div>
-                    <p>{event.detail}</p>
-                    <span>{event.time}</span>
-                  </li>
-                ))}
-              </ol>
+              {recentCheckIns.length === 0 ? (
+                <StatePanel
+                  tone="empty"
+                  title={
+                    primaryGoal.goal.status === "pending_buddy_acceptance"
+                      ? "Подтверждения появятся после принятия приглашения"
+                      : "Подтверждений пока нет"
+                  }
+                  description={
+                    primaryGoal.goal.status === "pending_buddy_acceptance"
+                      ? "Цикл запустится, когда партнёр примет приглашение."
+                      : "Соберите первое подтверждение и отправьте партнёру на проверку."
+                  }
+                  meta={
+                    primaryGoal.goal.status === "active" ? (
+                      <Link className={styles.secondaryLink} href={`/goals/${primaryGoal.goal.id}/check-in`}>
+                        Подготовить подтверждение
+                      </Link>
+                    ) : null
+                  }
+                />
+              ) : (
+                <ol className={styles.eventList}>
+                  {recentCheckIns.map((ci) => (
+                    <CheckInEventItem key={ci.id} checkIn={ci} goalID={primaryGoal.goal.id} />
+                  ))}
+                </ol>
+              )}
             </SectionShell>
 
-            <SectionShell eyebrow="Еженедельная сводка" title="Недельная сводка">
+            <SectionShell eyebrow="Сводка цели" title="Картина движения">
               <div className={styles.poster}>
                 <div className={styles.posterStats}>
-                  {weeklyPosterStats.map((item) => (
-                    <div key={item.label}>
-                      <span>{item.label}</span>
-                      <strong>{item.value}</strong>
-                    </div>
-                  ))}
+                  <div>
+                    <span>Подтверждено</span>
+                    <strong>{formatStat(checkInStats.approved)}</strong>
+                  </div>
+                  <div>
+                    <span>Ждут проверки</span>
+                    <strong>{formatStat(checkInStats.submitted)}</strong>
+                  </div>
+                  <div>
+                    <span>Стрик</span>
+                    <strong>{formatStat(primaryGoal.goal.current_streak_count)}</strong>
+                  </div>
+                  <div>
+                    <span>На доработке</span>
+                    <strong>{formatStat(checkInStats.changesRequested)}</strong>
+                  </div>
                 </div>
                 <p>
                   {primaryGoal.goal.status === "pending_buddy_acceptance"
-                    ? "Пока неделе не хватает принятого приглашения: как только партнёр войдёт в цикл, сводка начнёт отражать подтверждённое движение."
-                    : "Неделя читается через подтверждения и решения по ним. Здесь собирается не мотивация, а фактический ритм выполнения цели."}
+                    ? "Сводка начнёт отражать движение, как только партнёр примет приглашение."
+                    : checkInStats.total === 0
+                      ? "Цикл запущен, но подтверждения ещё не приходили — соберите первое."
+                      : "Сводка считается по реальным подтверждениям и решениям партнёра."}
                 </p>
               </div>
             </SectionShell>
@@ -525,4 +566,54 @@ function formatHealthScore(summary: DashboardResponse["summary"]) {
 
 function formatShortDate(value: string) {
   return formatDateLabel(value, { month: "short" });
+}
+
+function computeCheckInStats(list: CheckIn[]) {
+  return list.reduce(
+    (acc, ci) => {
+      acc.total += 1;
+      if (ci.status === "approved") acc.approved += 1;
+      else if (ci.status === "submitted") acc.submitted += 1;
+      else if (ci.status === "changes_requested") acc.changesRequested += 1;
+      else if (ci.status === "rejected") acc.rejected += 1;
+      return acc;
+    },
+    { total: 0, approved: 0, submitted: 0, changesRequested: 0, rejected: 0 },
+  );
+}
+
+function formatStat(n: number): string {
+  return n < 10 ? `0${n}` : String(n);
+}
+
+function CheckInEventItem({ checkIn, goalID }: { checkIn: CheckIn; goalID: number }) {
+  const date = checkIn.submitted_at ?? checkIn.created_at;
+  const status =
+    checkIn.status === "approved"
+      ? { label: "Подтверждён", tone: "approved" as const, detail: "Партнёр подтвердил движение по цели." }
+      : checkIn.status === "rejected"
+        ? { label: "Отклонён", tone: "rejected" as const, detail: "Партнёр отклонил это подтверждение." }
+        : checkIn.status === "submitted"
+          ? { label: "На ревью", tone: "pending" as const, detail: "Партнёр получил материалы и принимает решение." }
+          : checkIn.status === "changes_requested"
+            ? { label: "Нужны правки", tone: "changes_requested" as const, detail: "Партнёр вернул на доработку — откройте цель и посмотрите комментарий." }
+            : { label: "Черновик", tone: "active" as const, detail: "Идёт сборка материалов." };
+
+  const href =
+    checkIn.status === "draft" || checkIn.status === "changes_requested"
+      ? `/goals/${goalID}/check-in`
+      : `/goals/${goalID}`;
+
+  return (
+    <li className={styles.eventItem}>
+      <div className={styles.eventHeader}>
+        <strong>
+          <Link href={href}>Чекин #{checkIn.id}</Link>
+        </strong>
+        <StatusPill status={status.tone} label={status.label} />
+      </div>
+      <p>{status.detail}</p>
+      <span>{formatDateLabel(date, { month: "short", day: "numeric" })}</span>
+    </li>
+  );
 }

@@ -99,12 +99,14 @@ type EvidenceItem struct {
 	CreatedAt     time.Time    `json:"created_at"`
 }
 
-// CheckInView is the read model for a single check-in with all its evidence.
-// BuddyUserID is included for service-layer permission checks and is not serialised.
+// CheckInView is the read model for a single check-in with all its evidence
+// and any review records the buddy left. BuddyUserID is included for
+// service-layer permission checks and is not serialised.
 type CheckInView struct {
-	CheckIn      CheckIn        `json:"check_in"`
-	Evidence     []EvidenceItem `json:"evidence"`
-	BuddyUserID  int64          `json:"-"`
+	CheckIn     CheckIn        `json:"check_in"`
+	Evidence    []EvidenceItem `json:"evidence"`
+	Reviews     []ReviewRecord `json:"reviews"`
+	BuddyUserID int64          `json:"-"`
 }
 
 type AddTextInput struct {

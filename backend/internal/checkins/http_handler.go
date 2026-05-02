@@ -88,7 +88,11 @@ func (h *Handler) handleGet(w http.ResponseWriter, r *http.Request) {
 		h.writeServiceError(w, r, "get check-in", err)
 		return
 	}
-	writeJSON(w, http.StatusOK, map[string]any{"check_in": view.CheckIn, "evidence": view.Evidence})
+	writeJSON(w, http.StatusOK, map[string]any{
+		"check_in": view.CheckIn,
+		"evidence": view.Evidence,
+		"reviews":  view.Reviews,
+	})
 }
 
 func (h *Handler) handleSubmit(w http.ResponseWriter, r *http.Request) {

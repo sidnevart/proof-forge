@@ -92,8 +92,8 @@ describe("DashboardScreen", () => {
     expect((await screen.findAllByText("Ship MVP vertical slice")).length).toBeGreaterThan(0);
     expect(screen.getByText("Следующий шаг")).toBeInTheDocument();
     expect(screen.getAllByText("Главная цель").length).toBeGreaterThan(0);
-    expect(screen.getByText("История подтверждений")).toBeInTheDocument();
-    expect(screen.getByText("Недельная сводка")).toBeInTheDocument();
+    expect(screen.getAllByText("История подтверждений").length).toBeGreaterThan(0);
+    expect(screen.getByText("Картина движения")).toBeInTheDocument();
     expect(
       screen.queryByRole("button", { name: "Создать goal" }),
     ).not.toBeInTheDocument();

@@ -64,12 +64,14 @@ describe("CheckInScreen", () => {
   });
 
   it("loads existing draft without creating a new one", async () => {
-    fetchMock.mockResolvedValueOnce(json({ check_ins: [BASE_CHECK_IN] }));
+    fetchMock
+      .mockResolvedValueOnce(json({ check_ins: [BASE_CHECK_IN] }))
+      .mockResolvedValueOnce(json({ check_in: BASE_CHECK_IN, evidence: [], reviews: [] }));
 
     render(<CheckInScreen goalID={10} />);
 
     expect(await screen.findByRole("button", { name: "Отправить на проверку" })).toBeInTheDocument();
-    expect(fetchMock).toHaveBeenCalledTimes(1);
+    expect(fetchMock).toHaveBeenCalledTimes(2);
   });
 
   it("shows unauthenticated state on 401", async () => {
@@ -83,6 +85,7 @@ describe("CheckInScreen", () => {
   it("adds text evidence and shows it in the list", async () => {
     fetchMock
       .mockResolvedValueOnce(json({ check_ins: [BASE_CHECK_IN] }))
+      .mockResolvedValueOnce(json({ check_in: BASE_CHECK_IN, evidence: [], reviews: [] }))
       .mockResolvedValueOnce(
         json(
           {
@@ -113,6 +116,7 @@ describe("CheckInScreen", () => {
   it("adds link evidence and shows it in the list", async () => {
     fetchMock
       .mockResolvedValueOnce(json({ check_ins: [BASE_CHECK_IN] }))
+      .mockResolvedValueOnce(json({ check_in: BASE_CHECK_IN, evidence: [], reviews: [] }))
       .mockResolvedValueOnce(
         json(
           {
@@ -141,7 +145,9 @@ describe("CheckInScreen", () => {
   });
 
   it("disables submit when no evidence items", async () => {
-    fetchMock.mockResolvedValueOnce(json({ check_ins: [BASE_CHECK_IN] }));
+    fetchMock
+      .mockResolvedValueOnce(json({ check_ins: [BASE_CHECK_IN] }))
+      .mockResolvedValueOnce(json({ check_in: BASE_CHECK_IN, evidence: [], reviews: [] }));
 
     render(<CheckInScreen goalID={10} />);
 
@@ -160,6 +166,7 @@ describe("CheckInScreen", () => {
           ],
         }),
       )
+      .mockResolvedValueOnce(json({ check_in: BASE_CHECK_IN, evidence: [], reviews: [] }))
       .mockResolvedValueOnce(
         json({
           evidence: { id: 5, check_in_id: 1, kind: "text", text_content: "Done", created_at: "2026-05-01T10:00:00Z" },
@@ -183,12 +190,33 @@ describe("CheckInScreen", () => {
   });
 
   it("shows changes_requested banner for that status", async () => {
-    fetchMock.mockResolvedValueOnce(
-      json({ check_ins: [{ ...BASE_CHECK_IN, status: "changes_requested" }] }),
-    );
+    const ci = { ...BASE_CHECK_IN, status: "changes_requested" };
+    fetchMock
+      .mockResolvedValueOnce(json({ check_ins: [ci] }))
+      .mockResolvedValueOnce(json({ check_in: ci, evidence: [], reviews: [] }));
 
     render(<CheckInScreen goalID={10} />);
 
     expect(await screen.findByText("Нужно дополнить подтверждение")).toBeInTheDocument();
+  });
+
+  it("shows buddy comment when check-in returned for revision", async () => {
+    const ci = { ...BASE_CHECK_IN, status: "changes_requested" };
+    const review = {
+      id: 7,
+      check_in_id: 1,
+      reviewer_user_id: 2,
+      decision: "changes_requested",
+      comment: "Нужны скриншоты мобильной версии",
+      created_at: "2026-05-01T11:00:00Z",
+    };
+    fetchMock
+      .mockResolvedValueOnce(json({ check_ins: [ci] }))
+      .mockResolvedValueOnce(json({ check_in: ci, evidence: [], reviews: [review] }));
+
+    render(<CheckInScreen goalID={10} />);
+
+    expect(await screen.findByText("Нужны скриншоты мобильной версии")).toBeInTheDocument();
+    expect(screen.getByText("Комментарий партнёра")).toBeInTheDocument();
   });
 });

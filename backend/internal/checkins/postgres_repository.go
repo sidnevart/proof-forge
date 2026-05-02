@@ -114,7 +114,40 @@ func (r *PostgresRepository) GetCheckIn(ctx context.Context, checkInID int64) (C
 	if !found {
 		return CheckInView{}, ErrCheckInNotFound
 	}
+
+	reviews, err := r.listReviews(ctx, checkInID)
+	if err != nil {
+		return CheckInView{}, err
+	}
+	view.Reviews = reviews
 	return view, nil
+}
+
+func (r *PostgresRepository) listReviews(ctx context.Context, checkInID int64) ([]ReviewRecord, error) {
+	const query = `
+		SELECT id, check_in_id, reviewer_user_id, decision, comment, created_at
+		FROM check_in_reviews
+		WHERE check_in_id = $1
+		ORDER BY created_at ASC
+	`
+	rows, err := r.pool.Query(ctx, query, checkInID)
+	if err != nil {
+		return nil, fmt.Errorf("query check-in reviews: %w", err)
+	}
+	defer rows.Close()
+
+	var list []ReviewRecord
+	for rows.Next() {
+		var rec ReviewRecord
+		if err := rows.Scan(&rec.ID, &rec.CheckInID, &rec.ReviewerUserID, &rec.Decision, &rec.Comment, &rec.CreatedAt); err != nil {
+			return nil, fmt.Errorf("scan review row: %w", err)
+		}
+		list = append(list, rec)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, fmt.Errorf("iterate review rows: %w", err)
+	}
+	return list, nil
 }
 
 func (r *PostgresRepository) ListCheckInsByGoal(ctx context.Context, goalID int64, actorID int64) ([]CheckIn, error) {
@@ -188,10 +221,10 @@ func (r *PostgresRepository) InsertEvidence(ctx context.Context, params InsertEv
 	`
 
 	var (
-		item                                    EvidenceItem
+		item                                 EvidenceItem
 		textContent, externalURL, storageKey sql.NullString
-		mimeType                                sql.NullString
-		fileSize                                sql.NullInt64
+		mimeType                             sql.NullString
+		fileSize                             sql.NullInt64
 	)
 	err := r.pool.QueryRow(ctx, query,
 		params.CheckInID, params.Kind,
@@ -326,4 +359,3 @@ func nullableInt64(n int64) any {
 	}
 	return n
 }
-

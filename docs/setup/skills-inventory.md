@@ -90,6 +90,7 @@
 - `performance-smoke-tester`
 - `bug-reproducer`
 - `quality-gate-runner`
+- `integration-quality-gate`
 
 ## DevOps
 - `docker-compose-builder`

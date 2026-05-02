@@ -1,0 +1,23 @@
+{
+  "skill_name": "integration-quality-gate",
+  "evals": [
+    {
+      "id": 1,
+      "prompt": "Добавь серьёзное интеграционное покрытие для нового circle flow и скажи, можно ли это катить на прод.",
+      "expected_output": "Skill builds a scenario matrix, prioritizes backend integration, names e2e and smoke obligations, and ends with a release verdict.",
+      "files": []
+    },
+    {
+      "id": 2,
+      "prompt": "Проверь vertical slice с invite, check-in и buddy approval. Нужен полный quality gate, не только happy-path.",
+      "expected_output": "Skill covers permissions, invalid transitions, regression scenarios, and deploy smoke instead of stopping at the happy path.",
+      "files": []
+    },
+    {
+      "id": 3,
+      "prompt": "Перед push разложи сценарии, добей пробелы по backend и e2e, и обнови smoke checklist.",
+      "expected_output": "Skill produces scenario classification, missing coverage callouts, smoke checklist updates, commands run, and a clear push verdict.",
+      "files": []
+    }
+  ]
+}

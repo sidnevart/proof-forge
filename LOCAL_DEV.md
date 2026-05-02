@@ -98,6 +98,28 @@ Browser (http://localhost:3003)
   └── MinIO (S3)           :59000 — файловое хранилище
 ```
 
+## E2E тесты (без Docker)
+
+Если есть Go и Postgres локально:
+
+```bash
+# Поднять только postgres
+docker compose -f infra/docker/compose.local.yml up -d
+# или brew services start postgresql, или любой свой Postgres
+
+# Прогнать e2e
+cd backend
+TEST_DATABASE_URL="postgres://proofforge:proofforge@localhost:55432/proofforge?sslmode=disable" \
+  go test -v -run TestE2E ./internal/platform/app/...
+```
+
+Тесты покрывают:
+- `TestE2E_CriticalRoutesExist` — все роуты возвращают не-404 (ловит баг "404 на создании цели")
+- `TestE2E_FullAccountabilityFlow` — полный happy path: регистрация → цель → инвайт → ставка → чекин → аппрув → форфейт
+- `TestE2E_GoalCreationRejectsUnauthenticated` — 401 без сессии
+- `TestE2E_GoalCreationRejectsInvalidInput` — 400 на невалидный ввод (4 кейса)
+- `TestE2E_StakeForbiddenForNonParticipant` — посторонний не может работать со ставками
+
 ## Если что-то не работает
 
 **Web не запускается / билд падает:**
@@ -114,3 +136,18 @@ docker compose -f infra/docker/compose.dev.yml logs api
 
 **CORS ошибки в браузере:**
 Убедись что `WEB_ORIGIN=http://localhost:3003` в `.env.dev`
+
+**404 при создании цели / других API-вызовах:**
+`NEXT_PUBLIC_API_BASE_URL` в Next.js запекается на этапе билда, не runtime. Если переменная не пробрасывается как `build args`, фронт пойдёт по относительному пути на свой origin → 404.
+
+Уже исправлено в `compose.dev.yml`:
+```yaml
+build:
+  args:
+    NEXT_PUBLIC_API_BASE_URL: http://localhost:8080
+```
+
+После правок compose обязательно `--build`:
+```bash
+docker compose -f infra/docker/compose.dev.yml up --build -d
+```

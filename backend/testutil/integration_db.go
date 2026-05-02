@@ -10,8 +10,8 @@ import (
 	"testing"
 	"time"
 
-	_ "github.com/jackc/pgx/v5/stdlib"
 	"github.com/jackc/pgx/v5/pgxpool"
+	_ "github.com/jackc/pgx/v5/stdlib"
 	"github.com/pressly/goose/v3"
 
 	appmigrations "github.com/sidnevart/proof-forge/backend/migrations"
@@ -66,6 +66,8 @@ func OpenIntegrationPool(t *testing.T) *pgxpool.Pool {
 
 	if _, err := pool.Exec(ctx, `
 		TRUNCATE TABLE
+			stake_forfeitures,
+			stakes,
 			weekly_recaps,
 			check_in_reviews,
 			evidence_items,

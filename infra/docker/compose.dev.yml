@@ -130,6 +130,8 @@ services:
     build:
       context: ../..
       dockerfile: web/Dockerfile
+      args:
+        NEXT_PUBLIC_API_BASE_URL: http://localhost:8080
     container_name: proofforge-web-dev
     env_file: .env.dev
     environment:

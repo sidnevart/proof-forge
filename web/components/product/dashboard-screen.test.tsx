@@ -60,6 +60,11 @@ describe("DashboardScreen", () => {
                 created_at: "2026-05-01T10:00:00Z",
                 updated_at: "2026-05-01T10:00:00Z",
               },
+              owner: {
+                id: 1,
+                email: "owner@example.com",
+                display_name: "Артём",
+              },
               buddy: {
                 id: 2,
                 email: "peer@example.com",
@@ -74,6 +79,7 @@ describe("DashboardScreen", () => {
                 status: "pending",
                 expires_at: "2026-05-08T10:00:00Z",
               },
+              role: "owner",
             },
           ],
         }),
@@ -151,6 +157,11 @@ describe("DashboardScreen", () => {
                 created_at: "2026-05-01T10:00:00Z",
                 updated_at: "2026-05-01T10:00:00Z",
               },
+              owner: {
+                id: 1,
+                email: "owner@example.com",
+                display_name: "Артём",
+              },
               buddy: {
                 id: 2,
                 email: "peer@example.com",
@@ -165,6 +176,7 @@ describe("DashboardScreen", () => {
                 status: "pending",
                 expires_at: "2026-05-08T10:00:00Z",
               },
+              role: "owner",
             },
           }),
           { status: 201, headers: { "Content-Type": "application/json" } },
@@ -197,6 +209,11 @@ describe("DashboardScreen", () => {
                   created_at: "2026-05-01T10:00:00Z",
                   updated_at: "2026-05-01T10:00:00Z",
                 },
+                owner: {
+                  id: 1,
+                  email: "owner@example.com",
+                  display_name: "Owner",
+                },
                 buddy: {
                   id: 2,
                   email: "peer@example.com",
@@ -211,6 +228,7 @@ describe("DashboardScreen", () => {
                   status: "pending",
                   expires_at: "2026-05-08T10:00:00Z",
                 },
+                role: "owner",
               },
             ],
           }),

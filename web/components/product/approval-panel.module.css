@@ -1,33 +1,35 @@
 .page {
   display: grid;
-  gap: 22px;
-  padding: 24px 0 64px;
+  gap: 24px;
+  padding: 48px 0 96px;
 }
 
 .header {
   display: flex;
   align-items: flex-end;
   justify-content: space-between;
-  gap: 18px;
+  gap: 16px;
 }
 
 .header h1 {
-  margin: 16px 0 0;
+  margin: 8px 0 0;
   font-family: var(--font-heading);
-  font-size: clamp(32px, 4.5vw, 52px);
-  line-height: 0.96;
+  font-size: 28px;
+  font-weight: 600;
+  letter-spacing: -0.03em;
+  line-height: 1.15;
 }
 
 .grid {
   display: grid;
   grid-template-columns: 1.2fr 0.8fr;
-  gap: 18px;
+  gap: 16px;
   align-items: start;
 }
 
 .evidenceList {
   display: grid;
-  gap: 10px;
+  gap: 8px;
   margin: 0;
   padding: 0;
   list-style: none;
@@ -35,10 +37,9 @@
 
 .evidenceItem {
   display: grid;
-  gap: 6px;
-  padding: 14px 16px;
+  gap: 4px;
+  padding: 12px 14px;
   border-radius: var(--radius-xs);
-  background: rgba(255, 255, 255, 0.03);
   border: 1px solid var(--border);
 }
 
@@ -46,66 +47,67 @@
 .evidenceItem a {
   margin: 0;
   color: var(--text-muted);
-  font-size: 14px;
-  line-height: 1.5;
+  font-size: 13px;
+  line-height: 1.4;
   word-break: break-word;
 }
 
 .evidenceItem a {
-  color: var(--accent-blue);
+  color: var(--accent);
 }
 
 .evidenceKind {
-  font-size: 11px;
+  font-size: 10px;
   text-transform: uppercase;
-  letter-spacing: 0.1em;
+  letter-spacing: 0.06em;
   color: var(--text-dim);
 }
 
 .actions {
   display: grid;
-  gap: 14px;
+  gap: 12px;
 }
 
 .commentField {
   display: grid;
-  gap: 8px;
+  gap: 6px;
 }
 
 .commentField span {
   color: var(--text-dim);
-  font-size: 12px;
-  letter-spacing: 0.08em;
+  font-size: 11px;
+  font-weight: 500;
+  letter-spacing: 0.04em;
   text-transform: uppercase;
 }
 
 .commentField textarea {
   width: 100%;
-  padding: 14px 16px;
+  padding: 10px 14px;
   border: 1px solid var(--border);
-  border-radius: 14px;
-  background: rgba(8, 15, 24, 0.72);
+  border-radius: var(--radius-sm);
+  background: var(--bg);
   color: var(--text);
   outline: none;
+  font-size: 14px;
   resize: vertical;
 }
 
 .commentField textarea:focus {
-  border-color: var(--accent-blue);
-  box-shadow: 0 0 0 1px rgba(77, 178, 255, 0.3);
+  border-color: var(--accent);
 }
 
 .buttonRow {
   display: flex;
-  gap: 10px;
+  gap: 8px;
   flex-wrap: wrap;
 }
 
 .actionError {
   margin: 0;
-  color: var(--accent-red);
-  font-size: 14px;
-  line-height: 1.5;
+  color: var(--fn-red);
+  font-size: 13px;
+  line-height: 1.4;
 }
 
 @media (max-width: 900px) {
@@ -115,6 +117,10 @@
 }
 
 @media (max-width: 720px) {
+  .page {
+    padding: 32px 0 64px;
+  }
+
   .header {
     flex-direction: column;
     align-items: flex-start;

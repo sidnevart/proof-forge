@@ -1,33 +1,34 @@
 .page {
   display: grid;
-  gap: 24px;
-  padding: 28px 0 72px;
+  gap: 32px;
+  padding: 48px 0 96px;
 }
 
 .header {
   display: flex;
   align-items: flex-end;
   justify-content: space-between;
-  gap: 18px;
+  gap: 16px;
 }
 
 .header h1 {
-  margin: 16px 0 0;
+  margin: 8px 0 0;
   font-family: var(--font-heading);
-  font-size: clamp(36px, 5vw, 60px);
-  line-height: 0.96;
-  max-width: 14ch;
+  font-size: 28px;
+  font-weight: 600;
+  letter-spacing: -0.03em;
+  line-height: 1.15;
 }
 
 .heroGrid,
 .surfaceGrid,
 .authGrid {
   display: grid;
-  gap: 18px;
+  gap: 16px;
 }
 
 .heroGrid {
-  grid-template-columns: 1.15fr 0.85fr;
+  grid-template-columns: 1.2fr 0.8fr;
 }
 
 .surfaceGrid {
@@ -44,13 +45,15 @@
 .copyBlock,
 .otherGoals {
   display: grid;
-  gap: 16px;
+  gap: 12px;
 }
 
 .focusGoal {
   font-family: var(--font-heading);
-  font-size: clamp(30px, 4.5vw, 48px);
-  line-height: 0.96;
+  font-size: 22px;
+  font-weight: 600;
+  letter-spacing: -0.02em;
+  line-height: 1.2;
 }
 
 .nextStepBlock p,
@@ -63,13 +66,14 @@
 .goalListCard p {
   margin: 0;
   color: var(--text-muted);
-  line-height: 1.6;
+  font-size: 14px;
+  line-height: 1.5;
 }
 
 .actionRow {
   display: flex;
   flex-wrap: wrap;
-  gap: 12px;
+  gap: 8px;
   margin-top: 4px;
 }
 
@@ -78,32 +82,36 @@
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  min-height: 48px;
-  border-radius: 999px;
+  height: 40px;
+  border-radius: var(--radius-sm);
   padding: 0 20px;
-  font-weight: 700;
-  transition: transform 160ms ease, border-color 160ms ease, background 160ms ease;
-}
-
-.primaryLink:hover,
-.secondaryLink:hover {
-  transform: translateY(-1px);
+  font-size: 14px;
+  font-weight: 500;
+  transition: background 120ms ease, border-color 120ms ease;
 }
 
 .primaryLink {
-  color: #081018;
-  background: linear-gradient(135deg, var(--accent-blue), #87d5ff);
+  color: #fff;
+  background: var(--accent);
+}
+
+.primaryLink:hover {
+  background: var(--accent-hover);
 }
 
 .secondaryLink {
   color: var(--text);
   border: 1px solid var(--border-strong);
-  background: rgba(255, 255, 255, 0.05);
+  background: transparent;
+}
+
+.secondaryLink:hover {
+  border-color: var(--text-dim);
 }
 
 .snapshotList {
   display: grid;
-  gap: 16px;
+  gap: 12px;
   margin: 0;
 }
 
@@ -111,10 +119,9 @@
 .goalMeta div,
 .posterStats div,
 .goalListCard {
-  padding: 16px;
+  padding: 12px 16px;
   border-radius: var(--radius-sm);
   border: 1px solid var(--border);
-  background: rgba(255, 255, 255, 0.03);
 }
 
 .snapshotList dt,
@@ -124,17 +131,18 @@
 .field span {
   display: block;
   color: var(--text-dim);
-  font-size: 12px;
-  font-weight: 700;
-  letter-spacing: 0.08em;
+  font-size: 11px;
+  font-weight: 500;
+  letter-spacing: 0.04em;
   text-transform: uppercase;
 }
 
 .snapshotList dd,
 .goalMeta strong,
 .posterStats strong {
-  margin: 10px 0 0;
-  font-size: 16px;
+  margin: 4px 0 0;
+  font-size: 15px;
+  font-weight: 500;
 }
 
 .goalCard {
@@ -151,15 +159,16 @@
 
 .goalCardHeader strong {
   display: block;
-  margin-bottom: 10px;
-  font-size: 22px;
+  margin-bottom: 6px;
+  font-size: 17px;
+  font-weight: 600;
 }
 
 .goalMeta,
 .posterStats,
 .eventList {
   display: grid;
-  gap: 12px;
+  gap: 8px;
 }
 
 .goalMeta,
@@ -169,7 +178,9 @@
 
 .healthValue {
   font-family: var(--font-heading);
-  font-size: clamp(48px, 6vw, 76px);
+  font-size: 48px;
+  font-weight: 600;
+  letter-spacing: -0.04em;
   line-height: 1;
 }
 
@@ -181,56 +192,57 @@
 
 .eventItem {
   display: grid;
-  gap: 12px;
-  padding: 18px;
+  gap: 8px;
+  padding: 14px 16px;
   border-radius: var(--radius-sm);
   border: 1px solid var(--border);
-  background: rgba(255, 255, 255, 0.04);
 }
 
 .eventHeader {
   display: flex;
   justify-content: space-between;
-  gap: 16px;
+  gap: 12px;
   align-items: center;
 }
 
 .eventHeader strong,
 .goalListCard strong {
-  font-size: 18px;
+  font-size: 15px;
+  font-weight: 500;
 }
 
 .field {
   display: grid;
-  gap: 8px;
+  gap: 6px;
 }
 
 .field input,
 .field textarea {
   width: 100%;
-  padding: 14px 16px;
+  padding: 10px 14px;
   border: 1px solid var(--border);
-  border-radius: 14px;
-  background: rgba(8, 15, 24, 0.72);
+  border-radius: var(--radius-sm);
+  background: var(--bg);
   color: var(--text);
   outline: none;
+  font-size: 14px;
 }
 
 .field input:focus,
 .field textarea:focus {
-  border-color: var(--accent-blue);
-  box-shadow: 0 0 0 1px rgba(77, 178, 255, 0.3);
+  border-color: var(--accent);
 }
 
 .form {
   display: grid;
-  gap: 14px;
+  gap: 12px;
 }
 
 .formError {
   margin: 0;
-  color: var(--accent-red);
-  line-height: 1.5;
+  color: var(--fn-red);
+  font-size: 13px;
+  line-height: 1.4;
 }
 
 .ruleList {
@@ -248,13 +260,13 @@
 }
 
 @media (max-width: 720px) {
+  .page {
+    padding: 32px 0 64px;
+  }
+
   .header {
     flex-direction: column;
     align-items: flex-start;
-  }
-
-  .header h1 {
-    max-width: 100%;
   }
 
   .actionRow {

@@ -26,6 +26,7 @@ export type GoalView = {
     status: GoalStatus;
     current_progress_health: ProgressHealth;
     current_streak_count: number;
+    deadline_at?: string | null;
     created_at: string;
     updated_at: string;
   };
@@ -63,6 +64,7 @@ export type CheckIn = {
   approved_at?: string | null;
   rejected_at?: string | null;
   changes_requested_at?: string | null;
+  deadline_at?: string | null;
   created_at: string;
   updated_at: string;
 };

@@ -57,10 +57,11 @@ type InviteRecord struct {
 }
 
 type CreateInput struct {
-	Title       string `json:"title"`
-	Description string `json:"description"`
-	BuddyName   string `json:"buddy_name"`
-	BuddyEmail  string `json:"buddy_email"`
+	Title       string  `json:"title"`
+	Description string  `json:"description"`
+	BuddyName   string  `json:"buddy_name"`
+	BuddyEmail  string  `json:"buddy_email"`
+	DeadlineAt  *string `json:"deadline_at,omitempty"` // YYYY-MM-DD or null
 }
 
 type Goal struct {
@@ -70,6 +71,7 @@ type Goal struct {
 	Status                GoalStatus     `json:"status"`
 	CurrentProgressHealth ProgressHealth `json:"current_progress_health"`
 	CurrentStreakCount    int            `json:"current_streak_count"`
+	DeadlineAt            *string        `json:"deadline_at,omitempty"` // YYYY-MM-DD
 	CreatedAt             time.Time      `json:"created_at"`
 	UpdatedAt             time.Time      `json:"updated_at"`
 }
@@ -114,12 +116,46 @@ type Dashboard struct {
 }
 
 func (in CreateInput) Normalize() CreateInput {
-	return CreateInput{
+	out := CreateInput{
 		Title:       strings.TrimSpace(in.Title),
 		Description: strings.TrimSpace(in.Description),
 		BuddyName:   strings.TrimSpace(in.BuddyName),
 		BuddyEmail:  strings.ToLower(strings.TrimSpace(in.BuddyEmail)),
 	}
+	if in.DeadlineAt != nil {
+		trimmed := strings.TrimSpace(*in.DeadlineAt)
+		if trimmed != "" {
+			out.DeadlineAt = &trimmed
+		}
+	}
+	return out
+}
+
+// ParseDeadline parses an ISO date string ("YYYY-MM-DD") into a time.Time at
+// UTC midnight. Empty string returns nil. Returns ErrInvalidGoalInput on
+// malformed input.
+func ParseDeadline(raw *string) (*time.Time, error) {
+	if raw == nil {
+		return nil, nil
+	}
+	trimmed := strings.TrimSpace(*raw)
+	if trimmed == "" {
+		return nil, nil
+	}
+	t, err := time.Parse("2006-01-02", trimmed)
+	if err != nil {
+		return nil, errors.Join(ErrInvalidGoalInput, errors.New("deadline_at must be YYYY-MM-DD"))
+	}
+	return &t, nil
+}
+
+// FormatDeadline turns a stored time into "YYYY-MM-DD" for JSON output.
+func FormatDeadline(t *time.Time) *string {
+	if t == nil {
+		return nil
+	}
+	s := t.UTC().Format("2006-01-02")
+	return &s
 }
 
 func (in CreateInput) Validate(owner users.User) error {

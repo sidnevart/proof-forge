@@ -90,13 +90,10 @@ describe("DashboardScreen", () => {
     render(<DashboardScreen />);
 
     expect((await screen.findAllByText("Ship MVP vertical slice")).length).toBeGreaterThan(0);
-    expect(screen.getByText("Следующий шаг")).toBeInTheDocument();
-    expect(screen.getAllByText("Главная цель").length).toBeGreaterThan(0);
-    expect(screen.getAllByText("История подтверждений").length).toBeGreaterThan(0);
-    expect(screen.getByText("Картина движения")).toBeInTheDocument();
-    expect(
-      screen.queryByRole("button", { name: "Создать goal" }),
-    ).not.toBeInTheDocument();
+    expect(screen.getAllByRole("link", { name: "Создать цель" }).length).toBeGreaterThan(0);
+    expect(screen.getByRole("tab", { name: /Все/ })).toBeInTheDocument();
+    expect(screen.getByRole("tab", { name: /Свои/ })).toBeInTheDocument();
+    expect(screen.getByRole("tab", { name: /Партнёрство/ })).toBeInTheDocument();
   });
 
   it("completes registration and opens the dedicated goal creation flow", async () => {
@@ -248,8 +245,8 @@ describe("DashboardScreen", () => {
     });
     fireEvent.submit(screen.getByRole("button", { name: "Создать аккаунт" }).closest("form")!);
 
-    expect(
-      await screen.findByRole("link", { name: "Создать первую цель" }),
-    ).toHaveAttribute("href", "/goals/new");
+    const createLinks = await screen.findAllByRole("link", { name: "Создать цель" });
+    expect(createLinks.length).toBeGreaterThan(0);
+    expect(createLinks[0]).toHaveAttribute("href", "/goals/new");
   });
 });

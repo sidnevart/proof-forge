@@ -11,6 +11,10 @@ type Repository interface {
 	// the actor is the goal owner. Returns ErrGoalNotEligible otherwise.
 	CreateCheckIn(ctx context.Context, params CreateCheckInParams) (CheckIn, error)
 
+	// SetCheckInDeadline updates the deadline column on a check-in owned by
+	// ownerUserID. Pass nil to clear. Returns ErrCheckInNotFound otherwise.
+	SetCheckInDeadline(ctx context.Context, checkInID, ownerUserID int64, deadline *time.Time) error
+
 	// GetCheckIn fetches a check-in and all its evidence plus the goal's
 	// buddy_user_id so the service can enforce read permissions.
 	GetCheckIn(ctx context.Context, checkInID int64) (CheckInView, error)
@@ -30,6 +34,9 @@ type Repository interface {
 	// RecordReview atomically inserts a review record, transitions the check-in
 	// status, and updates goal progress (streak + health) when approved or rejected.
 	RecordReview(ctx context.Context, params RecordReviewParams) (ReviewRecord, error)
+
+	// DeleteCheckIn removes the check-in and cascades to evidence + reviews.
+	DeleteCheckIn(ctx context.Context, checkInID int64) error
 }
 
 // Storage abstracts object storage so the checkins service stays
@@ -43,6 +50,7 @@ type CreateCheckInParams struct {
 	GoalID      int64
 	OwnerUserID int64
 	Status      CheckInStatus
+	DeadlineAt  *time.Time
 }
 
 type UpdateStatusParams struct {

@@ -33,6 +33,7 @@ var (
 	ErrInvalidEvidenceInput = errors.New("invalid evidence input")
 	ErrCannotSubmit         = errors.New("check-in cannot be submitted in its current state")
 	ErrCannotAddEvidence    = errors.New("cannot add evidence in the current state")
+	ErrCannotDelete         = errors.New("check-in cannot be deleted in its current state")
 	ErrTooManyEvidenceItems = errors.New("maximum evidence items reached")
 	ErrFileTooLarge         = errors.New("file exceeds 10 MB limit")
 	ErrUnsupportedMIME      = errors.New("unsupported file type")
@@ -83,8 +84,37 @@ type CheckIn struct {
 	ApprovedAt         *time.Time    `json:"approved_at,omitempty"`
 	RejectedAt         *time.Time    `json:"rejected_at,omitempty"`
 	ChangesRequestedAt *time.Time    `json:"changes_requested_at,omitempty"`
+	DeadlineAt         *string       `json:"deadline_at,omitempty"` // YYYY-MM-DD
 	CreatedAt          time.Time     `json:"created_at"`
 	UpdatedAt          time.Time     `json:"updated_at"`
+}
+
+// FormatDeadline turns a stored time into "YYYY-MM-DD" for JSON output.
+func FormatDeadline(t *time.Time) *string {
+	if t == nil {
+		return nil
+	}
+	s := t.UTC().Format("2006-01-02")
+	return &s
+}
+
+// ParseDeadline parses an ISO date string ("YYYY-MM-DD") into a time.Time.
+// Returns nil for empty/nil input. Returns ErrInvalidEvidenceInput on
+// malformed input — chosen because we don't have a separate ErrInvalidInput
+// for check-ins yet and the consumer surfaces it as 400.
+func ParseDeadline(raw *string) (*time.Time, error) {
+	if raw == nil {
+		return nil, nil
+	}
+	trimmed := strings.TrimSpace(*raw)
+	if trimmed == "" {
+		return nil, nil
+	}
+	t, err := time.Parse("2006-01-02", trimmed)
+	if err != nil {
+		return nil, errors.Join(ErrInvalidEvidenceInput, errors.New("deadline_at must be YYYY-MM-DD"))
+	}
+	return &t, nil
 }
 
 type EvidenceItem struct {

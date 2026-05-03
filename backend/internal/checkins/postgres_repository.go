@@ -22,20 +22,20 @@ func NewPostgresRepository(pool *pgxpool.Pool) *PostgresRepository {
 func (r *PostgresRepository) CreateCheckIn(ctx context.Context, params CreateCheckInParams) (CheckIn, error) {
 	// Verify the goal is active and the actor is the owner in the same statement.
 	const query = `
-		INSERT INTO check_ins (goal_id, owner_user_id, status)
-		SELECT $1, $2, $3
+		INSERT INTO check_ins (goal_id, owner_user_id, status, deadline_at)
+		SELECT $1, $2, $3, $4
 		FROM goals
 		WHERE id = $1
 		  AND owner_user_id = $2
 		  AND status = 'active'
-		RETURNING id, goal_id, owner_user_id, status, submitted_at, approved_at, rejected_at, changes_requested_at, created_at, updated_at
+		RETURNING id, goal_id, owner_user_id, status, submitted_at, approved_at, rejected_at, changes_requested_at, deadline_at, created_at, updated_at
 	`
 
 	var ci CheckIn
-	var submittedAt, approvedAt, rejectedAt, changesAt sql.NullTime
-	err := r.pool.QueryRow(ctx, query, params.GoalID, params.OwnerUserID, params.Status).Scan(
+	var submittedAt, approvedAt, rejectedAt, changesAt, deadlineAt sql.NullTime
+	err := r.pool.QueryRow(ctx, query, params.GoalID, params.OwnerUserID, params.Status, params.DeadlineAt).Scan(
 		&ci.ID, &ci.GoalID, &ci.OwnerUserID, &ci.Status,
-		&submittedAt, &approvedAt, &rejectedAt, &changesAt,
+		&submittedAt, &approvedAt, &rejectedAt, &changesAt, &deadlineAt,
 		&ci.CreatedAt, &ci.UpdatedAt,
 	)
 	if err != nil {
@@ -45,7 +45,25 @@ func (r *PostgresRepository) CreateCheckIn(ctx context.Context, params CreateChe
 		return CheckIn{}, fmt.Errorf("insert check-in: %w", err)
 	}
 	applyNullTimes(&ci, submittedAt, approvedAt, rejectedAt, changesAt)
+	if deadlineAt.Valid {
+		t := deadlineAt.Time
+		ci.DeadlineAt = FormatDeadline(&t)
+	}
 	return ci, nil
+}
+
+func (r *PostgresRepository) SetCheckInDeadline(ctx context.Context, checkInID, ownerUserID int64, deadline *time.Time) error {
+	tag, err := r.pool.Exec(ctx,
+		`UPDATE check_ins SET deadline_at = $3, updated_at = NOW() WHERE id = $1 AND owner_user_id = $2`,
+		checkInID, ownerUserID, deadline,
+	)
+	if err != nil {
+		return fmt.Errorf("set check-in deadline: %w", err)
+	}
+	if tag.RowsAffected() == 0 {
+		return ErrCheckInNotFound
+	}
+	return nil
 }
 
 func (r *PostgresRepository) GetCheckIn(ctx context.Context, checkInID int64) (CheckInView, error) {
@@ -53,6 +71,7 @@ func (r *PostgresRepository) GetCheckIn(ctx context.Context, checkInID int64) (C
 		SELECT
 			c.id, c.goal_id, c.owner_user_id, c.status,
 			c.submitted_at, c.approved_at, c.rejected_at, c.changes_requested_at,
+			c.deadline_at,
 			c.created_at, c.updated_at,
 			g.buddy_user_id,
 			e.id, e.kind, e.text_content, e.external_url,
@@ -74,16 +93,16 @@ func (r *PostgresRepository) GetCheckIn(ctx context.Context, checkInID int64) (C
 	found := false
 	for rows.Next() {
 		var (
-			submittedAt, approvedAt, rejectedAt, changesAt sql.NullTime
-			eID                                            sql.NullInt64
-			eKind                                          sql.NullString
-			eText, eURL, eKey, eMIME                       sql.NullString
-			eSize                                          sql.NullInt64
-			eCreatedAt                                     sql.NullTime
+			submittedAt, approvedAt, rejectedAt, changesAt, deadlineAt sql.NullTime
+			eID                                                        sql.NullInt64
+			eKind                                                      sql.NullString
+			eText, eURL, eKey, eMIME                                   sql.NullString
+			eSize                                                      sql.NullInt64
+			eCreatedAt                                                 sql.NullTime
 		)
 		if err := rows.Scan(
 			&view.CheckIn.ID, &view.CheckIn.GoalID, &view.CheckIn.OwnerUserID, &view.CheckIn.Status,
-			&submittedAt, &approvedAt, &rejectedAt, &changesAt,
+			&submittedAt, &approvedAt, &rejectedAt, &changesAt, &deadlineAt,
 			&view.CheckIn.CreatedAt, &view.CheckIn.UpdatedAt,
 			&view.BuddyUserID,
 			&eID, &eKind, &eText, &eURL, &eKey, &eMIME, &eSize, &eCreatedAt,
@@ -92,6 +111,10 @@ func (r *PostgresRepository) GetCheckIn(ctx context.Context, checkInID int64) (C
 		}
 		if !found {
 			applyNullTimes(&view.CheckIn, submittedAt, approvedAt, rejectedAt, changesAt)
+			if deadlineAt.Valid {
+				t := deadlineAt.Time
+				view.CheckIn.DeadlineAt = FormatDeadline(&t)
+			}
 			found = true
 		}
 		if eID.Valid {
@@ -154,6 +177,7 @@ func (r *PostgresRepository) ListCheckInsByGoal(ctx context.Context, goalID int6
 	const query = `
 		SELECT c.id, c.goal_id, c.owner_user_id, c.status,
 		       c.submitted_at, c.approved_at, c.rejected_at, c.changes_requested_at,
+		       c.deadline_at,
 		       c.created_at, c.updated_at
 		FROM check_ins c
 		JOIN goals g ON g.id = c.goal_id
@@ -171,15 +195,19 @@ func (r *PostgresRepository) ListCheckInsByGoal(ctx context.Context, goalID int6
 	var list []CheckIn
 	for rows.Next() {
 		var ci CheckIn
-		var submittedAt, approvedAt, rejectedAt, changesAt sql.NullTime
+		var submittedAt, approvedAt, rejectedAt, changesAt, deadlineAt sql.NullTime
 		if err := rows.Scan(
 			&ci.ID, &ci.GoalID, &ci.OwnerUserID, &ci.Status,
-			&submittedAt, &approvedAt, &rejectedAt, &changesAt,
+			&submittedAt, &approvedAt, &rejectedAt, &changesAt, &deadlineAt,
 			&ci.CreatedAt, &ci.UpdatedAt,
 		); err != nil {
 			return nil, fmt.Errorf("scan check-in list row: %w", err)
 		}
 		applyNullTimes(&ci, submittedAt, approvedAt, rejectedAt, changesAt)
+		if deadlineAt.Valid {
+			t := deadlineAt.Time
+			ci.DeadlineAt = FormatDeadline(&t)
+		}
 		list = append(list, ci)
 	}
 	if err := rows.Err(); err != nil {
@@ -255,6 +283,17 @@ func (r *PostgresRepository) CountEvidence(ctx context.Context, checkInID int64)
 		return 0, fmt.Errorf("count evidence: %w", err)
 	}
 	return count, nil
+}
+
+func (r *PostgresRepository) DeleteCheckIn(ctx context.Context, checkInID int64) error {
+	tag, err := r.pool.Exec(ctx, `DELETE FROM check_ins WHERE id = $1`, checkInID)
+	if err != nil {
+		return fmt.Errorf("delete check-in: %w", err)
+	}
+	if tag.RowsAffected() == 0 {
+		return ErrCheckInNotFound
+	}
+	return nil
 }
 
 func (r *PostgresRepository) RecordReview(ctx context.Context, params RecordReviewParams) (ReviewRecord, error) {

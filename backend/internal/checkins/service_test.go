@@ -14,13 +14,15 @@ import (
 // --- stubs ---
 
 type repoStub struct {
-	createCheckIn func(context.Context, CreateCheckInParams) (CheckIn, error)
-	getCheckIn    func(context.Context, int64) (CheckInView, error)
-	listCheckIns  func(context.Context, int64, int64) ([]CheckIn, error)
-	updateStatus  func(context.Context, UpdateStatusParams) error
+	createCheckIn  func(context.Context, CreateCheckInParams) (CheckIn, error)
+	getCheckIn     func(context.Context, int64) (CheckInView, error)
+	listCheckIns   func(context.Context, int64, int64) ([]CheckIn, error)
+	updateStatus   func(context.Context, UpdateStatusParams) error
 	insertEvidence func(context.Context, InsertEvidenceParams) (EvidenceItem, error)
 	countEvidence  func(context.Context, int64) (int, error)
 	recordReview   func(context.Context, RecordReviewParams) (ReviewRecord, error)
+	deleteCheckIn  func(context.Context, int64) error
+	setDeadline    func(context.Context, int64, int64, *time.Time) error
 }
 
 func (s repoStub) CreateCheckIn(ctx context.Context, p CreateCheckInParams) (CheckIn, error) {
@@ -65,6 +67,18 @@ func (s repoStub) RecordReview(ctx context.Context, p RecordReviewParams) (Revie
 	}
 	return ReviewRecord{ID: 1, CheckInID: p.CheckInID, ReviewerUserID: p.ReviewerUserID, Decision: p.Decision, Comment: p.Comment}, nil
 }
+func (s repoStub) DeleteCheckIn(ctx context.Context, id int64) error {
+	if s.deleteCheckIn != nil {
+		return s.deleteCheckIn(ctx, id)
+	}
+	return nil
+}
+func (s repoStub) SetCheckInDeadline(ctx context.Context, checkInID, ownerUserID int64, deadline *time.Time) error {
+	if s.setDeadline != nil {
+		return s.setDeadline(ctx, checkInID, ownerUserID, deadline)
+	}
+	return nil
+}
 
 type storageStub struct {
 	putErr error
@@ -99,7 +113,7 @@ func TestCreateCheckInGoalNotEligibleReturnsError(t *testing.T) {
 		},
 	}
 	svc := NewService(repo, storageStub{})
-	_, err := svc.CreateCheckIn(context.Background(), owner(), 10)
+	_, err := svc.CreateCheckIn(context.Background(), owner(), 10, nil)
 	if !errors.Is(err, ErrGoalNotEligible) {
 		t.Fatalf("expected ErrGoalNotEligible, got %v", err)
 	}
@@ -107,7 +121,7 @@ func TestCreateCheckInGoalNotEligibleReturnsError(t *testing.T) {
 
 func TestCreateCheckInHappyPath(t *testing.T) {
 	svc := NewService(repoStub{}, storageStub{})
-	ci, err := svc.CreateCheckIn(context.Background(), owner(), 10)
+	ci, err := svc.CreateCheckIn(context.Background(), owner(), 10, nil)
 	if err != nil {
 		t.Fatalf("unexpected error: %v", err)
 	}

@@ -207,3 +207,61 @@
   font-size: 12px;
   color: var(--accent);
 }
+
+.checkInDelete {
+  background: transparent;
+  border: none;
+  padding: 0;
+  font-size: 12px;
+  color: var(--text-dim);
+  cursor: pointer;
+  transition: color 120ms ease;
+}
+
+.checkInDelete:hover:not(:disabled) {
+  color: var(--fn-red);
+}
+
+.checkInDelete:disabled {
+  cursor: default;
+  opacity: 0.6;
+}
+
+.deleteError {
+  margin: 8px 0 0;
+  color: var(--fn-red);
+  font-size: 13px;
+}
+
+.deadlineInput {
+  padding: 4px 8px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-xs);
+  background: var(--bg);
+  color: var(--text);
+  font-size: 13px;
+  outline: none;
+}
+
+.deadlineInput:focus {
+  border-color: var(--accent);
+}
+
+.deadlineAction {
+  background: transparent;
+  border: none;
+  padding: 0;
+  font-size: 12px;
+  color: var(--text-dim);
+  cursor: pointer;
+  text-decoration: underline;
+}
+
+.deadlineAction:hover:not(:disabled) {
+  color: var(--accent);
+}
+
+.deadlineAction:disabled {
+  cursor: default;
+  opacity: 0.6;
+}

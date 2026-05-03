@@ -28,6 +28,8 @@ func (h *Handler) RegisterRoutes(r chi.Router) {
 	r.Post("/goals/{goalID}/check-ins", h.handleCreate)
 	r.Get("/goals/{goalID}/check-ins", h.handleList)
 	r.Get("/check-ins/{checkInID}", h.handleGet)
+	r.Delete("/check-ins/{checkInID}", h.handleDelete)
+	r.Put("/check-ins/{checkInID}/deadline", h.handleSetDeadline)
 	r.Post("/check-ins/{checkInID}/submit", h.handleSubmit)
 	r.Post("/check-ins/{checkInID}/evidence/text", h.handleAddText)
 	r.Post("/check-ins/{checkInID}/evidence/link", h.handleAddLink)
@@ -47,12 +49,47 @@ func (h *Handler) handleCreate(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	ci, err := h.service.CreateCheckIn(r.Context(), actor, goalID)
+	var body struct {
+		DeadlineAt *string `json:"deadline_at"`
+	}
+	if r.ContentLength > 0 {
+		if err := json.NewDecoder(r.Body).Decode(&body); err != nil {
+			writeError(w, http.StatusBadRequest, "invalid_json", "Request body must be valid JSON")
+			return
+		}
+	}
+
+	ci, err := h.service.CreateCheckIn(r.Context(), actor, goalID, body.DeadlineAt)
 	if err != nil {
 		h.writeServiceError(w, r, "create check-in", err)
 		return
 	}
 	writeJSON(w, http.StatusCreated, map[string]any{"check_in": ci})
+}
+
+func (h *Handler) handleSetDeadline(w http.ResponseWriter, r *http.Request) {
+	actor, ok := currentUser(w, r)
+	if !ok {
+		return
+	}
+	checkInID, ok := pathInt64(w, r, "checkInID")
+	if !ok {
+		return
+	}
+
+	var body struct {
+		DeadlineAt *string `json:"deadline_at"`
+	}
+	if err := json.NewDecoder(r.Body).Decode(&body); err != nil {
+		writeError(w, http.StatusBadRequest, "invalid_json", "Request body must be valid JSON")
+		return
+	}
+
+	if err := h.service.SetCheckInDeadline(r.Context(), actor, checkInID, body.DeadlineAt); err != nil {
+		h.writeServiceError(w, r, "set check-in deadline", err)
+		return
+	}
+	w.WriteHeader(http.StatusNoContent)
 }
 
 func (h *Handler) handleList(w http.ResponseWriter, r *http.Request) {
@@ -93,6 +130,23 @@ func (h *Handler) handleGet(w http.ResponseWriter, r *http.Request) {
 		"evidence": view.Evidence,
 		"reviews":  view.Reviews,
 	})
+}
+
+func (h *Handler) handleDelete(w http.ResponseWriter, r *http.Request) {
+	actor, ok := currentUser(w, r)
+	if !ok {
+		return
+	}
+	checkInID, ok := pathInt64(w, r, "checkInID")
+	if !ok {
+		return
+	}
+
+	if err := h.service.DeleteCheckIn(r.Context(), actor, checkInID); err != nil {
+		h.writeServiceError(w, r, "delete check-in", err)
+		return
+	}
+	w.WriteHeader(http.StatusNoContent)
 }
 
 func (h *Handler) handleSubmit(w http.ResponseWriter, r *http.Request) {
@@ -264,6 +318,8 @@ func (h *Handler) writeServiceError(w http.ResponseWriter, r *http.Request, op s
 		writeError(w, http.StatusConflict, "cannot_submit", "Check-in cannot be submitted in its current state")
 	case errors.Is(err, ErrCannotAddEvidence):
 		writeError(w, http.StatusConflict, "cannot_add_evidence", "Cannot add evidence in the current state")
+	case errors.Is(err, ErrCannotDelete):
+		writeError(w, http.StatusConflict, "cannot_delete", "Check-in cannot be deleted in its current state")
 	case errors.Is(err, ErrTooManyEvidenceItems):
 		writeError(w, http.StatusConflict, "too_many_evidence", "Maximum evidence items reached")
 	case errors.Is(err, ErrFileTooLarge):

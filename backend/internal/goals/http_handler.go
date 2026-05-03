@@ -34,6 +34,8 @@ func (h *Handler) RegisterRoutes(r chi.Router) {
 	r.Post("/goals", h.handleCreateGoal)
 	r.Get("/goals", h.handleListGoals)
 	r.Get("/goals/{goalID}", h.handleGetGoal)
+	r.Delete("/goals/{goalID}", h.handleDeleteGoal)
+	r.Put("/goals/{goalID}/deadline", h.handleSetGoalDeadline)
 	r.Post("/goals/{goalID}/accept-invite", h.handleAcceptInviteForGoal)
 	r.Get("/dashboard", h.handleDashboard)
 	r.Post("/invites/{token}/accept", h.handleAcceptInvite)
@@ -176,6 +178,75 @@ func (h *Handler) handleGetInvite(w http.ResponseWriter, r *http.Request) {
 			"expires_at":    record.ExpiresAt,
 		},
 	})
+}
+
+func (h *Handler) handleSetGoalDeadline(w http.ResponseWriter, r *http.Request) {
+	actor, ok := users.CurrentUser(r.Context())
+	if !ok {
+		writeError(w, http.StatusUnauthorized, "auth_required", "Authentication required")
+		return
+	}
+
+	rawID := chi.URLParam(r, "goalID")
+	id, err := strconv.ParseInt(rawID, 10, 64)
+	if err != nil || id <= 0 {
+		writeError(w, http.StatusBadRequest, "invalid_param", "goalID must be a positive integer")
+		return
+	}
+
+	var body struct {
+		DeadlineAt *string `json:"deadline_at"`
+	}
+	if err := json.NewDecoder(r.Body).Decode(&body); err != nil {
+		writeError(w, http.StatusBadRequest, "invalid_json", "Request body must be valid JSON")
+		return
+	}
+
+	if err := h.service.SetGoalDeadline(r.Context(), actor, id, body.DeadlineAt); err != nil {
+		switch {
+		case errors.Is(err, ErrGoalNotFound):
+			writeError(w, http.StatusNotFound, "not_found", "Goal not found or you are not the owner")
+		case errors.Is(err, ErrInvalidGoalInput):
+			writeError(w, http.StatusBadRequest, "invalid_input", err.Error())
+		default:
+			if h.log != nil {
+				h.log.Error("set goal deadline", "err", err)
+			}
+			writeError(w, http.StatusInternalServerError, "internal_error", "Could not set deadline")
+		}
+		return
+	}
+	w.WriteHeader(http.StatusNoContent)
+}
+
+func (h *Handler) handleDeleteGoal(w http.ResponseWriter, r *http.Request) {
+	actor, ok := users.CurrentUser(r.Context())
+	if !ok {
+		writeError(w, http.StatusUnauthorized, "auth_required", "Authentication required")
+		return
+	}
+
+	rawID := chi.URLParam(r, "goalID")
+	id, err := strconv.ParseInt(rawID, 10, 64)
+	if err != nil || id <= 0 {
+		writeError(w, http.StatusBadRequest, "invalid_param", "goalID must be a positive integer")
+		return
+	}
+
+	if err := h.service.DeleteGoal(r.Context(), actor, id); err != nil {
+		switch {
+		case errors.Is(err, ErrGoalNotFound):
+			writeError(w, http.StatusNotFound, "not_found", "Goal not found or you are not the owner")
+		default:
+			if h.log != nil {
+				h.log.Error("delete goal", "err", err)
+			}
+			writeError(w, http.StatusInternalServerError, "internal_error", "Could not delete goal")
+		}
+		return
+	}
+
+	w.WriteHeader(http.StatusNoContent)
 }
 
 func (h *Handler) handleAcceptInviteForGoal(w http.ResponseWriter, r *http.Request) {

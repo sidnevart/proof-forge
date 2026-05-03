@@ -24,6 +24,8 @@ export function GoalSetupScreen() {
     const formData = new FormData(event.currentTarget);
     const title = String(formData.get("title") ?? "");
 
+    const deadlineRaw = String(formData.get("deadline_at") ?? "").trim();
+
     startTransition(async () => {
       try {
         await createGoal({
@@ -31,6 +33,7 @@ export function GoalSetupScreen() {
           description: String(formData.get("description") ?? ""),
           buddy_name: String(formData.get("buddy_name") ?? ""),
           buddy_email: String(formData.get("buddy_email") ?? ""),
+          deadline_at: deadlineRaw || null,
         });
         setCreatedTitle(title);
         setTimeout(() => router.push("/dashboard"), 1200);
@@ -87,6 +90,10 @@ export function GoalSetupScreen() {
                 <input name="buddy_email" type="email" placeholder="partner@example.com" required />
               </label>
             </div>
+            <label className={styles.field}>
+              <span>Дедлайн (опционально)</span>
+              <input name="deadline_at" type="date" />
+            </label>
             {error ? (
               <p className={styles.error} role="alert">
                 {error}

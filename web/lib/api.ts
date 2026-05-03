@@ -33,6 +33,7 @@ export type CreateGoalInput = {
   description: string;
   buddy_name: string;
   buddy_email: string;
+  deadline_at?: string | null;
 };
 
 async function request<T>(path: string, init?: RequestInit): Promise<T> {
@@ -100,8 +101,38 @@ export async function getGoal(goalID: number): Promise<{ goal: GoalView }> {
   return request<{ goal: GoalView }>(`/v1/goals/${goalID}`);
 }
 
-export async function createCheckIn(goalID: number): Promise<{ check_in: CheckIn }> {
-  return request<{ check_in: CheckIn }>(`/v1/goals/${goalID}/check-ins`, { method: "POST" });
+export async function deleteGoal(goalID: number): Promise<void> {
+  return request<void>(`/v1/goals/${goalID}`, { method: "DELETE" });
+}
+
+export async function deleteCheckIn(checkInID: number): Promise<void> {
+  return request<void>(`/v1/check-ins/${checkInID}`, { method: "DELETE" });
+}
+
+export async function setGoalDeadline(goalID: number, deadline: string | null): Promise<void> {
+  return request<void>(`/v1/goals/${goalID}/deadline`, {
+    method: "PUT",
+    body: JSON.stringify({ deadline_at: deadline }),
+  });
+}
+
+export async function setCheckInDeadline(checkInID: number, deadline: string | null): Promise<void> {
+  return request<void>(`/v1/check-ins/${checkInID}/deadline`, {
+    method: "PUT",
+    body: JSON.stringify({ deadline_at: deadline }),
+  });
+}
+
+export async function createCheckIn(
+  goalID: number,
+  deadlineAt?: string | null,
+): Promise<{ check_in: CheckIn }> {
+  const body =
+    deadlineAt !== undefined ? JSON.stringify({ deadline_at: deadlineAt }) : undefined;
+  return request<{ check_in: CheckIn }>(`/v1/goals/${goalID}/check-ins`, {
+    method: "POST",
+    body,
+  });
 }
 
 export async function listCheckIns(goalID: number): Promise<{ check_ins: CheckIn[] | null }> {

@@ -24,16 +24,47 @@ func NewService(repo Repository, storage Storage) *Service {
 	}
 }
 
-func (s *Service) CreateCheckIn(ctx context.Context, actor users.User, goalID int64) (CheckIn, error) {
+func (s *Service) CreateCheckIn(ctx context.Context, actor users.User, goalID int64, rawDeadline *string) (CheckIn, error) {
+	deadline, err := ParseDeadline(rawDeadline)
+	if err != nil {
+		return CheckIn{}, err
+	}
 	ci, err := s.repo.CreateCheckIn(ctx, CreateCheckInParams{
 		GoalID:      goalID,
 		OwnerUserID: actor.ID,
 		Status:      StatusDraft,
+		DeadlineAt:  deadline,
 	})
 	if err != nil {
 		return CheckIn{}, fmt.Errorf("create check-in: %w", err)
 	}
 	return ci, nil
+}
+
+func (s *Service) SetCheckInDeadline(ctx context.Context, actor users.User, checkInID int64, raw *string) error {
+	deadline, err := ParseDeadline(raw)
+	if err != nil {
+		return err
+	}
+	return s.repo.SetCheckInDeadline(ctx, checkInID, actor.ID, deadline)
+}
+
+// DeleteCheckIn lets the goal owner discard a check-in that is still under
+// their control (draft or returned for revision). Submitted check-ins are
+// owned by the buddy review queue; approved/rejected check-ins are immutable
+// history.
+func (s *Service) DeleteCheckIn(ctx context.Context, actor users.User, checkInID int64) error {
+	view, err := s.repo.GetCheckIn(ctx, checkInID)
+	if err != nil {
+		return err
+	}
+	if actor.ID != view.CheckIn.OwnerUserID {
+		return ErrNotOwner
+	}
+	if view.CheckIn.Status != StatusDraft && view.CheckIn.Status != StatusChangesRequested {
+		return ErrCannotDelete
+	}
+	return s.repo.DeleteCheckIn(ctx, checkInID)
 }
 
 func (s *Service) GetDetail(ctx context.Context, actor users.User, checkInID int64) (CheckInView, error) {

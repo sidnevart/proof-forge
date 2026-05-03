@@ -23,6 +23,8 @@ type repositoryStub struct {
 	findInvite       func(context.Context, string) (InviteRecord, error)
 	findInviteByGoal func(context.Context, int64) (InviteRecord, error)
 	acceptInvite     func(context.Context, AcceptInviteParams) error
+	deleteGoal       func(context.Context, int64, int64) error
+	setDeadline      func(context.Context, int64, int64, *time.Time) error
 }
 
 func (s repositoryStub) CreateGoalWithInvite(ctx context.Context, params CreateGoalParams) (GoalView, error) {
@@ -59,6 +61,20 @@ func (s repositoryStub) AcceptInvite(ctx context.Context, params AcceptInvitePar
 		return nil
 	}
 	return s.acceptInvite(ctx, params)
+}
+
+func (s repositoryStub) DeleteGoal(ctx context.Context, goalID, ownerUserID int64) error {
+	if s.deleteGoal == nil {
+		return nil
+	}
+	return s.deleteGoal(ctx, goalID, ownerUserID)
+}
+
+func (s repositoryStub) SetGoalDeadline(ctx context.Context, goalID, ownerUserID int64, deadline *time.Time) error {
+	if s.setDeadline == nil {
+		return nil
+	}
+	return s.setDeadline(ctx, goalID, ownerUserID, deadline)
 }
 
 func newTestStub() repositoryStub {

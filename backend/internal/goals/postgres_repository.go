@@ -5,6 +5,7 @@ import (
 	"database/sql"
 	"errors"
 	"fmt"
+	"time"
 
 	"github.com/jackc/pgx/v5"
 	"github.com/jackc/pgx/v5/pgxpool"
@@ -83,6 +84,7 @@ const goalViewSelect = `
 	SELECT
 		g.id, g.title, g.description, g.status,
 		g.current_progress_health, g.current_streak_count,
+		g.deadline_at,
 		g.created_at, g.updated_at,
 		o.id, o.email, o.display_name,
 		b.id, b.email, b.display_name,
@@ -101,9 +103,11 @@ func scanGoalView(rows interface {
 }) (GoalView, error) {
 	var item GoalView
 	var acceptedAt sql.NullTime
+	var deadlineAt sql.NullTime
 	if err := rows.Scan(
 		&item.Goal.ID, &item.Goal.Title, &item.Goal.Description, &item.Goal.Status,
 		&item.Goal.CurrentProgressHealth, &item.Goal.CurrentStreakCount,
+		&deadlineAt,
 		&item.Goal.CreatedAt, &item.Goal.UpdatedAt,
 		&item.Owner.ID, &item.Owner.Email, &item.Owner.DisplayName,
 		&item.Buddy.ID, &item.Buddy.Email, &item.Buddy.DisplayName,
@@ -116,6 +120,10 @@ func scanGoalView(rows interface {
 	if acceptedAt.Valid {
 		value := acceptedAt.Time
 		item.Pact.AcceptedAt = &value
+	}
+	if deadlineAt.Valid {
+		t := deadlineAt.Time
+		item.Goal.DeadlineAt = FormatDeadline(&t)
 	}
 	return item, nil
 }
@@ -227,6 +235,34 @@ func scanInvite(row pgx.Row) (InviteRecord, error) {
 	return rec, err
 }
 
+func (r *PostgresRepository) SetGoalDeadline(ctx context.Context, goalID, ownerUserID int64, deadline *time.Time) error {
+	tag, err := r.pool.Exec(ctx,
+		`UPDATE goals SET deadline_at = $3, updated_at = NOW() WHERE id = $1 AND owner_user_id = $2`,
+		goalID, ownerUserID, deadline,
+	)
+	if err != nil {
+		return fmt.Errorf("set goal deadline: %w", err)
+	}
+	if tag.RowsAffected() == 0 {
+		return ErrGoalNotFound
+	}
+	return nil
+}
+
+func (r *PostgresRepository) DeleteGoal(ctx context.Context, goalID, ownerUserID int64) error {
+	tag, err := r.pool.Exec(ctx,
+		`DELETE FROM goals WHERE id = $1 AND owner_user_id = $2`,
+		goalID, ownerUserID,
+	)
+	if err != nil {
+		return fmt.Errorf("delete goal: %w", err)
+	}
+	if tag.RowsAffected() == 0 {
+		return ErrGoalNotFound
+	}
+	return nil
+}
+
 func (r *PostgresRepository) AcceptInvite(ctx context.Context, params AcceptInviteParams) error {
 	tx, err := r.pool.BeginTx(ctx, pgx.TxOptions{})
 	if err != nil {
@@ -305,13 +341,15 @@ func (r *PostgresRepository) insertGoal(ctx context.Context, tx pgx.Tx, params C
 			description,
 			status,
 			current_progress_health,
-			current_streak_count
+			current_streak_count,
+			deadline_at
 		)
-		VALUES ($1, $2, $3, $4, $5, $6, 0)
-		RETURNING id, title, description, status, current_progress_health, current_streak_count, created_at, updated_at
+		VALUES ($1, $2, $3, $4, $5, $6, 0, $7)
+		RETURNING id, title, description, status, current_progress_health, current_streak_count, deadline_at, created_at, updated_at
 	`
 
 	var goal Goal
+	var deadlineAt sql.NullTime
 	if err := tx.QueryRow(
 		ctx,
 		query,
@@ -321,6 +359,7 @@ func (r *PostgresRepository) insertGoal(ctx context.Context, tx pgx.Tx, params C
 		params.Description,
 		params.GoalStatus,
 		params.ProgressHealth,
+		params.DeadlineAt,
 	).Scan(
 		&goal.ID,
 		&goal.Title,
@@ -328,10 +367,15 @@ func (r *PostgresRepository) insertGoal(ctx context.Context, tx pgx.Tx, params C
 		&goal.Status,
 		&goal.CurrentProgressHealth,
 		&goal.CurrentStreakCount,
+		&deadlineAt,
 		&goal.CreatedAt,
 		&goal.UpdatedAt,
 	); err != nil {
 		return Goal{}, fmt.Errorf("insert goal: %w", err)
+	}
+	if deadlineAt.Valid {
+		t := deadlineAt.Time
+		goal.DeadlineAt = FormatDeadline(&t)
 	}
 
 	return goal, nil

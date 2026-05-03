@@ -13,8 +13,10 @@ import {
   addLinkEvidence,
   addTextEvidence,
   createCheckIn,
+  deleteCheckIn,
   getCheckIn,
   listCheckIns,
+  setCheckInDeadline,
   submitCheckIn,
 } from "@/lib/api";
 import type { CheckIn, EvidenceItem, ReviewRecord } from "@/lib/types";
@@ -42,6 +44,9 @@ export function CheckInScreen({ goalID }: { goalID: number }) {
   const [isAddingFile, startAddFile] = useTransition();
   const [isSubmitting, startSubmit] = useTransition();
   const [isStarting, startCreate] = useTransition();
+  const [isDeleting, startDelete] = useTransition();
+  const [isSavingDeadline, startSaveDeadline] = useTransition();
+  const [deadlineError, setDeadlineError] = useState<string | null>(null);
   const fileRef = useRef<HTMLInputElement>(null);
 
   const loadDraft = useCallback(async () => {
@@ -177,6 +182,43 @@ export function CheckInScreen({ goalID }: { goalID: number }) {
         setTimeout(() => router.push("/dashboard"), 2000);
       } catch (error) {
         setEvidenceError(error instanceof Error ? error.message : "Не удалось отправить подтверждение.");
+      }
+    });
+  }
+
+  function handleDeadlineChange(value: string) {
+    if (state.kind !== "draft") return;
+    const checkInID = state.checkIn.id;
+    const next = value || null;
+    setDeadlineError(null);
+    startSaveDeadline(async () => {
+      try {
+        await setCheckInDeadline(checkInID, next);
+        setState((prev) =>
+          prev.kind === "draft"
+            ? { ...prev, checkIn: { ...prev.checkIn, deadline_at: next } }
+            : prev,
+        );
+      } catch (err) {
+        setDeadlineError(err instanceof Error ? err.message : "Не удалось сохранить дедлайн.");
+      }
+    });
+  }
+
+  function handleDeleteDraft() {
+    if (state.kind !== "draft") return;
+    if (typeof window !== "undefined") {
+      const ok = window.confirm("Удалить этот черновик и все собранные материалы?");
+      if (!ok) return;
+    }
+    const checkInID = state.checkIn.id;
+    setEvidenceError(null);
+    startDelete(async () => {
+      try {
+        await deleteCheckIn(checkInID);
+        router.push(`/goals/${goalID}`);
+      } catch (error) {
+        setEvidenceError(error instanceof Error ? error.message : "Не удалось удалить черновик.");
       }
     });
   }
@@ -370,6 +412,25 @@ export function CheckInScreen({ goalID }: { goalID: number }) {
             )}
           </SectionShell>
 
+          <SectionShell eyebrow="Дедлайн" title="Когда отправить">
+            <div className={styles.submitBlock}>
+              <label className={styles.field}>
+                <span>Дата (опционально)</span>
+                <input
+                  type="date"
+                  value={checkIn.deadline_at ?? ""}
+                  onChange={(e) => handleDeadlineChange(e.target.value)}
+                  disabled={isSavingDeadline}
+                />
+              </label>
+              {deadlineError ? (
+                <p className={styles.formError} role="alert">
+                  {deadlineError}
+                </p>
+              ) : null}
+            </div>
+          </SectionShell>
+
           <SectionShell eyebrow="Отправка" title="Передать партнёру на проверку">
             <div className={styles.submitBlock}>
               <p>
@@ -378,6 +439,9 @@ export function CheckInScreen({ goalID }: { goalID: number }) {
               </p>
               <Button onClick={handleSubmit} disabled={isSubmitting || evidence.length === 0}>
                 {isSubmitting ? "Отправляем..." : "Отправить на проверку"}
+              </Button>
+              <Button variant="ghost" onClick={handleDeleteDraft} disabled={isDeleting}>
+                {isDeleting ? "Удаляем..." : "Удалить черновик"}
               </Button>
             </div>
           </SectionShell>

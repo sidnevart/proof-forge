@@ -11,14 +11,24 @@ import { StakePanel } from "@/components/product/stake-panel";
 import { ApiError, getDashboard, listCheckIns, loginUser, registerUser } from "@/lib/api";
 import { formatDateLabel } from "@/lib/ui-copy";
 import type { CheckIn, DashboardResponse, GoalView } from "@/lib/types";
+import { type AppMode, useAppMode } from "@/lib/use-app-mode";
 
 import styles from "./dashboard-screen.module.css";
+
+type BuddyReviewItem = {
+  checkIn: CheckIn;
+  goal: GoalView;
+};
 
 type ScreenState =
   | { kind: "loading" }
   | { kind: "unauthenticated" }
   | { kind: "error"; message: string }
-  | { kind: "ready"; dashboard: DashboardResponse; primaryCheckIns: CheckIn[] };
+  | {
+      kind: "ready";
+      dashboard: DashboardResponse;
+      buddyReviewQueue: BuddyReviewItem[];
+    };
 
 export function DashboardScreen() {
   const [screenState, setScreenState] = useState<ScreenState>({ kind: "loading" });
@@ -26,6 +36,7 @@ export function DashboardScreen() {
   const [loginError, setLoginError] = useState<string | null>(null);
   const [isRegistering, startRegisterTransition] = useTransition();
   const [isLoggingIn, startLoginTransition] = useTransition();
+  const [mode, setMode] = useAppMode("all");
 
   useEffect(() => {
     void loadDashboard();
@@ -34,18 +45,36 @@ export function DashboardScreen() {
   async function loadDashboard() {
     try {
       const dashboard = await getDashboard();
-      const ownerGoals = (dashboard.goals ?? []).filter((g) => g.role === "owner");
-      const primary = pickPrimaryGoal(ownerGoals);
-      let primaryCheckIns: CheckIn[] = [];
-      if (primary && primary.goal.status === "active") {
-        try {
-          const data = await listCheckIns(primary.goal.id);
-          primaryCheckIns = data.check_ins ?? [];
-        } catch {
-          primaryCheckIns = [];
+      const goals = dashboard.goals ?? [];
+      const buddyActiveGoals = goals.filter(
+        (g) => g.role === "buddy" && g.goal.status === "active",
+      );
+
+      const buddyReviewQueue: BuddyReviewItem[] = [];
+      const buddyResults = await Promise.all(
+        buddyActiveGoals.map(async (g) => {
+          try {
+            const data = await listCheckIns(g.goal.id);
+            return { goal: g, checkIns: data.check_ins ?? [] };
+          } catch {
+            return { goal: g, checkIns: [] as CheckIn[] };
+          }
+        }),
+      );
+      for (const { goal, checkIns } of buddyResults) {
+        for (const ci of checkIns) {
+          if (ci.status === "submitted") {
+            buddyReviewQueue.push({ checkIn: ci, goal });
+          }
         }
       }
-      setScreenState({ kind: "ready", dashboard, primaryCheckIns });
+      buddyReviewQueue.sort((a, b) => {
+        const aDate = a.checkIn.submitted_at ?? a.checkIn.created_at;
+        const bDate = b.checkIn.submitted_at ?? b.checkIn.created_at;
+        return new Date(aDate).getTime() - new Date(bDate).getTime();
+      });
+
+      setScreenState({ kind: "ready", dashboard, buddyReviewQueue });
     } catch (error) {
       if (error instanceof ApiError && error.status === 401) {
         setScreenState({ kind: "unauthenticated" });
@@ -210,440 +239,285 @@ export function DashboardScreen() {
     );
   }
 
-  const { dashboard, primaryCheckIns } = screenState;
+  const { dashboard, buddyReviewQueue } = screenState;
   const allGoals = dashboard.goals ?? [];
   const ownerGoals = allGoals.filter((g) => g.role === "owner");
   const buddyGoals = allGoals.filter((g) => g.role === "buddy");
-  const primaryGoal = pickPrimaryGoal(ownerGoals);
-  const otherGoals = primaryGoal
-    ? ownerGoals.filter((goal) => goal.goal.id !== primaryGoal.goal.id)
-    : [];
+  const pendingBuddyInvites = buddyGoals.filter(
+    (g) => g.goal.status === "pending_buddy_acceptance",
+  );
 
-  const checkInStats = computeCheckInStats(primaryCheckIns);
-  const recentCheckIns = primaryCheckIns.slice(0, 5);
+  const filtered =
+    mode === "owner" ? ownerGoals : mode === "buddy" ? buddyGoals : allGoals;
+  const sorted = sortGoalsForList(filtered);
 
   return (
     <main className={styles.page}>
       <header className={styles.header}>
         <div>
-          <span className="eyebrow">Операционный центр</span>
-          <h1>{dashboard.user.display_name}, держите цель под контролем</h1>
+          <span className="eyebrow">Цели</span>
+          <h1>{dashboard.user.display_name}, всё в одном списке</h1>
         </div>
-        <StatusPill
-          status={primaryGoal?.goal.status === "pending_buddy_acceptance" ? "pending" : "active"}
-          label={
-            primaryGoal?.goal.status === "pending_buddy_acceptance"
-              ? "Ждём ответа партнёра"
-              : "Цель в работе"
-          }
-        />
+        <Link className={styles.primaryLink} href="/goals/new">
+          Создать цель
+        </Link>
       </header>
 
-      {primaryGoal ? (
-        <>
-          <section className={styles.heroGrid}>
-            <SectionShell eyebrow="Следующий шаг" title={getNextStep(primaryGoal).title}>
-              <div className={styles.nextStepBlock}>
-                <strong className={styles.focusGoal}>{primaryGoal.goal.title}</strong>
-                <p>{getNextStep(primaryGoal).description}</p>
-                <div className={styles.actionRow}>
-                  <Link className={styles.primaryLink} href={getNextStep(primaryGoal).href}>
-                    {getNextStep(primaryGoal).action}
-                  </Link>
-                  <Link className={styles.secondaryLink} href={`/goals/${primaryGoal.goal.id}`}>
-                    Открыть цель
-                  </Link>
-                  <Link className={styles.secondaryLink} href="/goals/new">
-                    Новая цель
-                  </Link>
-                </div>
-              </div>
-            </SectionShell>
+      <ModeSwitch
+        mode={mode}
+        onChange={setMode}
+        allCount={allGoals.length}
+        ownerCount={ownerGoals.length}
+        buddyCount={buddyGoals.length}
+        reviewQueueCount={buddyReviewQueue.length}
+        pendingInviteCount={pendingBuddyInvites.length}
+      />
 
-            <SectionShell eyebrow="Состояние контура" title="Что происходит сейчас">
-              <dl className={styles.snapshotList}>
-                <div>
-                  <dt>Главная цель</dt>
-                  <dd>{primaryGoal.goal.title}</dd>
-                </div>
-                <div>
-                  <dt>Партнёр</dt>
-                  <dd>{primaryGoal.buddy.display_name}</dd>
-                </div>
-                <div>
-                  <dt>Статус цели</dt>
-                  <dd>{primaryGoal.goal.status === "active" ? "Активна" : "Ждёт принятия"}</dd>
-                </div>
-                <div>
-                  <dt>Следующая точка</dt>
-                  <dd>{getNextStep(primaryGoal).shortLabel}</dd>
-                </div>
-              </dl>
-            </SectionShell>
-          </section>
-
-          <section className={styles.surfaceGrid}>
-            <SectionShell eyebrow="Главная цель" title="Карточка цели">
-              <GoalCard goal={primaryGoal} />
-            </SectionShell>
-
-            <SectionShell eyebrow="Состояние прогресса" title="Движение по цели">
-              <div className={styles.progressPanel}>
-                <div className={styles.healthValue}>{formatHealthScore(dashboard.summary)}</div>
-                <p>{getProgressText(primaryGoal, dashboard.summary)}</p>
-              </div>
-            </SectionShell>
-
-            <SectionShell eyebrow="Статус партнёра" title="Кто подтверждает движение">
-              <StatePanel
-                tone={primaryGoal.goal.status === "pending_buddy_acceptance" ? "pending" : "success"}
-                title={
-                  primaryGoal.goal.status === "pending_buddy_acceptance"
-                    ? "Партнёр ещё не принял приглашение"
-                    : "Партнёр готов к проверке"
-                }
-                description={
-                  primaryGoal.goal.status === "pending_buddy_acceptance"
-                    ? `Приглашение активно до ${formatShortDate(primaryGoal.invite.expires_at)}. Пока партнёр не подтвердит участие, прогресс по цели не может перейти в рабочий цикл.`
-                    : "Подтверждения можно отправлять на проверку. Решение по прогрессу принимает партнёр."
-                }
-              />
-            </SectionShell>
-
-            {primaryGoal.goal.status === "active" ? (
-              <StakePanel goalID={primaryGoal.goal.id} role="owner" />
-            ) : null}
-
-            <SectionShell eyebrow="История подтверждений" title="Последние сигналы">
-              {recentCheckIns.length === 0 ? (
-                <StatePanel
-                  tone="empty"
-                  title={
-                    primaryGoal.goal.status === "pending_buddy_acceptance"
-                      ? "Подтверждения появятся после принятия приглашения"
-                      : "Подтверждений пока нет"
-                  }
-                  description={
-                    primaryGoal.goal.status === "pending_buddy_acceptance"
-                      ? "Цикл запустится, когда партнёр примет приглашение."
-                      : "Соберите первое подтверждение и отправьте партнёру на проверку."
-                  }
-                  meta={
-                    primaryGoal.goal.status === "active" ? (
-                      <Link className={styles.secondaryLink} href={`/goals/${primaryGoal.goal.id}/check-in`}>
-                        Подготовить подтверждение
-                      </Link>
-                    ) : null
-                  }
-                />
-              ) : (
-                <ol className={styles.eventList}>
-                  {recentCheckIns.map((ci) => (
-                    <CheckInEventItem key={ci.id} checkIn={ci} goalID={primaryGoal.goal.id} />
-                  ))}
-                </ol>
-              )}
-            </SectionShell>
-
-            <SectionShell eyebrow="Сводка цели" title="Картина движения">
-              <div className={styles.poster}>
-                <div className={styles.posterStats}>
-                  <div>
-                    <span>Подтверждено</span>
-                    <strong>{formatStat(checkInStats.approved)}</strong>
-                  </div>
-                  <div>
-                    <span>Ждут проверки</span>
-                    <strong>{formatStat(checkInStats.submitted)}</strong>
-                  </div>
-                  <div>
-                    <span>Стрик</span>
-                    <strong>{formatStat(primaryGoal.goal.current_streak_count)}</strong>
-                  </div>
-                  <div>
-                    <span>На доработке</span>
-                    <strong>{formatStat(checkInStats.changesRequested)}</strong>
-                  </div>
-                </div>
-                <p>
-                  {primaryGoal.goal.status === "pending_buddy_acceptance"
-                    ? "Сводка начнёт отражать движение, как только партнёр примет приглашение."
-                    : checkInStats.total === 0
-                      ? "Цикл запущен, но подтверждения ещё не приходили — соберите первое."
-                      : "Сводка считается по реальным подтверждениям и решениям партнёра."}
-                </p>
-              </div>
-            </SectionShell>
-
-            {otherGoals.length > 0 ? (
-              <SectionShell eyebrow="Остальные цели" title="Что ещё идёт параллельно">
-                <div className={styles.otherGoals}>
-                  {otherGoals.map((goal) => (
-                    <Link key={goal.goal.id} href={`/goals/${goal.goal.id}`} className={styles.goalListCard}>
-                      <strong>{goal.goal.title}</strong>
-                      <p>{goal.goal.description || "Описание пока не заполнено."}</p>
-                      <StatusPill
-                        status={goal.goal.status === "active" ? "active" : "pending"}
-                        label={goal.goal.status === "active" ? "Активна" : "Ждёт принятия"}
-                      />
+      {(mode === "all" || mode === "buddy") && buddyReviewQueue.length > 0 ? (
+        <SectionShell
+          eyebrow="Очередь проверки"
+          title={`Ждут вашего решения (${buddyReviewQueue.length})`}
+        >
+          <ol className={styles.eventList}>
+            {buddyReviewQueue.map((item) => (
+              <li key={item.checkIn.id} className={styles.eventItem}>
+                <div className={styles.eventHeader}>
+                  <strong>
+                    <Link href={`/check-ins/${item.checkIn.id}/review`}>
+                      {item.goal.goal.title} · Чекин #{item.checkIn.id}
                     </Link>
-                  ))}
+                  </strong>
+                  <StatusPill status="pending" label="На ревью" />
                 </div>
-              </SectionShell>
-            ) : null}
-          </section>
-        </>
-      ) : (
-        <>
-          <section className={styles.heroGrid}>
-            <SectionShell eyebrow="Следующий шаг" title="Создайте первую цель">
-              <div className={styles.nextStepBlock}>
-                <strong className={styles.focusGoal}>Рабочий контур ещё не запущен</strong>
-                <p>
-                  Пока у вас нет ни одной цели, поэтому главный экран не может вести вас
-                  по циклу. Начните с формулировки цели и приглашения партнёра.
-                </p>
-                <div className={styles.actionRow}>
-                  <Link className={styles.primaryLink} href="/goals/new">
-                    Создать первую цель
+                <p>Владелец: {item.goal.owner.display_name}</p>
+                <div className={styles.eventFooter}>
+                  <span>
+                    Отправлен{" "}
+                    {formatDateLabel(
+                      item.checkIn.submitted_at ?? item.checkIn.created_at,
+                      { month: "short", day: "numeric" },
+                    )}
+                  </span>
+                  <Link
+                    className={styles.eventLink}
+                    href={`/check-ins/${item.checkIn.id}/review`}
+                  >
+                    Проверить →
                   </Link>
                 </div>
-              </div>
-            </SectionShell>
+              </li>
+            ))}
+          </ol>
+        </SectionShell>
+      ) : null}
 
-            <SectionShell eyebrow="Что появится дальше" title="Будущие поверхности">
-              <div className={styles.snapshotList}>
-                <div>
-                  <dt>Главная цель</dt>
-                  <dd>Станет центром экрана</dd>
-                </div>
-                <div>
-                  <dt>Партнёр</dt>
-                  <dd>Получит приглашение к участию</dd>
-                </div>
-                <div>
-                  <dt>Подтверждения</dt>
-                  <dd>Появятся в истории сигналов</dd>
-                </div>
-                <div>
-                  <dt>Сводка</dt>
-                  <dd>Соберёт картину недели</dd>
-                </div>
-              </div>
-            </SectionShell>
-          </section>
-
-          <section className={styles.surfaceGrid}>
-            <SectionShell eyebrow="Главная цель" title="Цель появится здесь">
-              <StatePanel
-                tone="empty"
-                title="Пока ничего не зафиксировано"
-                description="После создания цели здесь появится карточка с описанием, статусом и данными партнёра."
-              />
-            </SectionShell>
-
-            <SectionShell eyebrow="История подтверждений" title="Журнал пока пуст">
-              <StatePanel
-                tone="empty"
-                title="Нет подтверждений"
-                description="Как только по цели появятся первые материалы, они будут складываться в этот журнал."
-              />
-            </SectionShell>
-          </section>
-        </>
+      {sorted.length === 0 ? (
+        <SectionShell
+          eyebrow="Список целей"
+          title={
+            mode === "buddy"
+              ? "Партнёрств пока нет"
+              : mode === "owner"
+                ? "Своих целей пока нет"
+                : "Ни одной цели пока нет"
+          }
+        >
+          <StatePanel
+            tone="empty"
+            title="Здесь будет список"
+            description={
+              mode === "buddy"
+                ? "Когда вас пригласят как партнёра, цель появится в этом списке."
+                : "Создайте первую цель и пригласите партнёра."
+            }
+            meta={
+              mode !== "buddy" ? (
+                <Link className={styles.primaryLink} href="/goals/new">
+                  Создать цель
+                </Link>
+              ) : null
+            }
+          />
+        </SectionShell>
+      ) : (
+        <SectionShell
+          eyebrow="Список целей"
+          title={`${modeLabel(mode)} (${sorted.length})`}
+        >
+          <ol className={styles.goalList}>
+            {sorted.map((goal) => (
+              <GoalListRow key={goal.goal.id} view={goal} />
+            ))}
+          </ol>
+        </SectionShell>
       )}
 
-      {buddyGoals.length > 0 ? (
-        <section>
-          <SectionShell
-            eyebrow="Где вы партнёр"
-            title={`Цели партнёров (${buddyGoals.length})`}
-          >
-            <div className={styles.otherGoals}>
-              {buddyGoals.map((g) => (
-                <Link
-                  key={g.goal.id}
-                  href={`/goals/${g.goal.id}`}
-                  className={styles.goalListCard}
-                >
-                  <strong>{g.goal.title}</strong>
-                  <p>Владелец: {g.owner.display_name}</p>
-                  <StatusPill
-                    status={g.goal.status === "active" ? "active" : "pending"}
-                    label={g.goal.status === "active" ? "В работе" : "Ждёт принятия"}
-                  />
-                </Link>
-              ))}
-            </div>
-          </SectionShell>
-        </section>
-      ) : null}
     </main>
   );
 }
 
-function GoalCard({ goal }: { goal: GoalView }) {
+function ModeSwitch({
+  mode,
+  onChange,
+  allCount,
+  ownerCount,
+  buddyCount,
+  reviewQueueCount,
+  pendingInviteCount,
+}: {
+  mode: AppMode;
+  onChange: (next: AppMode) => void;
+  allCount: number;
+  ownerCount: number;
+  buddyCount: number;
+  reviewQueueCount: number;
+  pendingInviteCount: number;
+}) {
+  const buddyAttention = reviewQueueCount + pendingInviteCount;
+
   return (
-    <article className={styles.goalCard}>
-      <div className={styles.goalCardHeader}>
-        <div>
-          <strong>{goal.goal.title}</strong>
-          <p>{goal.goal.description || "Описание пока не заполнено."}</p>
-        </div>
-        <StatusPill
-          status={goal.goal.status === "active" ? "active" : "pending"}
-          label={goal.goal.status === "active" ? "Активна" : "Ждёт принятия"}
-        />
-      </div>
-
-      <div className={styles.goalMeta}>
-        <div>
-          <span>Партнёр</span>
-          <strong>{goal.buddy.display_name}</strong>
-        </div>
-        <div>
-          <span>Почта</span>
-          <strong>{goal.buddy.email}</strong>
-        </div>
-        <div>
-          <span>Приглашение действует до</span>
-          <strong>{formatShortDate(goal.invite.expires_at)}</strong>
-        </div>
-        <div>
-          <span>Последнее изменение</span>
-          <strong>{formatShortDate(goal.goal.updated_at)}</strong>
-        </div>
-      </div>
-    </article>
-  );
-}
-
-function pickPrimaryGoal(goals: GoalView[]) {
-  return goals.find((goal) => goal.goal.status === "pending_buddy_acceptance") ?? goals[0];
-}
-
-function getNextStep(goal: GoalView) {
-  if (goal.goal.status === "pending_buddy_acceptance") {
-    return {
-      title: "Дождитесь ответа партнёра",
-      description:
-        "Приглашение уже отправлено. Как только партнёр примет участие, цель перейдёт в рабочий цикл, и вы сможете отправлять подтверждения прогресса.",
-      action: "Создать ещё одну цель",
-      href: "/goals/new",
-      shortLabel: "Ждём принятия приглашения",
-    };
-  }
-
-  return {
-    title: "Подготовьте новое подтверждение",
-    description:
-      "Следующая задача — собрать материалы по цели и отправить их партнёру на проверку.",
-    action: "Перейти к подтверждению",
-    href: `/goals/${goal.goal.id}/check-in`,
-    shortLabel: "Собрать подтверждение",
-  };
-}
-
-function getProgressText(goal: GoalView, summary: DashboardResponse["summary"]) {
-  if (goal.goal.status === "pending_buddy_acceptance") {
-    return `Сейчас в системе ${summary.pending_buddy_acceptance} ${
-      summary.pending_buddy_acceptance === 1 ? "цель ждёт" : "цели ждут"
-    } ответа партнёра. Подтверждённый прогресс начнётся после принятия приглашения.`;
-  }
-
-  return "Цель находится в рабочем цикле. Следующий шаг — собрать подтверждение и отправить его партнёру на проверку.";
-}
-
-function formatHealthScore(summary: DashboardResponse["summary"]) {
-  if (summary.total_goals === 0) {
-    return "0%";
-  }
-
-  const activeWeight = summary.active_goals * 100;
-  const pendingWeight = summary.pending_buddy_acceptance * 45;
-  return `${Math.round((activeWeight + pendingWeight) / summary.total_goals)}%`;
-}
-
-function formatShortDate(value: string) {
-  return formatDateLabel(value, { month: "short" });
-}
-
-function computeCheckInStats(list: CheckIn[]) {
-  return list.reduce(
-    (acc, ci) => {
-      acc.total += 1;
-      if (ci.status === "approved") acc.approved += 1;
-      else if (ci.status === "submitted") acc.submitted += 1;
-      else if (ci.status === "changes_requested") acc.changesRequested += 1;
-      else if (ci.status === "rejected") acc.rejected += 1;
-      return acc;
-    },
-    { total: 0, approved: 0, submitted: 0, changesRequested: 0, rejected: 0 },
-  );
-}
-
-function formatStat(n: number): string {
-  return n < 10 ? `0${n}` : String(n);
-}
-
-function CheckInEventItem({ checkIn, goalID }: { checkIn: CheckIn; goalID: number }) {
-  const date = checkIn.submitted_at ?? checkIn.created_at;
-  const status =
-    checkIn.status === "approved"
-      ? {
-          label: "Подтверждён",
-          tone: "approved" as const,
-          detail: "Партнёр подтвердил движение по цели.",
-          cta: "Открыть цель",
-          href: `/goals/${goalID}`,
+    <div className={styles.modeSwitch} role="tablist" aria-label="Фильтр списка">
+      <ModeTab
+        active={mode === "all"}
+        label="Все"
+        badge={allCount > 0 ? String(allCount) : null}
+        onClick={() => onChange("all")}
+      />
+      <ModeTab
+        active={mode === "owner"}
+        label="Свои"
+        badge={ownerCount > 0 ? String(ownerCount) : null}
+        onClick={() => onChange("owner")}
+      />
+      <ModeTab
+        active={mode === "buddy"}
+        label="Партнёрство"
+        badge={
+          buddyAttention > 0
+            ? String(buddyAttention)
+            : buddyCount > 0
+              ? String(buddyCount)
+              : null
         }
-      : checkIn.status === "rejected"
-        ? {
-            label: "Отклонён",
-            tone: "rejected" as const,
-            detail: "Партнёр отклонил это подтверждение.",
-            cta: "Открыть цель",
-            href: `/goals/${goalID}`,
-          }
-        : checkIn.status === "submitted"
-          ? {
-              label: "На ревью",
-              tone: "pending" as const,
-              detail: "Партнёр получил материалы и принимает решение.",
-              cta: "Открыть цель",
-              href: `/goals/${goalID}`,
-            }
-          : checkIn.status === "changes_requested"
-            ? {
-                label: "Нужны правки",
-                tone: "changes_requested" as const,
-                detail: "Партнёр вернул на доработку — откройте чекин и посмотрите комментарий.",
-                cta: "Доработать чекин",
-                href: `/goals/${goalID}/check-in`,
-              }
-            : {
-                label: "Черновик",
-                tone: "active" as const,
-                detail: "Черновик в работе — соберите материалы.",
-                cta: "Продолжить черновик",
-                href: `/goals/${goalID}/check-in`,
-              };
+        attention={buddyAttention > 0}
+        onClick={() => onChange("buddy")}
+      />
+    </div>
+  );
+}
+
+function ModeTab({
+  active,
+  label,
+  badge,
+  attention,
+  onClick,
+}: {
+  active: boolean;
+  label: string;
+  badge: string | null;
+  attention?: boolean;
+  onClick: () => void;
+}) {
+  return (
+    <button
+      type="button"
+      role="tab"
+      aria-selected={active}
+      className={active ? styles.modeTabActive : styles.modeTab}
+      onClick={onClick}
+    >
+      <span>{label}</span>
+      {badge ? (
+        <span className={attention ? styles.modeBadgeAttention : styles.modeBadge}>
+          {badge}
+        </span>
+      ) : null}
+    </button>
+  );
+}
+
+function modeLabel(mode: AppMode): string {
+  if (mode === "owner") return "Свои цели";
+  if (mode === "buddy") return "Партнёрства";
+  return "Все цели";
+}
+
+function sortGoalsForList(goals: GoalView[]): GoalView[] {
+  return [...goals].sort((a, b) => {
+    const aPending = a.goal.status === "pending_buddy_acceptance" ? 0 : 1;
+    const bPending = b.goal.status === "pending_buddy_acceptance" ? 0 : 1;
+    if (aPending !== bPending) return aPending - bPending;
+    const aDl = a.goal.deadline_at;
+    const bDl = b.goal.deadline_at;
+    if (aDl && bDl) return aDl.localeCompare(bDl);
+    if (aDl) return -1;
+    if (bDl) return 1;
+    return b.goal.created_at.localeCompare(a.goal.created_at);
+  });
+}
+
+function GoalListRow({ view }: { view: GoalView }) {
+  const isPending = view.goal.status === "pending_buddy_acceptance";
+  const counterpart = view.role === "owner" ? view.buddy : view.owner;
+  const counterpartLabel = view.role === "owner" ? "Партнёр" : "Владелец";
+  const deadline = view.goal.deadline_at ? deadlineAccent(view.goal.deadline_at) : null;
 
   return (
-    <li className={styles.eventItem}>
-      <div className={styles.eventHeader}>
-        <strong>
-          <Link href={status.href}>Чекин #{checkIn.id}</Link>
-        </strong>
-        <StatusPill status={status.tone} label={status.label} />
-      </div>
-      <p>{status.detail}</p>
-      <div className={styles.eventFooter}>
-        <span>{formatDateLabel(date, { month: "short", day: "numeric" })}</span>
-        <Link className={styles.eventLink} href={status.href}>
-          {status.cta} →
-        </Link>
-      </div>
+    <li className={styles.goalRow}>
+      <Link href={`/goals/${view.goal.id}`} className={styles.goalRowLink}>
+        <div className={styles.goalRowMain}>
+          <div className={styles.goalRowTitle}>
+            <strong>{view.goal.title}</strong>
+            <span className={view.role === "owner" ? styles.roleOwner : styles.roleBuddy}>
+              {view.role === "owner" ? "Свои" : "Партнёр"}
+            </span>
+          </div>
+          {view.goal.description ? (
+            <p className={styles.goalRowDescription}>{view.goal.description}</p>
+          ) : null}
+          <div className={styles.goalRowMeta}>
+            <span>
+              {counterpartLabel}: <strong>{counterpart.display_name}</strong>
+            </span>
+            <span>
+              Стрик: <strong>{view.goal.current_streak_count}</strong>
+            </span>
+          </div>
+        </div>
+        <div className={styles.goalRowAside}>
+          <StatusPill
+            status={isPending ? "pending" : "active"}
+            label={isPending ? "Ждёт принятия" : "В работе"}
+          />
+          {deadline ? (
+            <span className={`${styles.deadlineChip} ${styles[`deadline_${deadline.tone}`] ?? ""}`}>
+              {deadline.label}
+            </span>
+          ) : (
+            <span className={styles.deadlineChip}>без дедлайна</span>
+          )}
+        </div>
+      </Link>
     </li>
   );
 }
+
+function deadlineAccent(iso: string): { label: string; tone: "overdue" | "soon" | "ok" } {
+  const [y, m, d] = iso.split("-").map((part) => parseInt(part, 10));
+  const target = new Date(y, m - 1, d);
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
+  const days = Math.round((target.getTime() - today.getTime()) / (24 * 60 * 60 * 1000));
+  const formatted = target.toLocaleDateString("ru-RU", {
+    day: "numeric",
+    month: "short",
+  });
+  if (days < 0) {
+    return { label: `просрочено на ${Math.abs(days)} дн · ${formatted}`, tone: "overdue" };
+  }
+  if (days === 0) return { label: `сегодня · ${formatted}`, tone: "soon" };
+  if (days <= 7) return { label: `через ${days} дн · ${formatted}`, tone: "soon" };
+  return { label: `до ${formatted}`, tone: "ok" };
+}
+

@@ -45,6 +45,11 @@ func (s *Service) CreateGoal(ctx context.Context, owner users.User, input Create
 	}
 
 	input = input.Normalize()
+	deadline, err := ParseDeadline(input.DeadlineAt)
+	if err != nil {
+		return GoalView{}, err
+	}
+
 	rawToken, err := s.tokenGenerate()
 	if err != nil {
 		return GoalView{}, fmt.Errorf("generate invite token: %w", err)
@@ -63,6 +68,7 @@ func (s *Service) CreateGoal(ctx context.Context, owner users.User, input Create
 		ProgressHealth:  ProgressHealthUnknown,
 		InviteTokenHash: hashInviteToken(rawToken),
 		InviteExpiresAt: s.clock().UTC().Add(s.inviteTTL),
+		DeadlineAt:      deadline,
 	})
 	if err != nil {
 		return GoalView{}, fmt.Errorf("create goal with invite: %w", err)
@@ -121,6 +127,23 @@ func (s *Service) GetGoal(ctx context.Context, actor users.User, goalID int64) (
 		return GoalView{}, err
 	}
 	return view, nil
+}
+
+// DeleteGoal removes the goal owned by actor and everything that hangs off it
+// (pacts, invites, check-ins, evidence, reviews, milestones, stakes, recaps).
+// Only the goal owner can delete; buddies cannot.
+func (s *Service) DeleteGoal(ctx context.Context, actor users.User, goalID int64) error {
+	return s.repo.DeleteGoal(ctx, goalID, actor.ID)
+}
+
+// SetGoalDeadline updates the goal's deadline_at column. Pass nil/empty raw
+// string to clear it.
+func (s *Service) SetGoalDeadline(ctx context.Context, actor users.User, goalID int64, raw *string) error {
+	deadline, err := ParseDeadline(raw)
+	if err != nil {
+		return err
+	}
+	return s.repo.SetGoalDeadline(ctx, goalID, actor.ID, deadline)
 }
 
 // GetInvitePreview looks up an invite by its raw token and returns the preview

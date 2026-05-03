@@ -128,6 +128,12 @@ export function BuddyGoalScreen({
             <span className={styles.metaLabel}>Стрик</span>
             <span className={styles.metaValue}>{view.goal.current_streak_count}</span>
           </div>
+          {view.goal.deadline_at ? (
+            <div className={styles.metaItem}>
+              <span className={styles.metaLabel}>Дедлайн</span>
+              <span className={styles.metaValue}>{formatDateOnly(view.goal.deadline_at)}</span>
+            </div>
+          ) : null}
         </div>
       </header>
 
@@ -249,4 +255,14 @@ function BuddyHistoryRow({ row }: { row: CheckInWithReview }) {
 
 function formatDate(iso: string): string {
   return new Date(iso).toLocaleDateString("ru-RU", { day: "numeric", month: "short", year: "numeric" });
+}
+
+function formatDateOnly(iso: string): string {
+  const [y, m, d] = iso.split("-").map((part) => parseInt(part, 10));
+  if (!y || !m || !d) return iso;
+  return new Date(y, m - 1, d).toLocaleDateString("ru-RU", {
+    day: "numeric",
+    month: "short",
+    year: "numeric",
+  });
 }

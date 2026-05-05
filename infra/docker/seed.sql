@@ -65,7 +65,7 @@ VALUES
    'active', 'strong', 7,
    'Скриншот из Strava с дистанцией и временем',
    'Спорт и здоровье', TRUE,
-   NOW()-INTERVAL '20 days', NOW()),
+   NOW()-INTERVAL '4 days', NOW()),
 
   -- Цель 2: Марина читает, бадди Алекс, в круге 1
   (2, 1, 2, 1,
@@ -74,7 +74,7 @@ VALUES
    'active', 'improving', 4,
    'Фото страницы с закладкой или заметка с цитатой',
    'Образование', TRUE,
-   NOW()-INTERVAL '18 days', NOW()),
+   NOW()-INTERVAL '3 days', NOW()),
 
   -- Цель 3: Кирилл учит английский, бадди Марина, в круге 2
   (3, 2, 3, 2,
@@ -83,7 +83,7 @@ VALUES
    'active', 'stable', 3,
    'Скриншот Duolingo или краткий конспект прочитанной статьи',
    'Образование', TRUE,
-   NOW()-INTERVAL '13 days', NOW())
+   NOW()-INTERVAL '3 days', NOW())
 ON CONFLICT DO NOTHING;
 
 SELECT setval('goals_id_seq', (SELECT MAX(id) FROM goals));
@@ -91,9 +91,9 @@ SELECT setval('goals_id_seq', (SELECT MAX(id) FROM goals));
 -- ── 6. Pacts ─────────────────────────────────────────────────────────────────
 INSERT INTO pacts (id, goal_id, owner_user_id, buddy_user_id, status, accepted_at, created_at, updated_at)
 VALUES
-  (1, 1, 1, 2, 'active', NOW()-INTERVAL '20 days', NOW()-INTERVAL '20 days', NOW()),
-  (2, 2, 2, 1, 'active', NOW()-INTERVAL '18 days', NOW()-INTERVAL '18 days', NOW()),
-  (3, 3, 3, 2, 'active', NOW()-INTERVAL '13 days', NOW()-INTERVAL '13 days', NOW())
+  (1, 1, 1, 2, 'active', NOW()-INTERVAL '4 days', NOW()-INTERVAL '4 days', NOW()),
+  (2, 2, 2, 1, 'active', NOW()-INTERVAL '3 days', NOW()-INTERVAL '3 days', NOW()),
+  (3, 3, 3, 2, 'active', NOW()-INTERVAL '3 days', NOW()-INTERVAL '3 days', NOW())
 ON CONFLICT DO NOTHING;
 
 SELECT setval('pacts_id_seq', (SELECT MAX(id) FROM pacts));
@@ -102,9 +102,9 @@ SELECT setval('pacts_id_seq', (SELECT MAX(id) FROM pacts));
 -- token_hash — sha256 от фиктивного токена, статус accepted
 INSERT INTO invites (id, goal_id, pact_id, inviter_user_id, invitee_user_id, token_hash, status, expires_at, accepted_at, created_at)
 VALUES
-  (1, 1, 1, 1, 2, md5('demo-invite-token-1'), 'accepted', NOW()+INTERVAL '30 days', NOW()-INTERVAL '20 days', NOW()-INTERVAL '20 days'),
-  (2, 2, 2, 2, 1, md5('demo-invite-token-2'), 'accepted', NOW()+INTERVAL '30 days', NOW()-INTERVAL '18 days', NOW()-INTERVAL '18 days'),
-  (3, 3, 3, 3, 2, md5('demo-invite-token-3'), 'accepted', NOW()+INTERVAL '30 days', NOW()-INTERVAL '13 days', NOW()-INTERVAL '13 days')
+  (1, 1, 1, 1, 2, md5('demo-invite-token-1'), 'accepted', NOW()+INTERVAL '30 days', NOW()-INTERVAL '4 days', NOW()-INTERVAL '4 days'),
+  (2, 2, 2, 2, 1, md5('demo-invite-token-2'), 'accepted', NOW()+INTERVAL '30 days', NOW()-INTERVAL '3 days', NOW()-INTERVAL '3 days'),
+  (3, 3, 3, 3, 2, md5('demo-invite-token-3'), 'accepted', NOW()+INTERVAL '30 days', NOW()-INTERVAL '3 days', NOW()-INTERVAL '3 days')
 ON CONFLICT DO NOTHING;
 
 SELECT setval('invites_id_seq', (SELECT MAX(id) FROM invites));
@@ -113,40 +113,35 @@ SELECT setval('invites_id_seq', (SELECT MAX(id) FROM invites));
 -- is_public_example = TRUE → попадает в публичную ленту "ПОХОЖИЕ ЦЕЛИ"
 -- status submitted/approved → попадает в ленту круга "МОЙ КРУГ"
 
--- Goal 1 — Алекс бегает (7 approved + 1 submitted сегодня)
+-- Goal 1 — Алекс бегает (4 approved + 1 submitted сегодня)
 INSERT INTO check_ins (id, goal_id, owner_user_id, status, is_public_example, submitted_at, approved_at, created_at, updated_at)
 VALUES
-  (1,  1, 1, 'approved', TRUE,  NOW()-INTERVAL '7 days 8h',  NOW()-INTERVAL '7 days 10h', NOW()-INTERVAL '7 days',  NOW()-INTERVAL '7 days 9h'),
-  (2,  1, 1, 'approved', TRUE,  NOW()-INTERVAL '6 days 8h',  NOW()-INTERVAL '6 days 11h', NOW()-INTERVAL '6 days',  NOW()-INTERVAL '6 days 10h'),
-  (3,  1, 1, 'approved', TRUE,  NOW()-INTERVAL '5 days 8h',  NOW()-INTERVAL '5 days 10h', NOW()-INTERVAL '5 days',  NOW()-INTERVAL '5 days 9h'),
-  (4,  1, 1, 'approved', TRUE,  NOW()-INTERVAL '4 days 8h',  NOW()-INTERVAL '4 days 9h',  NOW()-INTERVAL '4 days',  NOW()-INTERVAL '4 days 8h30m'),
-  (5,  1, 1, 'approved', TRUE,  NOW()-INTERVAL '3 days 8h',  NOW()-INTERVAL '3 days 10h', NOW()-INTERVAL '3 days',  NOW()-INTERVAL '3 days 9h'),
-  (6,  1, 1, 'approved', TRUE,  NOW()-INTERVAL '2 days 8h',  NOW()-INTERVAL '2 days 9h',  NOW()-INTERVAL '2 days',  NOW()-INTERVAL '2 days 8h30m'),
-  (7,  1, 1, 'approved', TRUE,  NOW()-INTERVAL '1 day 8h',   NOW()-INTERVAL '1 day 10h',  NOW()-INTERVAL '1 day',   NOW()-INTERVAL '1 day 9h'),
+  (1,  1, 1, 'approved', TRUE,  NOW()-INTERVAL '4 days 8h',  NOW()-INTERVAL '4 days 10h', NOW()-INTERVAL '4 days',  NOW()-INTERVAL '4 days 9h'),
+  (2,  1, 1, 'approved', TRUE,  NOW()-INTERVAL '3 days 8h',  NOW()-INTERVAL '3 days 11h', NOW()-INTERVAL '3 days',  NOW()-INTERVAL '3 days 10h'),
+  (3,  1, 1, 'approved', TRUE,  NOW()-INTERVAL '2 days 8h',  NOW()-INTERVAL '2 days 9h',  NOW()-INTERVAL '2 days',  NOW()-INTERVAL '2 days 8h30m'),
+  (4,  1, 1, 'approved', TRUE,  NOW()-INTERVAL '1 day 8h',   NOW()-INTERVAL '1 day 10h',  NOW()-INTERVAL '1 day',   NOW()-INTERVAL '1 day 9h'),
   -- сегодня: submitted, ждёт одобрения Марины
-  (8,  1, 1, 'submitted', FALSE, NOW()-INTERVAL '1h',         NULL,                         NOW()-INTERVAL '2h',   NOW()-INTERVAL '1h')
+  (5,  1, 1, 'submitted', FALSE, NOW()-INTERVAL '1h',         NULL,                         NOW()-INTERVAL '2h',   NOW()-INTERVAL '1h')
 ON CONFLICT DO NOTHING;
 
--- Goal 2 — Марина читает (4 approved + 1 rejected + 1 submitted)
+-- Goal 2 — Марина читает (3 approved + 1 submitted)
 INSERT INTO check_ins (id, goal_id, owner_user_id, status, is_public_example, submitted_at, approved_at, created_at, updated_at)
 VALUES
-  (9,  2, 2, 'approved', TRUE,  NOW()-INTERVAL '5 days 21h', NOW()-INTERVAL '5 days 23h', NOW()-INTERVAL '5 days', NOW()-INTERVAL '5 days 22h'),
-  (10, 2, 2, 'approved', TRUE,  NOW()-INTERVAL '4 days 20h', NOW()-INTERVAL '4 days 22h', NOW()-INTERVAL '4 days', NOW()-INTERVAL '4 days 21h'),
-  (11, 2, 2, 'rejected', FALSE, NOW()-INTERVAL '3 days 20h', NULL,                        NOW()-INTERVAL '3 days', NOW()-INTERVAL '3 days 21h'),
-  (12, 2, 2, 'approved', TRUE,  NOW()-INTERVAL '2 days 21h', NOW()-INTERVAL '2 days 23h', NOW()-INTERVAL '2 days', NOW()-INTERVAL '2 days 22h'),
-  (13, 2, 2, 'approved', TRUE,  NOW()-INTERVAL '1 day 20h',  NOW()-INTERVAL '1 day 22h',  NOW()-INTERVAL '1 day',  NOW()-INTERVAL '1 day 21h'),
+  (6,  2, 2, 'approved', TRUE,  NOW()-INTERVAL '3 days 21h', NOW()-INTERVAL '3 days 23h', NOW()-INTERVAL '3 days', NOW()-INTERVAL '3 days 22h'),
+  (7,  2, 2, 'approved', TRUE,  NOW()-INTERVAL '2 days 21h', NOW()-INTERVAL '2 days 22h', NOW()-INTERVAL '2 days', NOW()-INTERVAL '2 days 21h30m'),
+  (8,  2, 2, 'approved', TRUE,  NOW()-INTERVAL '1 day 20h',  NOW()-INTERVAL '1 day 22h',  NOW()-INTERVAL '1 day',  NOW()-INTERVAL '1 day 21h'),
   -- сегодня: submitted, ждёт одобрения Алекса
-  (14, 2, 2, 'submitted', FALSE, NOW()-INTERVAL '30m',        NULL,                         NOW()-INTERVAL '1h',  NOW()-INTERVAL '30m')
+  (9,  2, 2, 'submitted', FALSE, NOW()-INTERVAL '30m',        NULL,                         NOW()-INTERVAL '1h',  NOW()-INTERVAL '30m')
 ON CONFLICT DO NOTHING;
 
 -- Goal 3 — Кирилл английский (3 approved + 1 submitted)
 INSERT INTO check_ins (id, goal_id, owner_user_id, status, is_public_example, submitted_at, approved_at, created_at, updated_at)
 VALUES
-  (15, 3, 3, 'approved', TRUE,  NOW()-INTERVAL '3 days 15h', NOW()-INTERVAL '3 days 16h', NOW()-INTERVAL '3 days', NOW()-INTERVAL '3 days 15h'),
-  (16, 3, 3, 'approved', TRUE,  NOW()-INTERVAL '2 days 15h', NOW()-INTERVAL '2 days 16h', NOW()-INTERVAL '2 days', NOW()-INTERVAL '2 days 15h'),
-  (17, 3, 3, 'approved', TRUE,  NOW()-INTERVAL '1 day 15h',  NOW()-INTERVAL '1 day 16h',  NOW()-INTERVAL '1 day',  NOW()-INTERVAL '1 day 15h'),
+  (10, 3, 3, 'approved', TRUE,  NOW()-INTERVAL '3 days 15h', NOW()-INTERVAL '3 days 16h', NOW()-INTERVAL '3 days', NOW()-INTERVAL '3 days 15h'),
+  (11, 3, 3, 'approved', TRUE,  NOW()-INTERVAL '2 days 15h', NOW()-INTERVAL '2 days 16h', NOW()-INTERVAL '2 days', NOW()-INTERVAL '2 days 15h'),
+  (12, 3, 3, 'approved', TRUE,  NOW()-INTERVAL '1 day 15h',  NOW()-INTERVAL '1 day 16h',  NOW()-INTERVAL '1 day',  NOW()-INTERVAL '1 day 15h'),
   -- сегодня: submitted, ждёт одобрения Марины
-  (18, 3, 3, 'submitted', FALSE, NOW()-INTERVAL '45m',        NULL,                         NOW()-INTERVAL '2h',  NOW()-INTERVAL '45m')
+  (13, 3, 3, 'submitted', FALSE, NOW()-INTERVAL '45m',        NULL,                         NOW()-INTERVAL '2h',  NOW()-INTERVAL '45m')
 ON CONFLICT DO NOTHING;
 
 SELECT setval('check_ins_id_seq', (SELECT MAX(id) FROM check_ins));
@@ -154,31 +149,26 @@ SELECT setval('check_ins_id_seq', (SELECT MAX(id) FROM check_ins));
 -- ── 8. Evidence items ────────────────────────────────────────────────────────
 INSERT INTO evidence_items (check_in_id, kind, text_content, external_url, created_at)
 VALUES
-  -- Goal 1: Алекс бегает
-  (1,  'text', '5.2 км за 28 минут. Новый личный рекорд по темпу!', NULL, NOW()-INTERVAL '7 days 8h'),
-  (1,  'link', NULL, 'https://strava.com/activities/demo1', NOW()-INTERVAL '7 days 8h5m'),
-  (2,  'text', '5.1 км — дождь, но я добежал. Чувствую себя чемпионом 🔥', NULL, NOW()-INTERVAL '6 days 8h'),
-  (3,  'text', '5.0 км. Попробовал новый маршрут через набережную, очень понравилось.', NULL, NOW()-INTERVAL '5 days 8h'),
-  (4,  'text', '5.3 км — лучшее время за неделю. Тело привыкает к режиму.', NULL, NOW()-INTERVAL '4 days 8h'),
-  (5,  'text', '5.0 км ровно. Встретил соседа, тоже бегает по утрам — теперь бегаем вместе.', NULL, NOW()-INTERVAL '3 days 8h'),
-  (6,  'text', '5.2 км. 6-й день подряд, ни разу не пропустил!', NULL, NOW()-INTERVAL '2 days 8h'),
-  (6,  'link', NULL, 'https://strava.com/activities/demo6', NOW()-INTERVAL '2 days 8h5m'),
-  (7,  'text', '5.1 км за 27 минут 40 секунд. Неделя без пропусков — горжусь собой 💪', NULL, NOW()-INTERVAL '1 day 8h'),
-  (8,  'text', '5.0 км сегодня утром. Устал после вчерашнего, но вышел как обещал.', NULL, NOW()-INTERVAL '1h'),
+  -- Goal 1: Алекс бегает (check-ins 1-5)
+  (1,  'text', '5.2 км за 28 минут. Новый личный рекорд по темпу!', NULL, NOW()-INTERVAL '4 days 8h'),
+  (1,  'link', NULL, 'https://strava.com/activities/demo1', NOW()-INTERVAL '4 days 8h5m'),
+  (2,  'text', '5.1 км — дождь, но я добежал. Чувствую себя чемпионом 🔥', NULL, NOW()-INTERVAL '3 days 8h'),
+  (3,  'text', '5.3 км — лучшее время за неделю. Тело привыкает к режиму.', NULL, NOW()-INTERVAL '2 days 8h'),
+  (3,  'link', NULL, 'https://strava.com/activities/demo3', NOW()-INTERVAL '2 days 8h5m'),
+  (4,  'text', '5.1 км за 27 минут 40 секунд. 4 дня подряд — горжусь собой 💪', NULL, NOW()-INTERVAL '1 day 8h'),
+  (5,  'text', '5.0 км сегодня утром. Устал после вчерашнего, но вышел как обещал.', NULL, NOW()-INTERVAL '1h'),
 
-  -- Goal 2: Марина читает
-  (9,  'text', 'Начала «Атомные привычки». Глава 1-3: маленькие изменения = большие результаты.', NULL, NOW()-INTERVAL '5 days 21h'),
-  (10, 'text', 'Глава 4-5. Про identity-based habits — меняй не действия, а то кем себя считаешь. 🤯', NULL, NOW()-INTERVAL '4 days 20h'),
-  (11, 'text', 'Только 10 минут сегодня, отвлеклась на сериал. Обещаю исправиться.', NULL, NOW()-INTERVAL '3 days 20h'),
-  (12, 'text', 'Глава 6-8. Четыре закона изменения поведения — буду применять на следующей неделе.', NULL, NOW()-INTERVAL '2 days 21h'),
-  (13, 'text', 'Дочитала первую часть книги. Самая важная цитата: "You do not rise to the level of your goals, you fall to the level of your systems."', NULL, NOW()-INTERVAL '1 day 20h'),
-  (14, 'text', 'Начала вторую часть. Привычки-маяки работают лучше всего утром.', NULL, NOW()-INTERVAL '30m'),
+  -- Goal 2: Марина читает (check-ins 6-9)
+  (6,  'text', 'Начала «Атомные привычки». Глава 1-3: маленькие изменения = большие результаты.', NULL, NOW()-INTERVAL '3 days 21h'),
+  (7,  'text', 'Глава 4-5. Про identity-based habits — меняй не действия, а то кем себя считаешь. 🤯', NULL, NOW()-INTERVAL '2 days 21h'),
+  (8,  'text', 'Дочитала первую часть. Самая важная цитата: "You do not rise to the level of your goals, you fall to the level of your systems."', NULL, NOW()-INTERVAL '1 day 20h'),
+  (9,  'text', 'Начала вторую часть. Привычки-маяки работают лучше всего утром.', NULL, NOW()-INTERVAL '30m'),
 
-  -- Goal 3: Кирилл английский
-  (15, 'text', 'Day 1: Duolingo streak + статья на BBC Learning English про искусственный интеллект. Новые слова: "breakthrough", "pivotal", "unprecedented".', NULL, NOW()-INTERVAL '3 days 15h'),
-  (16, 'text', 'Day 2: Посмотрел TED talk с субтитрами, записал 15 новых выражений. Уровень слушания растёт.', NULL, NOW()-INTERVAL '2 days 15h'),
-  (17, 'text', 'Day 3: Прочитал статью The Guardian, написал краткое резюме на английском. Грамматические ошибки — всё меньше.', NULL, NOW()-INTERVAL '1 day 15h'),
-  (18, 'text', 'Сегодня 35 минут: Duolingo + разговорный урок с носителем в italki. Первый раз не стеснялся говорить!', NULL, NOW()-INTERVAL '45m')
+  -- Goal 3: Кирилл английский (check-ins 10-13)
+  (10, 'text', 'Day 1: Duolingo streak + статья на BBC Learning English про искусственный интеллект. Новые слова: "breakthrough", "pivotal", "unprecedented".', NULL, NOW()-INTERVAL '3 days 15h'),
+  (11, 'text', 'Day 2: Посмотрел TED talk с субтитрами, записал 15 новых выражений. Уровень слушания растёт.', NULL, NOW()-INTERVAL '2 days 15h'),
+  (12, 'text', 'Day 3: Прочитал статью The Guardian, написал краткое резюме на английском. Грамматические ошибки — всё меньше.', NULL, NOW()-INTERVAL '1 day 15h'),
+  (13, 'text', 'Сегодня 35 минут: Duolingo + разговорный урок с носителем в italki. Первый раз не стеснялся говорить!', NULL, NOW()-INTERVAL '45m')
 ON CONFLICT DO NOTHING;
 
 -- ── 9. Обновляем public_attachment_ids для публичных чекинов ─────────────────
@@ -192,7 +182,7 @@ UPDATE check_ins SET public_attachment_ids = ARRAY(
 ) WHERE id = 2 AND is_public_example = TRUE;
 
 UPDATE check_ins SET public_attachment_ids = ARRAY(
-  SELECT id FROM evidence_items WHERE check_in_id = 3 LIMIT 1
+  SELECT id FROM evidence_items WHERE check_in_id = 3 AND kind = 'text' LIMIT 1
 ) WHERE id = 3 AND is_public_example = TRUE;
 
 UPDATE check_ins SET public_attachment_ids = ARRAY(
@@ -200,11 +190,7 @@ UPDATE check_ins SET public_attachment_ids = ARRAY(
 ) WHERE id = 4 AND is_public_example = TRUE;
 
 UPDATE check_ins SET public_attachment_ids = ARRAY(
-  SELECT id FROM evidence_items WHERE check_in_id = 5 LIMIT 1
-) WHERE id = 5 AND is_public_example = TRUE;
-
-UPDATE check_ins SET public_attachment_ids = ARRAY(
-  SELECT id FROM evidence_items WHERE check_in_id = 6 AND kind = 'text' LIMIT 1
+  SELECT id FROM evidence_items WHERE check_in_id = 6 LIMIT 1
 ) WHERE id = 6 AND is_public_example = TRUE;
 
 UPDATE check_ins SET public_attachment_ids = ARRAY(
@@ -212,63 +198,44 @@ UPDATE check_ins SET public_attachment_ids = ARRAY(
 ) WHERE id = 7 AND is_public_example = TRUE;
 
 UPDATE check_ins SET public_attachment_ids = ARRAY(
-  SELECT id FROM evidence_items WHERE check_in_id = 9 LIMIT 1
-) WHERE id = 9 AND is_public_example = TRUE;
+  SELECT id FROM evidence_items WHERE check_in_id = 8 LIMIT 1
+) WHERE id = 8 AND is_public_example = TRUE;
 
 UPDATE check_ins SET public_attachment_ids = ARRAY(
   SELECT id FROM evidence_items WHERE check_in_id = 10 LIMIT 1
 ) WHERE id = 10 AND is_public_example = TRUE;
 
 UPDATE check_ins SET public_attachment_ids = ARRAY(
+  SELECT id FROM evidence_items WHERE check_in_id = 11 LIMIT 1
+) WHERE id = 11 AND is_public_example = TRUE;
+
+UPDATE check_ins SET public_attachment_ids = ARRAY(
   SELECT id FROM evidence_items WHERE check_in_id = 12 LIMIT 1
 ) WHERE id = 12 AND is_public_example = TRUE;
-
-UPDATE check_ins SET public_attachment_ids = ARRAY(
-  SELECT id FROM evidence_items WHERE check_in_id = 13 LIMIT 1
-) WHERE id = 13 AND is_public_example = TRUE;
-
-UPDATE check_ins SET public_attachment_ids = ARRAY(
-  SELECT id FROM evidence_items WHERE check_in_id = 15 LIMIT 1
-) WHERE id = 15 AND is_public_example = TRUE;
-
-UPDATE check_ins SET public_attachment_ids = ARRAY(
-  SELECT id FROM evidence_items WHERE check_in_id = 16 LIMIT 1
-) WHERE id = 16 AND is_public_example = TRUE;
-
-UPDATE check_ins SET public_attachment_ids = ARRAY(
-  SELECT id FROM evidence_items WHERE check_in_id = 17 LIMIT 1
-) WHERE id = 17 AND is_public_example = TRUE;
 
 -- ── 10. Reviews ──────────────────────────────────────────────────────────────
 INSERT INTO check_in_reviews (check_in_id, reviewer_user_id, decision, comment, created_at)
 VALUES
-  -- Марина одобряет Алекса
-  (1,  2, 'approved', 'Красавчик! 5 км это серьёзно 💪',         NOW()-INTERVAL '7 days 10h'),
-  (2,  2, 'approved', 'Дождь не помеха, уважаю!',               NOW()-INTERVAL '6 days 11h'),
-  (3,  2, 'approved', 'Набережная — хороший выбор маршрута',     NOW()-INTERVAL '5 days 10h'),
-  (4,  2, 'approved', 'Рост темпа виден, так держать 🚀',       NOW()-INTERVAL '4 days 9h'),
-  (5,  2, 'approved', 'Компания при беге — это мотивация!',      NOW()-INTERVAL '3 days 10h'),
-  (6,  2, 'approved', '6 дней подряд — это уже привычка!',      NOW()-INTERVAL '2 days 9h'),
-  (7,  2, 'approved', 'Неделя без пропусков 🏆 Ты это сделал!', NOW()-INTERVAL '1 day 10h'),
-  -- Алекс одобряет Марину
-  (9,  1, 'approved', 'Атомные привычки — топ книга, сам читал', NOW()-INTERVAL '5 days 23h'),
-  (10, 1, 'approved', 'Identity-based habits — это про изменение личности, сильная идея', NOW()-INTERVAL '4 days 22h'),
-  (11, 1, 'rejected', '10 минут не считается 😄 Сериал подождёт!', NOW()-INTERVAL '3 days 21h'),
-  (12, 1, 'approved', 'Четыре закона — полезная схема, запомни их', NOW()-INTERVAL '2 days 23h'),
-  (13, 1, 'approved', 'Отличная цитата! Системы важнее целей.',  NOW()-INTERVAL '1 day 22h'),
-  -- Марина одобряет Кирилла
-  (15, 2, 'approved', 'Хорошее начало! BBC Learning — отличный ресурс', NOW()-INTERVAL '3 days 16h'),
-  (16, 2, 'approved', 'TED talks с субтитрами — умно, я так и делала', NOW()-INTERVAL '2 days 16h'),
-  (17, 2, 'approved', 'Резюме на английском — это уже уровень 🎯', NOW()-INTERVAL '1 day 16h')
+  -- Марина одобряет Алекса (check-ins 1-4)
+  (1,  2, 'approved', 'Красавчик! 5 км это серьёзно 💪',        NOW()-INTERVAL '4 days 10h'),
+  (2,  2, 'approved', 'Дождь не помеха, уважаю!',              NOW()-INTERVAL '3 days 11h'),
+  (3,  2, 'approved', 'Рост темпа виден, так держать 🚀',      NOW()-INTERVAL '2 days 9h'),
+  (4,  2, 'approved', '4 дня подряд — это уже привычка! 🏆',   NOW()-INTERVAL '1 day 10h'),
+  -- Алекс одобряет Марину (check-ins 6-8)
+  (6,  1, 'approved', 'Атомные привычки — топ книга, сам читал', NOW()-INTERVAL '3 days 23h'),
+  (7,  1, 'approved', 'Identity-based habits — про изменение личности, сильная идея', NOW()-INTERVAL '2 days 22h'),
+  (8,  1, 'approved', 'Отличная цитата! Системы важнее целей.', NOW()-INTERVAL '1 day 22h'),
+  -- Марина одобряет Кирилла (check-ins 10-12)
+  (10, 2, 'approved', 'Хорошее начало! BBC Learning — отличный ресурс', NOW()-INTERVAL '3 days 16h'),
+  (11, 2, 'approved', 'TED talks с субтитрами — умно, я так и делала', NOW()-INTERVAL '2 days 16h'),
+  (12, 2, 'approved', 'Резюме на английском — это уже уровень 🎯', NOW()-INTERVAL '1 day 16h')
 ON CONFLICT DO NOTHING;
 
 -- ── 11. Circle events ────────────────────────────────────────────────────────
 INSERT INTO circle_events (circle_id, kind, actor_user_id, payload, created_at)
 VALUES
-  (1, 'approved', 1, '{"streak":7,"goal_title":"Бегать 5 км каждое утро"}',       NOW()-INTERVAL '1 day 10h'),
-  (1, 'approved', 2, '{"streak":4,"goal_title":"Читать 20 минут каждый день"}',    NOW()-INTERVAL '1 day 22h'),
-  (1, 'at_risk',  2, '{"reason":"rejected_checkin"}',                              NOW()-INTERVAL '3 days 21h'),
-  (1, 'comeback', 2, '{"streak":2}',                                               NOW()-INTERVAL '2 days 23h'),
+  (1, 'approved', 1, '{"streak":4,"goal_title":"Бегать 5 км каждое утро"}',       NOW()-INTERVAL '1 day 10h'),
+  (1, 'approved', 2, '{"streak":3,"goal_title":"Читать 20 минут каждый день"}',    NOW()-INTERVAL '1 day 22h'),
   (2, 'approved', 3, '{"streak":3,"goal_title":"Учить английский 30 минут в день"}', NOW()-INTERVAL '1 day 16h')
 ON CONFLICT DO NOTHING;
 
@@ -292,8 +259,8 @@ ON CONFLICT DO NOTHING;
 SELECT setval('weekly_recaps_id_seq', (SELECT MAX(id) FROM weekly_recaps));
 
 -- ── 13. Обновить streaks и health у целей ────────────────────────────────────
-UPDATE goals SET current_streak_count = 7, current_progress_health = 'strong'    WHERE id = 1;
-UPDATE goals SET current_streak_count = 4, current_progress_health = 'improving' WHERE id = 2;
+UPDATE goals SET current_streak_count = 4, current_progress_health = 'strong'    WHERE id = 1;
+UPDATE goals SET current_streak_count = 3, current_progress_health = 'improving' WHERE id = 2;
 UPDATE goals SET current_streak_count = 3, current_progress_health = 'stable'    WHERE id = 3;
 
 COMMIT;

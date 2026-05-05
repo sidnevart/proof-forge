@@ -21,6 +21,7 @@ export default function MePage() {
   const [state, setState] = useState<PageState>({ kind: "loading" });
   const [activeCircleId, setActiveCircleId] = useState<number | null>(null);
   const [assembly, setAssembly] = useState<WeeklyAssembly | null>(null);
+  const [assemblyError, setAssemblyError] = useState(false);
 
   useEffect(() => {
     async function load() {
@@ -45,9 +46,10 @@ export default function MePage() {
   useEffect(() => {
     if (activeCircleId === null) return;
     setAssembly(null);
+    setAssemblyError(false);
     getWeeklyAssembly(activeCircleId)
       .then(setAssembly)
-      .catch(() => setAssembly(null));
+      .catch(() => setAssemblyError(true));
   }, [activeCircleId]);
 
   if (state.kind === "loading") {
@@ -228,6 +230,10 @@ export default function MePage() {
           <div className={styles.emptyBlock}>
             <span className={styles.emptyText}>У ТЕБЯ НЕТ АКТИВНЫХ ЦЕЛЕЙ В ЭТОМ КРУГЕ.</span>
             <Link href="/goals/new" className={styles.bigCta}>ДОБАВИТЬ ЦЕЛЬ →</Link>
+          </div>
+        ) : assemblyError ? (
+          <div className={styles.emptyBlock}>
+            <span className={styles.emptyText}>НЕ УДАЛОСЬ ЗАГРУЗИТЬ СТАТИСТИКУ КРУГА.</span>
           </div>
         ) : (
           <div className={styles.emptyBlock}>

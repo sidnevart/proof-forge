@@ -154,19 +154,26 @@
   font-family: var(--font-mono);
 }
 
-.reportBtn {
+.likeBtn {
   background: none;
   border: none;
   color: var(--ink-mono);
-  font-size: 10px;
+  font-size: 13px;
   font-weight: 700;
-  letter-spacing: 0.08em;
+  letter-spacing: 0.04em;
   cursor: pointer;
   padding: 0;
+  transition: color 120ms, transform 100ms;
+  line-height: 1;
 }
 
-.reportBtn:hover {
-  color: var(--danger);
+.likeBtn:hover {
+  color: #e05260;
+  transform: scale(1.15);
+}
+
+.likeBtnActive {
+  color: #e05260;
 }
 
 /* ── Inline approve/reject buttons ─────────────── */

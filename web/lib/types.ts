@@ -275,7 +275,7 @@ export type CircleFeedItem = {
   text_content?: string;
   external_url?: string;
   submitted_at: string;
-  status: "submitted" | "approved";
+  status: "submitted" | "approved" | "rejected";
   can_approve: boolean;
   streak: number;
 };

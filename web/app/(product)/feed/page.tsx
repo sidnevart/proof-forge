@@ -9,7 +9,6 @@ import {
   getCirclesFeed,
   getPublicProofs,
   rejectCheckIn,
-  reportContent,
 } from "@/lib/api";
 import type { CircleFeedItem, PublicProof } from "@/lib/types";
 import styles from "./page.module.css";
@@ -137,7 +136,7 @@ function CircleFeed() {
   function handleReject(id: number) {
     setItems((prev) =>
       prev.map((item) =>
-        item.id === id ? { ...item, status: "approved", can_approve: false } : item
+        item.id === id ? { ...item, status: "rejected", can_approve: false } : item
       )
     );
     void rejectCheckIn(id).catch(() => {
@@ -197,12 +196,20 @@ function CircleProofCard({ item, onApprove, onReject }: CircleProofCardProps) {
 
   async function doApprove() {
     setBusy(true);
-    onApprove(item.id);
+    try {
+      onApprove(item.id);
+    } finally {
+      setBusy(false);
+    }
   }
 
   async function doReject() {
     setBusy(true);
-    onReject(item.id);
+    try {
+      onReject(item.id);
+    } finally {
+      setBusy(false);
+    }
   }
 
   return (
@@ -270,7 +277,14 @@ function CircleProofCard({ item, onApprove, onReject }: CircleProofCardProps) {
 // SimilarFeed — ПОХОЖИЕ ЦЕЛИ tab (migrated from /inspiration)
 // ─────────────────────────────────────────
 
-const CATEGORIES = ["", "фитнес", "учёба", "работа", "творчество", "развитие"];
+const CATEGORIES = [
+  "",
+  "Спорт и здоровье",
+  "Образование",
+  "Работа",
+  "Творчество",
+  "Развитие",
+];
 
 function SimilarFeed() {
   const [proofs, setProofs] = useState<PublicProof[]>([]);
@@ -278,14 +292,16 @@ function SimilarFeed() {
   const [loadingMore, setLoadingMore] = useState(false);
   const [q, setQ] = useState("");
   const [category, setCategory] = useState("");
-  const [cursor, setCursor] = useState<number | undefined>(undefined);
   const [hasMore, setHasMore] = useState(true);
   const sentinelRef = useRef<HTMLDivElement>(null);
+  // Use a ref for cursor to avoid stale closure when filters change
+  const cursorRef = useRef<number | undefined>(undefined);
 
   const load = useCallback(
     async (reset: boolean) => {
       if (reset) {
         setLoading(true);
+        cursorRef.current = undefined;
       } else {
         setLoadingMore(true);
       }
@@ -293,13 +309,13 @@ function SimilarFeed() {
         const data = await getPublicProofs({
           q: q || undefined,
           category: category || undefined,
-          cursor: reset ? undefined : cursor,
+          cursor: reset ? undefined : cursorRef.current,
           limit: 24,
         });
         const next = data.proofs ?? [];
         setProofs((prev) => (reset ? next : [...prev, ...next]));
         setHasMore(next.length === 24);
-        if (next.length > 0) setCursor(next[next.length - 1].id);
+        if (next.length > 0) cursorRef.current = next[next.length - 1].id;
       } catch {
         // silent
       } finally {
@@ -307,7 +323,7 @@ function SimilarFeed() {
         setLoadingMore(false);
       }
     },
-    [q, category, cursor] // eslint-disable-line react-hooks/exhaustive-deps
+    [q, category] // eslint-disable-line react-hooks/exhaustive-deps
   );
 
   useEffect(() => {
@@ -372,16 +388,17 @@ function SimilarFeed() {
 }
 
 function SimilarProofCard({ proof }: { proof: PublicProof }) {
-  const [reported, setReported] = useState(false);
+  // Optimistic local-only likes — no backend persistence needed for demo
+  const [likes, setLikes] = useState(() => Math.floor(Math.random() * 18) + 2);
+  const [liked, setLiked] = useState(false);
 
-  async function handleReport() {
-    if (reported) return;
-    try {
-      await reportContent("checkin", proof.id, "inappropriate");
-      setReported(true);
-    } catch {
-      // silent
+  function handleLike() {
+    if (liked) {
+      setLikes((n) => n - 1);
+    } else {
+      setLikes((n) => n + 1);
     }
+    setLiked((v) => !v);
   }
 
   return (
@@ -415,11 +432,11 @@ function SimilarProofCard({ proof }: { proof: PublicProof }) {
         </time>
         <button
           type="button"
-          className={styles.reportBtn}
-          onClick={handleReport}
-          disabled={reported}
+          className={`${styles.likeBtn} ${liked ? styles.likeBtnActive : ""}`}
+          onClick={handleLike}
+          aria-label="Нравится"
         >
-          {reported ? "ОТПРАВЛЕНО" : "СООБЩИТЬ"}
+          {liked ? "❤" : "♡"} {likes}
         </button>
       </div>
     </article>

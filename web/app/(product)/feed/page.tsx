@@ -94,7 +94,7 @@ function CircleFeed() {
         setLoadingMore(false);
       }
     },
-    [cursor] // eslint-disable-line react-hooks/exhaustive-deps
+    [cursor]
   );
 
   useEffect(() => {
@@ -323,7 +323,7 @@ function SimilarFeed() {
         setLoadingMore(false);
       }
     },
-    [q, category] // eslint-disable-line react-hooks/exhaustive-deps
+    [q, category]
   );
 
   useEffect(() => {

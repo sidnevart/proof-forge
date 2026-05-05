@@ -71,7 +71,7 @@ INSERT INTO goals (
   title, description, status,
   current_progress_health, current_streak_count,
   proof_examples, category,
-  is_public_template, share_default,
+  is_public_template,
   created_at, updated_at
 ) VALUES (
   1, 1, 1, 2,
@@ -81,7 +81,7 @@ INSERT INTO goals (
   'strong', 5,
   'Скриншот из Strava с дистанцией и временем',
   'Спорт и здоровье',
-  TRUE, TRUE,
+  TRUE,
   NOW() - INTERVAL '20 days', NOW()
 ) ON CONFLICT DO NOTHING;
 
@@ -91,7 +91,7 @@ INSERT INTO goals (
   title, description, status,
   current_progress_health, current_streak_count,
   proof_examples, category,
-  is_public_template, share_default,
+  is_public_template,
   created_at, updated_at
 ) VALUES (
   2, 1, 2, 1,
@@ -101,7 +101,7 @@ INSERT INTO goals (
   'improving', 3,
   'Фото страницы с закладкой или заметка с цитатой дня',
   'Образование',
-  TRUE, TRUE,
+  TRUE,
   NOW() - INTERVAL '18 days', NOW()
 ) ON CONFLICT DO NOTHING;
 
@@ -111,7 +111,7 @@ INSERT INTO goals (
   title, description, status,
   current_progress_health, current_streak_count,
   proof_examples, category,
-  is_public_template, share_default,
+  is_public_template,
   created_at, updated_at
 ) VALUES (
   3, 1, 3, 2,
@@ -121,7 +121,7 @@ INSERT INTO goals (
   'unknown', 1,
   'Скриншот прогресса в Duolingo или прочитанная статья с кратким конспектом',
   'Образование',
-  FALSE, FALSE,
+  FALSE,
   NOW() - INTERVAL '13 days', NOW()
 ) ON CONFLICT DO NOTHING;
 

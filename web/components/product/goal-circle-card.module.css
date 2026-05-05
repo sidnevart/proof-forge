@@ -1,0 +1,139 @@
+/*
+ * GoalCircleCard — dashboard's per-goal surface.
+ *
+ * Brutal dark card matching the dashboard `.emptyCard` language: surface
+ * background, 2px borders, green accent stripe. Width is capped via the
+ * dashboard `.goalStack` wrapper so single-goal users don't see a card
+ * stretched across the whole desktop.
+ *
+ * Container queries handle in-card responsiveness (the card stacks ring +
+ * title vertically when its inline size drops below 420px), independent of
+ * the viewport — works whether one or two cards are side by side at 1280+.
+ */
+
+.card {
+  position: relative;
+  background: var(--bg-surface);
+  color: var(--ink-primary);
+  border: 2px solid var(--border-strong);
+  border-left: 4px solid var(--win);
+  padding: clamp(20px, 3vw, 28px);
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  min-height: 0;
+  container-type: inline-size;
+}
+
+/* ── Top row: ring + title ───────────────────── */
+.topRow {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+
+.goalTitle {
+  flex: 1;
+  margin: 0;
+  font-family: var(--font-display);
+  font-size: clamp(18px, 1.4vw + 14px, 26px);
+  letter-spacing: 0.02em;
+  line-height: 1.15;
+  color: var(--ink-primary);
+  /* clamp long titles to 2 lines so the card doesn't grow awkwardly */
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+/* ── Season meta line ────────────────────────── */
+.seasonMeta {
+  margin: 0;
+  font-family: var(--font-mono);
+  font-size: 12px;
+  color: var(--ink-mono);
+  letter-spacing: 0.04em;
+}
+
+/* ── Status pill (data-status drives color) ─── */
+.statusPill {
+  align-self: flex-start;
+  display: inline-flex;
+  align-items: center;
+  padding: 4px 10px;
+  border: 2px solid currentColor;
+  font-family: var(--font-mono);
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.statusPill[data-status="pending"] {
+  color: var(--warn);
+}
+
+.statusPill[data-status="active"] {
+  color: var(--win);
+}
+
+.statusPill[data-status="completed"] {
+  color: var(--ink-mono);
+}
+
+/* ── Completed badge (top-right corner) ─────── */
+.completedBadge {
+  position: absolute;
+  top: clamp(12px, 2vw, 20px);
+  right: clamp(12px, 2vw, 20px);
+  padding: 4px 10px;
+  border: 2px solid var(--win);
+  color: var(--win);
+  font-family: var(--font-mono);
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+}
+
+/* ── Check-in button (matches dashboard .ctaSolid) ─── */
+.checkInBtn {
+  align-self: flex-start;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 14px 24px;
+  background: var(--ink-primary);
+  color: #000;
+  font-family: var(--font-display);
+  font-size: 18px;
+  letter-spacing: 0.06em;
+  min-height: 44px;
+  border: 2px solid var(--ink-primary);
+  cursor: pointer;
+  transition: background 150ms, color 150ms, transform 150ms;
+}
+
+.checkInBtn:hover:not(:disabled) {
+  background: transparent;
+  color: var(--ink-primary);
+  transform: translateY(-1px);
+}
+
+.checkInBtn:focus-visible {
+  outline: 2px solid var(--win);
+  outline-offset: 3px;
+}
+
+.checkInBtn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+/* ── Container query: stack on narrow card widths ─── */
+@container (max-width: 420px) {
+  .topRow {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+}

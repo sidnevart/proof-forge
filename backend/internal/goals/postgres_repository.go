@@ -3,8 +3,10 @@ package goals
 import (
 	"context"
 	"database/sql"
+	"encoding/json"
 	"errors"
 	"fmt"
+	"time"
 
 	"github.com/jackc/pgx/v5"
 	"github.com/jackc/pgx/v5/pgxpool"
@@ -24,6 +26,20 @@ func (r *PostgresRepository) CreateGoalWithInvite(ctx context.Context, params Cr
 		return GoalView{}, fmt.Errorf("begin tx: %w", err)
 	}
 	defer tx.Rollback(ctx)
+
+	// If the caller did not pick an existing circle, create one in the same tx.
+	// Goal -> circle binding is non-nullable in the schema, so we MUST end up
+	// with a valid circle_id for every goal.
+	if params.CircleID == nil {
+		if params.AutoCircle == nil {
+			return GoalView{}, fmt.Errorf("create goal: circle_id is required (AutoCircle params missing)")
+		}
+		circleID, err := r.insertAutoCircle(ctx, tx, params.OwnerID, *params.AutoCircle)
+		if err != nil {
+			return GoalView{}, err
+		}
+		params.CircleID = &circleID
+	}
 
 	buddy, err := r.findOrCreateBuddy(ctx, tx, params.BuddyEmail, params.BuddyName)
 	if err != nil {
@@ -65,8 +81,11 @@ func (r *PostgresRepository) ListGoalsByOwner(ctx context.Context, ownerID int64
 	const query = `
 		SELECT
 			g.id,
+			g.circle_id,
 			g.title,
 			g.description,
+			g.proof_examples,
+			g.category,
 			g.status,
 			g.current_progress_health,
 			g.current_streak_count,
@@ -99,10 +118,14 @@ func (r *PostgresRepository) ListGoalsByOwner(ctx context.Context, ownerID int64
 	for rows.Next() {
 		var item GoalView
 		var acceptedAt sql.NullTime
+		var proofExamples, category sql.NullString
 		if err := rows.Scan(
 			&item.Goal.ID,
+			&item.Goal.CircleID,
 			&item.Goal.Title,
 			&item.Goal.Description,
+			&proofExamples,
+			&category,
 			&item.Goal.Status,
 			&item.Goal.CurrentProgressHealth,
 			&item.Goal.CurrentStreakCount,
@@ -120,6 +143,8 @@ func (r *PostgresRepository) ListGoalsByOwner(ctx context.Context, ownerID int64
 		); err != nil {
 			return nil, fmt.Errorf("scan owner goal: %w", err)
 		}
+		item.Goal.ProofExamples = proofExamples.String
+		item.Goal.Category = category.String
 		if acceptedAt.Valid {
 			value := acceptedAt.Time
 			item.Pact.AcceptedAt = &value
@@ -132,6 +157,126 @@ func (r *PostgresRepository) ListGoalsByOwner(ctx context.Context, ownerID int64
 	}
 
 	return goals, nil
+}
+
+func (r *PostgresRepository) FindGoalRefineCache(ctx context.Context, draftHash string, minCreatedAt time.Time) (GoalRefineResponse, bool, error) {
+	const query = `
+		SELECT response
+		FROM goal_refine_cache
+		WHERE hash = $1
+		  AND created_at >= $2
+	`
+
+	var raw json.RawMessage
+	if err := r.pool.QueryRow(ctx, query, draftHash, minCreatedAt).Scan(&raw); err != nil {
+		if errors.Is(err, pgx.ErrNoRows) {
+			return GoalRefineResponse{}, false, nil
+		}
+		return GoalRefineResponse{}, false, fmt.Errorf("query refine cache: %w", err)
+	}
+
+	var response GoalRefineResponse
+	if err := json.Unmarshal(raw, &response); err != nil {
+		return GoalRefineResponse{}, false, fmt.Errorf("decode refine cache: %w", err)
+	}
+
+	return response, true, nil
+}
+
+func (r *PostgresRepository) SaveGoalRefineCache(ctx context.Context, draftHash string, response GoalRefineResponse) error {
+	const query = `
+		INSERT INTO goal_refine_cache (hash, response, created_at)
+		VALUES ($1, $2, NOW())
+		ON CONFLICT (hash) DO UPDATE
+		SET response = EXCLUDED.response,
+		    created_at = EXCLUDED.created_at
+	`
+
+	payload, err := json.Marshal(response)
+	if err != nil {
+		return fmt.Errorf("encode refine cache response: %w", err)
+	}
+	if _, err := r.pool.Exec(ctx, query, draftHash, payload); err != nil {
+		return fmt.Errorf("upsert refine cache: %w", err)
+	}
+	return nil
+}
+
+func (r *PostgresRepository) CountGoalRefineRequestsSince(ctx context.Context, userID int64, since time.Time) (int, error) {
+	const query = `
+		SELECT COUNT(*)
+		FROM goal_refine_requests
+		WHERE user_id = $1
+		  AND created_at >= $2
+	`
+
+	var count int
+	if err := r.pool.QueryRow(ctx, query, userID, since).Scan(&count); err != nil {
+		return 0, fmt.Errorf("count refine requests: %w", err)
+	}
+	return count, nil
+}
+
+func (r *PostgresRepository) InsertGoalRefineRequest(ctx context.Context, params GoalRefineRequestLogParams) error {
+	const query = `
+		INSERT INTO goal_refine_requests (user_id, draft_hash)
+		VALUES ($1, $2)
+	`
+
+	if _, err := r.pool.Exec(ctx, query, params.UserID, params.DraftHash); err != nil {
+		return fmt.Errorf("insert refine request: %w", err)
+	}
+	return nil
+}
+
+func (r *PostgresRepository) IsCircleMember(ctx context.Context, circleID int64, userID int64) (bool, error) {
+	var exists bool
+	err := r.pool.QueryRow(ctx,
+		`SELECT EXISTS(SELECT 1 FROM circle_memberships WHERE circle_id = $1 AND user_id = $2 AND status = 'active')`,
+		circleID, userID,
+	).Scan(&exists)
+	if err != nil {
+		return false, fmt.Errorf("check circle membership: %w", err)
+	}
+	return exists, nil
+}
+
+// HasActiveGoalInCircle reports whether the given owner already has an active
+// or pending goal inside the circle. The schema enforces this via a partial
+// UNIQUE index, but the service uses this to fail with a friendly domain error
+// before hitting the index violation.
+func (r *PostgresRepository) HasActiveGoalInCircle(ctx context.Context, circleID int64, ownerID int64) (bool, error) {
+	const query = `
+		SELECT EXISTS(
+			SELECT 1 FROM goals
+			WHERE circle_id = $1
+			  AND owner_user_id = $2
+			  AND status IN ('pending_buddy_acceptance', 'active')
+		)
+	`
+	var exists bool
+	if err := r.pool.QueryRow(ctx, query, circleID, ownerID).Scan(&exists); err != nil {
+		return false, fmt.Errorf("check active goal in circle: %w", err)
+	}
+	return exists, nil
+}
+
+func (r *PostgresRepository) IsCircleMemberByEmail(ctx context.Context, circleID int64, email string) (bool, error) {
+	var exists bool
+	err := r.pool.QueryRow(ctx, `
+		SELECT EXISTS(
+			SELECT 1
+			FROM circle_memberships m
+			JOIN users u ON u.id = m.user_id
+			WHERE m.circle_id = $1
+			  AND m.status = 'active'
+			  AND u.email = $2
+		)
+	`, circleID, email).Scan(&exists)
+	if err != nil {
+		return false, fmt.Errorf("check circle membership by email: %w", err)
+	}
+	return exists, nil
 }
 
 func (r *PostgresRepository) FindInviteByToken(ctx context.Context, tokenHash string) (InviteRecord, error) {
@@ -147,7 +292,8 @@ func (r *PostgresRepository) FindInviteByToken(ctx context.Context, tokenHash st
 			invitee.email,
 			g.title,
 			g.status,
-			owner.display_name
+			owner.display_name,
+			owner.email
 		FROM invites i
 		JOIN users invitee ON invitee.id = i.invitee_user_id
 		JOIN goals g ON g.id = i.goal_id
@@ -168,6 +314,7 @@ func (r *PostgresRepository) FindInviteByToken(ctx context.Context, tokenHash st
 		&rec.GoalTitle,
 		&rec.GoalStatus,
 		&rec.OwnerName,
+		&rec.OwnerEmail,
 	)
 	if err != nil {
 		if errors.Is(err, pgx.ErrNoRows) {
@@ -248,35 +395,79 @@ func (r *PostgresRepository) findOrCreateBuddy(ctx context.Context, tx pgx.Tx, e
 	return buddy, nil
 }
 
+// insertAutoCircle creates a new circle, its first season (7 days from now),
+// and the owner membership inside the goal-creation transaction. This keeps
+// «goal + circle + season + membership» atomic — if any later step fails the
+// whole tx rolls back and we don't leave orphan circles behind.
+func (r *PostgresRepository) insertAutoCircle(ctx context.Context, tx pgx.Tx, ownerID int64, params AutoCircleParams) (int64, error) {
+	const insertCircle = `
+		INSERT INTO circles (owner_user_id, name, invite_code, member_limit)
+		VALUES ($1, $2, $3, $4)
+		RETURNING id
+	`
+	var circleID int64
+	if err := tx.QueryRow(ctx, insertCircle, ownerID, params.Name, params.InviteCode, params.MemberLimit).Scan(&circleID); err != nil {
+		return 0, fmt.Errorf("insert auto circle: %w", err)
+	}
+
+	const insertSeason = `
+		INSERT INTO circle_seasons (circle_id, status, starts_at, ends_at)
+		VALUES ($1, 'active', $2, $3)
+	`
+	if _, err := tx.Exec(ctx, insertSeason, circleID, params.StartsAt, params.EndsAt); err != nil {
+		return 0, fmt.Errorf("insert auto season: %w", err)
+	}
+
+	const insertMembership = `
+		INSERT INTO circle_memberships (circle_id, user_id, status, role)
+		VALUES ($1, $2, 'active', 'owner')
+	`
+	if _, err := tx.Exec(ctx, insertMembership, circleID, ownerID); err != nil {
+		return 0, fmt.Errorf("insert owner membership: %w", err)
+	}
+
+	return circleID, nil
+}
+
 func (r *PostgresRepository) insertGoal(ctx context.Context, tx pgx.Tx, params CreateGoalParams, buddyID int64) (Goal, error) {
 	const query = `
 		INSERT INTO goals (
 			owner_user_id,
 			buddy_user_id,
+			circle_id,
 			title,
 			description,
+			proof_examples,
+			category,
 			status,
 			current_progress_health,
 			current_streak_count
 		)
-		VALUES ($1, $2, $3, $4, $5, $6, 0)
-		RETURNING id, title, description, status, current_progress_health, current_streak_count, created_at, updated_at
+		VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, 0)
+		RETURNING id, circle_id, title, description, proof_examples, category, status, current_progress_health, current_streak_count, created_at, updated_at
 	`
 
 	var goal Goal
+	var proofExamplesOut, categoryOut sql.NullString
 	if err := tx.QueryRow(
 		ctx,
 		query,
 		params.OwnerID,
 		buddyID,
+		params.CircleID,
 		params.Title,
 		params.Description,
+		params.ProofExamples,
+		params.Category,
 		params.GoalStatus,
 		params.ProgressHealth,
 	).Scan(
 		&goal.ID,
+		&goal.CircleID,
 		&goal.Title,
 		&goal.Description,
+		&proofExamplesOut,
+		&categoryOut,
 		&goal.Status,
 		&goal.CurrentProgressHealth,
 		&goal.CurrentStreakCount,
@@ -285,6 +476,8 @@ func (r *PostgresRepository) insertGoal(ctx context.Context, tx pgx.Tx, params C
 	); err != nil {
 		return Goal{}, fmt.Errorf("insert goal: %w", err)
 	}
+	goal.ProofExamples = proofExamplesOut.String
+	goal.Category = categoryOut.String
 
 	return goal, nil
 }

@@ -2,7 +2,7 @@ name: proofforge-dev
 
 services:
   postgres:
-    image: postgres:16-alpine
+    image: pgvector/pgvector:pg16
     container_name: proofforge-postgres-dev
     environment:
       POSTGRES_DB: proofforge
@@ -130,6 +130,8 @@ services:
     build:
       context: ../..
       dockerfile: web/Dockerfile
+      args:
+        API_INTERNAL_URL: http://proofforge-api-dev:8080
     container_name: proofforge-web-dev
     env_file: .env.dev
     environment:

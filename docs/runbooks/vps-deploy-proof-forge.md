@@ -33,8 +33,8 @@
 - `SMTP_FROM`
 
 Также проверить:
-- `WEB_ORIGIN=https://80.74.25.43:18443`
-- `NEXT_PUBLIC_API_BASE_URL=https://80.74.25.43:18443`
+- `WEB_ORIGIN=https://YOUR_VPS_IP:18443`
+- `NEXT_PUBLIC_API_BASE_URL=https://YOUR_VPS_IP:18443`
 
 ## Первичная подготовка сервера
 1. Сгенерировать SSH key для GitHub Actions.
@@ -53,12 +53,12 @@
 
 ## Smoke checks
 Проверить:
-- `curl http://80.74.25.43:18080/`
-- `curl -k https://80.74.25.43:18443/`
-- `curl -k https://80.74.25.43:18443/readyz`
+- `curl http://YOUR_VPS_IP:18080/`
+- `curl -k https://YOUR_VPS_IP:18443/`
+- `curl -k https://YOUR_VPS_IP:18443/readyz`
 
 Для браузерной проверки:
-- открыть `https://80.74.25.43:18443`
+- открыть `https://YOUR_VPS_IP:18443`
 - принять self-signed certificate warning
 - пройти регистрацию
 - убедиться, что dashboard открывается

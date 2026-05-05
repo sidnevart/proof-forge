@@ -19,7 +19,7 @@ export function StatePanel({ title, description, tone, meta, className }: Props)
   return (
     <div className={cn(styles.panel, styles[tone], className)}>
       <div className={styles.header}>
-        <span className="eyebrow">{TONE_LABELS[tone]}</span>
+        <span className={styles.eyebrow}>{TONE_LABELS[tone]}</span>
         <h3>{title}</h3>
       </div>
       <p>{description}</p>

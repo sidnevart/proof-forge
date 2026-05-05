@@ -1,0 +1,45 @@
+.feed {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  max-width: 600px;
+  /* Fixed height so the container doesn't reflow when items enter/exit */
+  overflow: hidden;
+}
+
+.msg {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 14px 20px;
+  background: var(--bg-surface);
+  border: 2px solid var(--border-strong);
+  font-size: 13px;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  /* Default: stable */
+  opacity: 1;
+  transform: translateY(0);
+  transition: opacity 200ms ease, transform 200ms ease;
+}
+
+/* New message enters from above */
+.msgEnter {
+  opacity: 0;
+  transform: translateY(-12px);
+}
+
+/* Old message exits downward */
+.msgExit {
+  opacity: 0;
+  transform: translateY(8px);
+}
+
+.icon {
+  font-size: 16px;
+  flex-shrink: 0;
+}
+
+.msg_win .text { color: var(--win); }
+.msg_warn .text { color: var(--warn); }
+.msg_danger .text { color: var(--frost); }

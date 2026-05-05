@@ -1,0 +1,117 @@
+.page {
+  max-width: 480px;
+  margin: 0 auto;
+  padding: 48px 24px;
+}
+
+.heading {
+  font-family: var(--font-display);
+  font-size: 48px;
+  font-weight: 400;
+  color: var(--ink-primary);
+  margin: 0 0 12px;
+  letter-spacing: 0.02em;
+}
+
+.sub {
+  font-family: var(--font-body);
+  font-size: 15px;
+  color: var(--ink-mono);
+  margin: 0 0 32px;
+  line-height: 1.5;
+}
+
+.ctaButton {
+  display: block;
+  width: 100%;
+  padding: 18px 24px;
+  background: var(--ink-primary);
+  color: var(--bg-base);
+  border: 2px solid var(--ink-primary);
+  font-family: var(--font-display);
+  font-size: 18px;
+  font-weight: 400;
+  letter-spacing: 0.05em;
+  cursor: pointer;
+  transition: background 0.15s, color 0.15s;
+}
+
+.ctaButton:hover:not(:disabled) {
+  background: transparent;
+  color: var(--ink-primary);
+}
+
+.ctaButton:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.linkBlock {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.instruction {
+  font-family: var(--font-body);
+  font-size: 14px;
+  color: var(--ink-mono);
+  margin: 0;
+}
+
+.deeplinkButton {
+  display: block;
+  padding: 18px 24px;
+  background: var(--ink-primary);
+  color: var(--bg-base);
+  border: 2px solid var(--ink-primary);
+  font-family: var(--font-display);
+  font-size: 18px;
+  font-weight: 400;
+  letter-spacing: 0.05em;
+  text-align: center;
+  text-decoration: none;
+  transition: background 0.15s, color 0.15s;
+}
+
+.deeplinkButton:hover {
+  background: transparent;
+  color: var(--ink-primary);
+}
+
+.copyButton {
+  padding: 14px 24px;
+  background: transparent;
+  color: var(--ink-primary);
+  border: 2px solid var(--ink-primary);
+  font-family: var(--font-display);
+  font-size: 16px;
+  font-weight: 400;
+  letter-spacing: 0.05em;
+  cursor: pointer;
+  transition: background 0.15s, color 0.15s;
+}
+
+.copyButton:hover {
+  background: var(--ink-primary);
+  color: var(--bg-base);
+}
+
+.refreshLink {
+  background: none;
+  border: none;
+  color: var(--ink-mono);
+  font-family: var(--font-body);
+  font-size: 13px;
+  cursor: pointer;
+  padding: 0;
+  text-decoration: underline;
+  align-self: flex-start;
+}
+
+.error {
+  color: var(--danger);
+  font-family: var(--font-body);
+  font-size: 14px;
+  margin-top: 16px;
+}

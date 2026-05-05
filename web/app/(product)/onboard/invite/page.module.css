@@ -1,0 +1,160 @@
+.page {
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 40px 20px;
+}
+
+.content {
+  width: 100%;
+  max-width: 480px;
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.eyebrow {
+  font-family: var(--font-mono);
+  font-size: 11px;
+  letter-spacing: 0.12em;
+  color: var(--ink-mono);
+}
+
+.title {
+  margin: 0;
+  font-family: var(--font-display);
+  font-size: 72px;
+  line-height: 1;
+  letter-spacing: 0.02em;
+}
+
+.sub {
+  margin: 0;
+  font-size: 15px;
+  color: var(--ink-mono);
+  letter-spacing: 0.04em;
+}
+
+.codeBlock {
+  padding: 20px;
+  background: var(--bg-surface);
+  border: 2px solid var(--border-strong);
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.codeLabel {
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  color: var(--ink-mono);
+}
+
+.code {
+  font-family: var(--font-mono);
+  font-size: 48px;
+  letter-spacing: 0.16em;
+  line-height: 1;
+  word-break: break-all;
+}
+
+.shareButtons {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.primaryBtn {
+  padding: 16px;
+  background: var(--ink-primary);
+  border: 2px solid var(--ink-primary);
+  color: #000;
+  font-family: var(--font-display);
+  font-size: 18px;
+  letter-spacing: 0.06em;
+  cursor: pointer;
+  transition: opacity 150ms;
+}
+
+.primaryBtn:hover {
+  opacity: 0.85;
+}
+
+.secondaryBtn {
+  padding: 14px;
+  background: transparent;
+  border: 2px solid var(--border-strong);
+  color: var(--ink-mono);
+  font-family: var(--font-display);
+  font-size: 16px;
+  letter-spacing: 0.06em;
+  cursor: pointer;
+  transition: border-color 150ms, color 150ms;
+}
+
+.secondaryBtn:hover {
+  border-color: var(--ink-primary);
+  color: var(--ink-primary);
+}
+
+.waitCounter {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 16px 20px;
+  background: var(--bg-surface);
+  border: 2px solid var(--border-strong);
+}
+
+.waitLabel {
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  color: var(--ink-mono);
+}
+
+.waitCount {
+  font-family: var(--font-display);
+  font-size: 32px;
+  line-height: 1;
+}
+
+.footer {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.nextBtn {
+  padding: 16px;
+  background: transparent;
+  border: 2px solid var(--ink-primary);
+  color: var(--ink-primary);
+  font-family: var(--font-display);
+  font-size: 20px;
+  letter-spacing: 0.06em;
+  cursor: pointer;
+  transition: background 150ms, color 150ms;
+}
+
+.nextBtn:not(.nextDisabled):hover {
+  background: var(--ink-primary);
+  color: #000;
+}
+
+.nextDisabled {
+  opacity: 0.3;
+  cursor: not-allowed;
+  border-color: var(--border-strong);
+  color: var(--ink-mono);
+}
+
+.waitNote {
+  margin: 0;
+  font-size: 11px;
+  color: var(--ink-mono);
+  text-align: center;
+  letter-spacing: 0.04em;
+}

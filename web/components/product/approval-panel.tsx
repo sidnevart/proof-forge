@@ -16,8 +16,9 @@ type ScreenState =
   | { kind: "unauthenticated" }
   | { kind: "error"; message: string }
   | { kind: "not_submitted" }
-  | { kind: "reviewing"; checkIn: CheckIn; evidence: EvidenceItem[] }
+  | { kind: "reviewing"; checkIn: CheckIn; evidence: EvidenceItem[]; proofExamples?: string }
   | { kind: "decided"; decision: "approved" | "rejected" | "changes_requested" };
+
 
 export function ApprovalPanel({ checkInID }: { checkInID: number }) {
   const [state, setState] = useState<ScreenState>({ kind: "loading" });
@@ -34,7 +35,7 @@ export function ApprovalPanel({ checkInID }: { checkInID: number }) {
         setState({ kind: "not_submitted" });
         return;
       }
-      setState({ kind: "reviewing", checkIn: data.check_in, evidence: data.evidence ?? [] });
+      setState({ kind: "reviewing", checkIn: data.check_in, evidence: data.evidence ?? [], proofExamples: data.goal_proof_examples });
     } catch (error) {
       if (error instanceof ApiError && error.status === 401) {
         setState({ kind: "unauthenticated" });
@@ -184,6 +185,12 @@ export function ApprovalPanel({ checkInID }: { checkInID: number }) {
               по цели, возврат на доработку просит уточнить материалы, отклонение
               завершает этот цикл без подтверждения результата.
             </p>
+            {state.kind === "reviewing" && state.proofExamples && (
+              <div className={styles.proofHint}>
+                <span className={styles.proofHintLabel}>ПО ДОГОВОРУ ПРУФОМ СЧИТАЕТСЯ:</span>
+                <p className={styles.proofHintText}>{state.proofExamples}</p>
+              </div>
+            )}
 
             <label className={styles.commentField}>
               <span>Комментарий (необязательно)</span>

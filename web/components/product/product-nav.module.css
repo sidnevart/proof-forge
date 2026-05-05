@@ -1,0 +1,127 @@
+.nav {
+  position: sticky;
+  top: 0;
+  z-index: 100;
+  display: flex;
+  align-items: center;
+  gap: 0;
+  height: 52px;
+  border-bottom: 1px solid var(--border-strong);
+  background: rgba(0, 0, 0, 0.9);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  margin: 0 calc(50% - 50vw);
+  padding: 0 calc(50vw - 50%);
+}
+
+.logo {
+  font-family: var(--font-display);
+  font-size: 22px;
+  letter-spacing: 0.16em;
+  color: var(--danger);
+  padding-right: 32px;
+  border-right: 1px solid var(--border-strong);
+  height: 100%;
+  display: flex;
+  align-items: center;
+  flex-shrink: 0;
+  transition: color 120ms;
+}
+
+.logo:hover {
+  color: var(--ink-primary);
+}
+
+.links {
+  display: flex;
+  align-items: center;
+  height: 100%;
+  flex: 1;
+  padding: 0 24px;
+  gap: 4px;
+}
+
+.link {
+  display: flex;
+  align-items: center;
+  height: 100%;
+  padding: 0 14px;
+  font-family: var(--font-display);
+  font-size: 13px;
+  letter-spacing: 0.1em;
+  color: var(--ink-mono);
+  border-bottom: 2px solid transparent;
+  margin-bottom: -1px;
+  transition: color 120ms, border-color 120ms;
+}
+
+.link:hover {
+  color: var(--ink-primary);
+}
+
+.active {
+  color: var(--ink-primary);
+  border-bottom-color: var(--danger);
+}
+
+.right {
+  display: flex;
+  align-items: center;
+  height: 100%;
+  padding-left: 16px;
+  border-left: 1px solid var(--border-strong);
+}
+
+.userBtn {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  height: 100%;
+  padding: 0 16px;
+  color: var(--ink-primary);
+  font-family: var(--font-display);
+  font-size: 13px;
+  letter-spacing: 0.08em;
+  transition: background 120ms;
+}
+
+.userBtn:hover {
+  background: var(--bg-elevated);
+}
+
+.avatar {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 28px;
+  height: 28px;
+  background: var(--danger);
+  color: #fff;
+  font-family: var(--font-display);
+  font-size: 14px;
+  flex-shrink: 0;
+}
+
+.userName {
+  font-size: 12px;
+  letter-spacing: 0.1em;
+}
+
+/*
+ * Auth-loading placeholder. Reserves the same horizontal footprint as the
+ * resolved avatar+name so the nav grid doesn't jump when the dashboard fetch
+ * resolves. Transparent background — no flash.
+ */
+.authSlot {
+  display: inline-block;
+  width: 96px;
+  height: 28px;
+  background: transparent;
+  flex-shrink: 0;
+}
+
+@media (max-width: 640px) {
+  .links {
+    display: none;
+  }
+}

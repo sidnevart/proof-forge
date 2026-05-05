@@ -1,0 +1,43 @@
+/* Wrapper — no visual style by itself */
+.root {
+  display: block;
+}
+
+/* Visually hidden SR-only fallback */
+.srOnly {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}
+
+/* Space character: keeps word-breaks intact */
+.space {
+  display: inline-block;
+  white-space: pre;
+}
+
+/* Each letter: start invisible and shifted down */
+.letter {
+  display: inline-block;
+  opacity: 0;
+  transform: translateY(24px);
+  transition:
+    opacity 350ms ease,
+    transform 350ms ease;
+  transition-delay: calc(var(--char-index) * 30ms);
+}
+
+/* On mount (.is-ready added via rAF), letters slide in */
+.is-ready .letter {
+  opacity: 1;
+  transform: none;
+}
+
+/* Newlines inside the heading — <br> is rendered between char spans via
+   the parent JSX, so we just need letter to stay inline-block. */

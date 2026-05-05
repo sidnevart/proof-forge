@@ -15,7 +15,7 @@ export function SectionShell({ title, eyebrow, className, children }: Props) {
     <section className={cn(styles.section, className)}>
       {(eyebrow || title) && (
         <header className={styles.header}>
-          {eyebrow ? <span className="eyebrow">{eyebrow}</span> : null}
+          {eyebrow ? <span className={styles.eyebrow}>{eyebrow}</span> : null}
           {title ? <h2 className={styles.title}>{title}</h2> : null}
         </header>
       )}

@@ -2,9 +2,8 @@
   display: grid;
   gap: 14px;
   padding: 20px;
-  border-radius: var(--radius-sm);
-  border: 1px solid var(--border);
-  background: rgba(255, 255, 255, 0.04);
+  background: var(--bg-surface);
+  border: 2px solid var(--border-strong);
 }
 
 .header {
@@ -14,34 +13,40 @@
   gap: 16px;
 }
 
+.eyebrow {
+  font-family: var(--font-mono);
+  font-size: 11px;
+  font-weight: 700;
+  color: var(--ink-mono);
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+}
+
 .header h3 {
   margin: 0;
-  font-family: var(--font-heading);
-  font-size: 18px;
+  font-family: var(--font-display);
+  font-size: clamp(18px, 2vw, 22px);
+  letter-spacing: 0.04em;
+  color: var(--ink-primary);
 }
 
 .panel p {
   margin: 0;
-  color: var(--text-muted);
+  color: var(--ink-mono);
   line-height: 1.55;
 }
 
-.loading {
-  border-color: rgba(77, 178, 255, 0.32);
+.meta {
+  display: flex;
+  gap: 12px;
+  font-family: var(--font-mono);
+  font-size: 12px;
+  color: var(--ink-mono);
 }
 
-.error {
-  border-color: rgba(255, 109, 104, 0.32);
-}
-
-.empty {
-  border-color: rgba(186, 202, 221, 0.24);
-}
-
-.success {
-  border-color: rgba(112, 216, 150, 0.32);
-}
-
-.pending {
-  border-color: rgba(255, 191, 91, 0.32);
-}
+/* Status accents — semantic tokens, not blue */
+.loading { border-left: 4px solid var(--ink-mono); }
+.error   { border-left: 4px solid var(--danger); }
+.empty   { border-left: 4px solid var(--border-strong); }
+.success { border-left: 4px solid var(--win); }
+.pending { border-left: 4px solid var(--warn); }

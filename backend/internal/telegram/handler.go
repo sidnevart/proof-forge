@@ -1,23 +1,53 @@
 package telegram
 
 import (
+	"context"
 	"encoding/json"
 	"io"
 	"log/slog"
 	"net/http"
+	"strings"
 
 	"github.com/go-chi/chi/v5"
+	"github.com/sidnevart/proof-forge/backend/internal/telegram/bot"
 )
 
-// Handler receives Telegram webhook updates. It validates the secret token
-// header and logs the raw update. Bot-logic dispatch is a follow-up slice.
-type Handler struct {
-	secret string
-	log    *slog.Logger
+// MessageHandler processes a Telegram message.
+type MessageHandler interface {
+	Handle(ctx context.Context, msg *bot.Message)
 }
 
-func NewHandler(secret string, log *slog.Logger) *Handler {
-	return &Handler{secret: secret, log: log}
+// CallbackHandler processes a Telegram callback query.
+type CallbackHandler interface {
+	Handle(ctx context.Context, cq *bot.CallbackQuery)
+}
+
+// Handler receives Telegram webhook updates and dispatches to sub-handlers.
+type Handler struct {
+	secret         string
+	startHandler   MessageHandler
+	commandHandler MessageHandler
+	reviewCallback CallbackHandler
+	log            *slog.Logger
+}
+
+// HandlerConfig wires sub-handlers into the top-level webhook handler.
+type HandlerConfig struct {
+	Secret         string
+	StartHandler   MessageHandler
+	CommandHandler MessageHandler
+	ReviewCallback CallbackHandler
+	Log            *slog.Logger
+}
+
+func NewHandler(cfg HandlerConfig) *Handler {
+	return &Handler{
+		secret:         cfg.Secret,
+		startHandler:   cfg.StartHandler,
+		commandHandler: cfg.CommandHandler,
+		reviewCallback: cfg.ReviewCallback,
+		log:            cfg.Log,
+	}
 }
 
 func (h *Handler) RegisterRoutes(r chi.Router) {
@@ -31,20 +61,49 @@ func (h *Handler) handleUpdate(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	body, err := io.ReadAll(io.LimitReader(r.Body, 1<<20)) // 1 MB cap
+	body, err := io.ReadAll(io.LimitReader(r.Body, 1<<20))
 	if err != nil {
 		h.log.Error("telegram webhook: read body", "err", err)
 		http.Error(w, "bad request", http.StatusBadRequest)
 		return
 	}
 
-	var raw json.RawMessage
-	if err := json.Unmarshal(body, &raw); err != nil {
-		h.log.Error("telegram webhook: invalid json", "err", err)
+	var update bot.Update
+	if err := json.Unmarshal(body, &update); err != nil {
+		h.log.Error("telegram webhook: unmarshal update", "err", err)
 		http.Error(w, "bad request", http.StatusBadRequest)
 		return
 	}
 
-	h.log.Info("telegram webhook: update received", "bytes", len(body))
 	w.WriteHeader(http.StatusOK)
+	h.dispatch(r.Context(), update)
+}
+
+func (h *Handler) dispatch(ctx context.Context, update bot.Update) {
+	switch {
+	case update.CallbackQuery != nil:
+		cq := update.CallbackQuery
+		if strings.HasPrefix(cq.Data, "review_") && h.reviewCallback != nil {
+			h.reviewCallback.Handle(ctx, cq)
+		}
+
+	case update.Message != nil:
+		msg := update.Message
+		text := strings.TrimSpace(msg.Text)
+
+		switch {
+		case strings.HasPrefix(text, "/start"):
+			if h.startHandler != nil {
+				h.startHandler.Handle(ctx, msg)
+			}
+		case strings.HasPrefix(text, "/quiet") ||
+			strings.HasPrefix(text, "/today") ||
+			strings.HasPrefix(text, "/help"):
+			if h.commandHandler != nil {
+				h.commandHandler.Handle(ctx, msg)
+			}
+		default:
+			h.log.Debug("telegram webhook: unhandled message", "text", text)
+		}
+	}
 }

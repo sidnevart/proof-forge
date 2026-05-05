@@ -1,29 +1,78 @@
-@import url("https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@500;600&family=Manrope:wght@400;500;600;700;800&display=swap&subset=cyrillic");
-
 :root {
-  --bg: #0c1016;
-  --bg-elevated: #131a22;
-  --bg-panel: #171f29;
-  --bg-panel-strong: #1d2733;
-  --border: rgba(186, 202, 221, 0.18);
-  --border-strong: rgba(186, 202, 221, 0.28);
-  --text: #edf2f8;
-  --text-muted: #99a7b7;
-  --text-dim: #708094;
-  --accent-blue: #4db2ff;
-  --accent-green: #70d896;
-  --accent-amber: #ffbf5b;
-  --accent-red: #ff6d68;
-  --accent-ink: #0f141b;
-  --shadow: 0 24px 80px rgba(4, 10, 18, 0.48);
-  --radius-xs: 10px;
-  --radius-sm: 18px;
-  --radius-md: 24px;
-  --radius-lg: 36px;
+  --bg-base: #000000;
+  --bg-surface: #0a0a0a;
+  --bg-elevated: #141414;
+
+  --ink-primary: #ffffff;
+  --ink-mono: #a0a0a0;
+
+  --danger: #ff2a2a;
+  --danger-glow: rgba(255, 42, 42, 0.35);
+  --frost: #9fdfff;
+  --fire: #ff7a1a;
+  --win: #1ce783;
+  --warn: #ffb01f;
+
+  --border: #1f1f1f;
+  --border-strong: #2a2a2a;
+
+  --font-display: var(--display, "Impact", "Arial Black", sans-serif);
+  --font-body: var(--body, "Helvetica Neue", "Arial", sans-serif);
+  --font-mono: var(--mono, "Courier New", monospace);
+
   --max-width: 1240px;
-  --font-heading: "Manrope", "IBM Plex Sans", "Avenir Next", sans-serif;
-  --font-body: "Manrope", "IBM Plex Sans", "Avenir Next", sans-serif;
-  --font-mono: "IBM Plex Mono", "SFMono-Regular", ui-monospace, monospace;
+
+  /* Reactive cursor coordinates — mutated by hero mousemove handler */
+  --cursor-x: 50%;
+  --cursor-y: 50%;
+}
+
+@keyframes pulse-danger {
+  0%, 100% { box-shadow: 0 0 0 0 rgba(255, 42, 42, 0.4); }
+  50% { box-shadow: 0 0 0 10px rgba(255, 42, 42, 0); }
+}
+
+@keyframes pulse-win {
+  0%, 100% { box-shadow: 0 0 0 0 rgba(0, 200, 83, 0.4); }
+  50% { box-shadow: 0 0 0 10px rgba(0, 200, 83, 0); }
+}
+
+@keyframes event-slide-in {
+  from { opacity: 0; transform: translateY(-10px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes digit-roll {
+  from { transform: translateY(-100%); opacity: 0; }
+  to { transform: translateY(0); opacity: 1; }
+}
+
+@keyframes frost-creep {
+  from { opacity: 0.35; }
+  to { opacity: 1; }
+}
+
+/* ── New ambient keyframes for "тревожный пульс" ───── */
+@keyframes ambient-breath {
+  0%, 100% { opacity: 0.55; transform: scale(1); }
+  50%      { opacity: 1;    transform: scale(1.06); }
+}
+
+@keyframes scanline-drift {
+  from { background-position: 0 0; }
+  to   { background-position: 0 120px; }
+}
+
+@keyframes grid-drift {
+  from { background-position: 0 0, 0 0; }
+  to   { background-position: 12px 18px, -12px -18px; }
+}
+
+@keyframes glitch-digit {
+  0%, 91%, 95%, 100% { transform: translate3d(0,0,0) skewX(0); opacity: 1; }
+  92% { transform: translate3d(-1px, 0, 0) skewX(0.6deg); opacity: 0.92; }
+  93% { transform: translate3d(1px, 0, 0)  skewX(-0.4deg); opacity: 0.85; }
+  94% { transform: translate3d(0, 0, 0)    skewX(0.2deg);  opacity: 0.95; }
 }
 
 * {
@@ -37,13 +86,21 @@ html {
 body {
   margin: 0;
   min-height: 100vh;
-  background:
-    radial-gradient(circle at top right, rgba(77, 178, 255, 0.18), transparent 22%),
-    radial-gradient(circle at 15% 10%, rgba(112, 216, 150, 0.12), transparent 18%),
-    linear-gradient(180deg, #081018 0%, #0a1219 100%);
-  color: var(--text);
+  background-color: var(--bg-base);
+  /*
+   * Ambient base: dot-grid + soft crosshatch only.
+   * Section-specific glows / scanlines / frost live in landing-page.module.css
+   * via ::before/::after — keeps body neutral and reusable for non-marketing pages.
+   */
+  background-image:
+    radial-gradient(rgba(255, 255, 255, 0.06) 1px, transparent 1px),
+    repeating-linear-gradient(45deg, rgba(255, 255, 255, 0.018) 0 1px, transparent 1px 140px),
+    repeating-linear-gradient(-45deg, rgba(255, 255, 255, 0.018) 0 1px, transparent 1px 140px);
+  background-size: 28px 28px, auto, auto;
+  color: var(--ink-primary);
   font-family: var(--font-body);
-  font-feature-settings: "ss01" 1, "cv02" 1, "cv03" 1;
+  font-size: 15px;
+  line-height: 1.5;
 }
 
 a {
@@ -53,7 +110,8 @@ a {
 
 button,
 input,
-textarea {
+textarea,
+select {
   font: inherit;
 }
 
@@ -66,40 +124,44 @@ textarea {
   margin: 0 auto;
 }
 
-.eyebrow {
-  display: inline-flex;
-  align-items: center;
-  gap: 10px;
-  padding: 8px 14px;
-  border-radius: 999px;
-  border: 1px solid var(--border);
-  background: rgba(255, 255, 255, 0.04);
-  color: var(--text-muted);
-  letter-spacing: 0.06em;
-  font-size: 12px;
-  font-weight: 700;
-}
-
-.grid-lines {
-  position: fixed;
-  inset: 0;
-  pointer-events: none;
-  background-image:
-    linear-gradient(rgba(255, 255, 255, 0.03) 1px, transparent 1px),
-    linear-gradient(90deg, rgba(255, 255, 255, 0.03) 1px, transparent 1px);
-  background-size: 32px 32px;
-  mask-image: linear-gradient(180deg, rgba(0, 0, 0, 0.72), transparent 92%);
-}
-
-.status-dot {
-  width: 8px;
-  height: 8px;
-  border-radius: 999px;
-  background: currentColor;
-}
-
 @media (max-width: 720px) {
   .page-shell {
     width: min(100% - 20px, var(--max-width));
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}
+
+/* ── Mobile-first layout tokens ────────────────── */
+.container-fluid {
+  width: min(100% - 32px, 720px);
+  margin-inline: auto;
+}
+
+.touch-target {
+  min-height: 44px;
+  min-width: 44px;
+}
+
+/*
+ * product-content — обёртка контента продуктовых страниц.
+ * На мобайле добавляет нижний отступ под BottomNav,
+ * чтобы последний элемент не перекрывался таббаром.
+ */
+.product-content {
+  flex: 1;
+}
+
+@media (max-width: 640px) {
+  .product-content {
+    padding-bottom: calc(60px + env(safe-area-inset-bottom, 0px) + 16px);
   }
 }

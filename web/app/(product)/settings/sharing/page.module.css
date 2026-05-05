@@ -1,0 +1,154 @@
+.page {
+  max-width: 600px;
+  margin: 0 auto;
+  padding: 40px 24px 80px;
+}
+
+.header {
+  margin-bottom: 32px;
+}
+
+.header h1 {
+  font-family: var(--font-display);
+  font-size: 48px;
+  line-height: 1;
+  color: var(--ink-primary);
+  margin: 8px 0 0;
+}
+
+.card {
+  background: var(--bg-surface);
+  border: 2px solid #1f1f1f;
+  padding: 32px;
+  border-radius: 2px;
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+}
+
+.desc {
+  font-size: 14px;
+  color: var(--ink-mono);
+  margin: 0;
+  line-height: 1.6;
+}
+
+.options {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.option {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  cursor: pointer;
+}
+
+.option input[type="checkbox"] {
+  width: 18px;
+  height: 18px;
+  margin-top: 2px;
+  flex-shrink: 0;
+  accent-color: var(--ink-primary);
+  cursor: pointer;
+}
+
+.option span {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.option strong {
+  font-size: 13px;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  color: var(--ink-primary);
+}
+
+.option span span {
+  font-size: 12px;
+  color: var(--ink-mono);
+}
+
+.aliasField {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.aliasLabel {
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  color: var(--ink-mono);
+}
+
+.aliasInput {
+  width: 100%;
+  background: var(--bg-elevated);
+  border: 2px solid #1f1f1f;
+  color: var(--ink-primary);
+  padding: 10px 14px;
+  font-size: 14px;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  border-radius: 2px;
+  outline: none;
+  box-sizing: border-box;
+}
+
+.aliasInput:focus {
+  border-color: var(--ink-primary);
+}
+
+.savedMsg {
+  font-family: var(--font-display);
+  font-size: 20px;
+  color: var(--win);
+  margin: 0;
+}
+
+.saveBtn {
+  background: var(--ink-primary);
+  color: var(--bg-base);
+  border: 2px solid var(--ink-primary);
+  padding: 14px 24px;
+  font-size: 14px;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  cursor: pointer;
+  border-radius: 2px;
+  transition: all 0.15s;
+  align-self: flex-start;
+}
+
+.saveBtn:hover:not(:disabled) {
+  background: transparent;
+  color: var(--ink-primary);
+}
+
+.saveBtn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.links {
+  display: flex;
+  gap: 24px;
+  margin-top: 24px;
+}
+
+.link {
+  font-size: 13px;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  color: var(--ink-mono);
+  text-decoration: none;
+}
+
+.link:hover {
+  color: var(--ink-primary);
+}

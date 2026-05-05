@@ -6,6 +6,23 @@ import (
 	"time"
 )
 
+// DomainEventEmitter writes domain events for downstream consumers (nudge engine, etc).
+type DomainEventEmitter interface {
+	Emit(ctx context.Context, kind string, payload map[string]any) error
+}
+
+// MembershipChecker is the read-only window into circle membership used by
+// the check-in service to decide whether an actor can review a check-in.
+// Round-A pivot: any active circle member may approve, not just the buddy.
+type MembershipChecker interface {
+	IsCircleMemberForGoal(ctx context.Context, userID int64, goalID int64) (bool, error)
+}
+
+// NoopEmitter satisfies DomainEventEmitter without doing anything.
+type NoopEmitter struct{}
+
+func (NoopEmitter) Emit(_ context.Context, _ string, _ map[string]any) error { return nil }
+
 type Repository interface {
 	// CreateCheckIn inserts a draft check-in only when the goal is active and
 	// the actor is the goal owner. Returns ErrGoalNotEligible otherwise.

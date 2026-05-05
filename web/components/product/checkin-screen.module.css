@@ -13,7 +13,7 @@
 
 .header h1 {
   margin: 16px 0 0;
-  font-family: var(--font-heading);
+  font-family: var(--font-display);
   font-size: clamp(32px, 4.5vw, 52px);
   line-height: 0.96;
 }
@@ -46,7 +46,7 @@
 }
 
 .field span {
-  color: var(--text-dim);
+  color: var(--ink-mono);
   font-size: 12px;
   letter-spacing: 0.08em;
   text-transform: uppercase;
@@ -56,22 +56,21 @@
 .field textarea {
   width: 100%;
   padding: 14px 16px;
-  border: 1px solid var(--border);
-  border-radius: 14px;
-  background: rgba(8, 15, 24, 0.72);
-  color: var(--text);
+  border: 2px solid var(--border-strong);
+  border-radius: 0;
+  background: var(--bg-elevated);
+  color: var(--ink-primary);
   outline: none;
   resize: vertical;
 }
 
 .field input[type="url"]:focus,
 .field textarea:focus {
-  border-color: var(--accent-blue);
-  box-shadow: 0 0 0 1px rgba(77, 178, 255, 0.3);
+  border-color: var(--ink-primary);
 }
 
 .fileInput {
-  color: var(--text-muted);
+  color: var(--ink-mono);
   font-size: 14px;
   cursor: pointer;
 }
@@ -79,28 +78,28 @@
 .fileInput::file-selector-button {
   padding: 8px 16px;
   margin-right: 12px;
-  border: 1px solid var(--border-strong);
-  border-radius: 10px;
-  background: var(--bg-panel-strong);
-  color: var(--text);
+  border: 2px solid var(--border-strong);
+  border-radius: 0;
+  background: var(--bg-elevated);
+  color: var(--ink-primary);
   cursor: pointer;
   font: inherit;
   font-size: 13px;
 }
 
 .fileInput::file-selector-button:hover {
-  border-color: var(--accent-blue);
+  border-color: var(--ink-primary);
 }
 
 .uploadHint {
   margin: 0;
-  color: var(--text-muted);
+  color: var(--ink-mono);
   font-size: 13px;
 }
 
 .formError {
   margin: 0;
-  color: var(--accent-red);
+  color: var(--danger);
   line-height: 1.5;
 }
 
@@ -116,29 +115,29 @@
   display: grid;
   gap: 6px;
   padding: 14px 16px;
-  border-radius: var(--radius-xs);
-  background: rgba(255, 255, 255, 0.03);
-  border: 1px solid var(--border);
+  border-radius: 0;
+  background: var(--bg-elevated);
+  border: 2px solid var(--border-strong);
 }
 
 .evidenceItem p,
 .evidenceItem a {
   margin: 0;
-  color: var(--text-muted);
+  color: var(--ink-mono);
   font-size: 14px;
   line-height: 1.5;
   word-break: break-word;
 }
 
 .evidenceItem a {
-  color: var(--accent-blue);
+  color: var(--ink-primary);
 }
 
 .evidenceKind {
   font-size: 11px;
   text-transform: uppercase;
   letter-spacing: 0.1em;
-  color: var(--text-dim);
+  color: var(--ink-mono);
 }
 
 .startBlock,
@@ -150,7 +149,7 @@
 .startBlock p,
 .submitBlock p {
   margin: 0;
-  color: var(--text-muted);
+  color: var(--ink-mono);
   line-height: 1.55;
 }
 

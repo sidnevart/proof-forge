@@ -90,6 +90,7 @@ type AIConfig struct {
 
 type TelegramConfig struct {
 	BotToken      string
+	BotUsername   string
 	WebhookBase   string
 	WebhookSecret string
 	Enabled       bool
@@ -168,6 +169,7 @@ func Load() (Config, error) {
 		},
 		Telegram: TelegramConfig{
 			BotToken:      getEnv("TELEGRAM_BOT_TOKEN", ""),
+			BotUsername:   getEnv("TELEGRAM_BOT_USERNAME", ""),
 			WebhookBase:   getEnv("TELEGRAM_WEBHOOK_BASE_URL", ""),
 			WebhookSecret: getEnv("TELEGRAM_WEBHOOK_SECRET", ""),
 			Enabled:       getEnv("TELEGRAM_BOT_TOKEN", "") != "" && getEnv("TELEGRAM_WEBHOOK_BASE_URL", "") != "",

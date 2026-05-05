@@ -1,12 +1,26 @@
 .DS_Store
 .env
 .env.prod
+.env.dev
 .env.local
 .env.*.local
 !.env.example
 **/.env.prod
+**/.env.dev
+infra/docker/.env.dev
+infra/docker/.env.prod
 infra/nginx/certs/*
 !infra/nginx/certs/.gitkeep
+.superpowers/
+.claude/
+AI_WEB3_INTEGRATION_PLAN.md
+PLAN.md
+*.png
+*.jpg
+*.jpeg
+*.gif
+!docs/**/*.png
+!docs/**/*.jpg
 node_modules/
 .next/
 *.tsbuildinfo
@@ -24,6 +38,7 @@ __pycache__/
 vendor/
 bin/
 out/
+.worktrees/
 
 # Compiled binaries
 /backend/api

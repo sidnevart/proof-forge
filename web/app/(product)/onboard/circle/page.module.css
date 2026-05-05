@@ -1,0 +1,154 @@
+.page {
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 40px 20px;
+}
+
+.content {
+  width: 100%;
+  max-width: 480px;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.eyebrow {
+  font-family: var(--font-mono);
+  font-size: 11px;
+  letter-spacing: 0.12em;
+  color: var(--ink-mono);
+}
+
+.title {
+  margin: 0;
+  font-family: var(--font-display);
+  font-size: 72px;
+  line-height: 1;
+  letter-spacing: 0.02em;
+}
+
+.sub {
+  margin: 0;
+  font-size: 15px;
+  color: var(--ink-mono);
+  letter-spacing: 0.04em;
+}
+
+.tabs {
+  display: flex;
+  gap: 0;
+  border: 2px solid var(--border-strong);
+  margin-top: 8px;
+}
+
+.tab {
+  flex: 1;
+  padding: 12px;
+  background: transparent;
+  border: none;
+  color: var(--ink-mono);
+  font-family: var(--font-display);
+  font-size: 13px;
+  letter-spacing: 0.08em;
+  cursor: pointer;
+  transition: background 150ms, color 150ms;
+  border-right: 2px solid var(--border-strong);
+}
+
+.tab:last-child {
+  border-right: none;
+}
+
+.tab:hover {
+  color: var(--ink-primary);
+  background: var(--bg-elevated);
+}
+
+.tabActive {
+  background: var(--ink-primary) !important;
+  color: #000 !important;
+}
+
+.form {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  margin-top: 8px;
+}
+
+.field {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.fieldLabel {
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  color: var(--ink-mono);
+}
+
+.input {
+  width: 100%;
+  padding: 14px 16px;
+  background: var(--bg-elevated);
+  border: 2px solid var(--border-strong);
+  color: var(--ink-primary);
+  font-size: 15px;
+  outline: none;
+  transition: border-color 150ms;
+}
+
+.input:focus {
+  border-color: var(--ink-primary);
+}
+
+.submitBtn {
+  padding: 16px;
+  background: transparent;
+  border: 2px solid var(--ink-primary);
+  color: var(--ink-primary);
+  font-family: var(--font-display);
+  font-size: 20px;
+  letter-spacing: 0.06em;
+  cursor: pointer;
+  transition: background 150ms, color 150ms;
+}
+
+.submitBtn:hover:not(:disabled) {
+  background: var(--ink-primary);
+  color: #000;
+}
+
+.submitBtn:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+.error {
+  margin: 0;
+  color: var(--danger);
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+}
+
+.footer {
+  margin-top: 8px;
+  text-align: center;
+}
+
+.skipLink {
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  color: var(--ink-mono);
+  transition: color 150ms;
+}
+
+.skipLink:hover {
+  color: var(--ink-primary);
+}

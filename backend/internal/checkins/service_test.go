@@ -87,8 +87,9 @@ func pendingView(ownerID, buddyID int64) CheckInView {
 	}
 }
 
-func owner() users.User { return users.User{ID: 1, Email: "owner@example.com"} }
-func buddy() users.User { return users.User{ID: 2, Email: "buddy@example.com"} }
+func owner() users.User  { return users.User{ID: 1, Email: "owner@example.com"} }
+func buddy() users.User  { return users.User{ID: 2, Email: "buddy@example.com"} }
+func stranger() users.User { return users.User{ID: 3, Email: "stranger@example.com"} }
 
 // --- tests ---
 
@@ -311,9 +312,27 @@ func TestReviewNotBuddyReturnsError(t *testing.T) {
 		},
 	}
 	svc := NewService(repo, storageStub{})
+	// stranger (ID=3) is not owner, not buddy, and NoopMembershipChecker returns
+	// isMember=false → ErrNotAuthorized (Round-A: any circle member may review).
+	_, err := svc.Review(context.Background(), stranger(), 1, ReviewInput{Decision: DecisionApprove})
+	if !errors.Is(err, ErrNotAuthorized) {
+		t.Fatalf("expected ErrNotAuthorized, got %v", err)
+	}
+}
+
+func TestReviewOwnCheckInReturnsError(t *testing.T) {
+	repo := repoStub{
+		getCheckIn: func(_ context.Context, _ int64) (CheckInView, error) {
+			v := pendingView(1, 2)
+			v.CheckIn.Status = StatusSubmitted
+			return v, nil
+		},
+	}
+	svc := NewService(repo, storageStub{})
+	// owner reviewing their own check-in must be rejected.
 	_, err := svc.Review(context.Background(), owner(), 1, ReviewInput{Decision: DecisionApprove})
-	if !errors.Is(err, ErrNotBuddy) {
-		t.Fatalf("expected ErrNotBuddy, got %v", err)
+	if !errors.Is(err, ErrCannotReviewOwn) {
+		t.Fatalf("expected ErrCannotReviewOwn, got %v", err)
 	}
 }
 

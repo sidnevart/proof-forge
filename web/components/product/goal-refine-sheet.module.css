@@ -1,0 +1,223 @@
+.backdrop {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.6);
+  z-index: 40;
+}
+
+.sheet {
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  max-height: 80vh;
+  overflow-y: auto;
+  background: var(--bg-surface);
+  border-top: 2px solid var(--ink-primary);
+  z-index: 50;
+  padding: 24px;
+}
+
+@media (min-width: 768px) {
+  .sheet {
+    left: auto;
+    right: 24px;
+    bottom: 24px;
+    width: 480px;
+    max-height: 70vh;
+    border: 2px solid var(--ink-primary);
+  }
+}
+
+.sheetHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 16px;
+}
+
+.sheetTitle {
+  font-family: var(--font-display);
+  font-size: 20px;
+  color: var(--ink-primary);
+  letter-spacing: 0.05em;
+}
+
+.closeBtn {
+  background: none;
+  border: none;
+  color: var(--ink-mono);
+  font-size: 24px;
+  cursor: pointer;
+  padding: 0;
+  line-height: 1;
+}
+
+.closeBtn:hover {
+  color: var(--ink-primary);
+}
+
+.loadingState {
+  padding: 32px 0;
+  text-align: center;
+}
+
+.loadingText {
+  font-family: var(--font-display);
+  font-size: 18px;
+  color: var(--ink-mono);
+  letter-spacing: 0.1em;
+  animation: blink 1.2s infinite;
+}
+
+@keyframes blink {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.3; }
+}
+
+.errorState {
+  padding: 16px 0;
+}
+
+.errorText {
+  font-family: var(--font-body);
+  font-size: 14px;
+  color: var(--danger);
+}
+
+.categoryBadge {
+  display: inline-block;
+  padding: 4px 10px;
+  border: 1px solid var(--border-strong);
+  font-family: var(--font-mono);
+  font-size: 11px;
+  color: var(--ink-mono);
+  letter-spacing: 0.08em;
+  margin-bottom: 16px;
+}
+
+.variants {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.variantCard {
+  border: 2px solid var(--border);
+  padding: 16px;
+  background: var(--bg-elevated);
+  transition: border-color 0.15s;
+}
+
+.variantCard:hover {
+  border-color: var(--border-strong);
+}
+
+.variantHeader {
+  display: flex;
+  align-items: baseline;
+  gap: 10px;
+  margin-bottom: 8px;
+}
+
+.variantIndex {
+  font-family: var(--font-display);
+  font-size: 28px;
+  color: var(--ink-mono);
+  line-height: 1;
+  flex-shrink: 0;
+}
+
+.variantTitle {
+  font-family: var(--font-display);
+  font-size: 16px;
+  color: var(--ink-primary);
+  letter-spacing: 0.04em;
+}
+
+.variantSmart {
+  font-family: var(--font-body);
+  font-size: 14px;
+  color: var(--ink-primary);
+  line-height: 1.5;
+  margin: 0 0 12px;
+}
+
+.proofExamples {
+  margin-bottom: 12px;
+  padding: 10px;
+  background: var(--bg-surface);
+  border-left: 2px solid var(--border-strong);
+}
+
+.proofLabel {
+  font-family: var(--font-mono);
+  font-size: 10px;
+  color: var(--ink-mono);
+  letter-spacing: 0.08em;
+  margin-bottom: 8px;
+}
+
+.proofList {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.proofItem {
+  font-family: var(--font-body);
+  font-size: 13px;
+  color: var(--ink-mono);
+  padding-left: 12px;
+  position: relative;
+}
+
+.proofItem::before {
+  content: "—";
+  position: absolute;
+  left: 0;
+  color: var(--border-strong);
+}
+
+.variantActions {
+  display: flex;
+  gap: 8px;
+}
+
+.acceptBtn {
+  padding: 10px 20px;
+  background: var(--ink-primary);
+  color: var(--bg-base);
+  border: 2px solid var(--ink-primary);
+  font-family: var(--font-display);
+  font-size: 14px;
+  font-weight: 400;
+  letter-spacing: 0.05em;
+  cursor: pointer;
+  transition: background 0.15s, color 0.15s;
+}
+
+.acceptBtn:hover {
+  background: transparent;
+  color: var(--ink-primary);
+}
+
+.expandBtn {
+  padding: 10px 16px;
+  background: transparent;
+  color: var(--ink-mono);
+  border: 1px solid var(--border);
+  font-family: var(--font-mono);
+  font-size: 11px;
+  letter-spacing: 0.05em;
+  cursor: pointer;
+  transition: color 0.15s, border-color 0.15s;
+}
+
+.expandBtn:hover {
+  color: var(--ink-primary);
+  border-color: var(--border-strong);
+}

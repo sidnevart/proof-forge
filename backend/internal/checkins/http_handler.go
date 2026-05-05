@@ -254,6 +254,8 @@ func (h *Handler) writeServiceError(w http.ResponseWriter, r *http.Request, op s
 		writeError(w, http.StatusForbidden, "forbidden", "Only the goal owner can perform this action")
 	case errors.Is(err, ErrNotBuddy):
 		writeError(w, http.StatusForbidden, "forbidden", "Only the goal buddy can review this check-in")
+	case errors.Is(err, ErrCannotReviewOwn):
+		writeError(w, http.StatusForbidden, "forbidden", "Cannot review your own check-in")
 	case errors.Is(err, ErrCannotReview):
 		writeError(w, http.StatusConflict, "cannot_review", "Check-in is not in a reviewable state")
 	case errors.Is(err, ErrCannotSubmit):

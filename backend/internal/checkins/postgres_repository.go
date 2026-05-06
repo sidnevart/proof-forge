@@ -55,6 +55,7 @@ func (r *PostgresRepository) GetCheckIn(ctx context.Context, checkInID int64) (C
 			c.submitted_at, c.approved_at, c.rejected_at, c.changes_requested_at,
 			c.created_at, c.updated_at,
 			g.buddy_user_id,
+			COALESCE(g.proof_examples, ''),
 			e.id, e.kind, e.text_content, e.external_url,
 			e.storage_key, e.mime_type, e.file_size_bytes, e.created_at
 		FROM check_ins c
@@ -86,6 +87,7 @@ func (r *PostgresRepository) GetCheckIn(ctx context.Context, checkInID int64) (C
 			&submittedAt, &approvedAt, &rejectedAt, &changesAt,
 			&view.CheckIn.CreatedAt, &view.CheckIn.UpdatedAt,
 			&view.BuddyUserID,
+			&view.GoalProofExamples,
 			&eID, &eKind, &eText, &eURL, &eKey, &eMIME, &eSize, &eCreatedAt,
 		); err != nil {
 			return CheckInView{}, fmt.Errorf("scan check-in row: %w", err)

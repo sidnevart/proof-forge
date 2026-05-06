@@ -2,6 +2,7 @@ package app
 
 import (
 	"context"
+	"encoding/json"
 	"errors"
 	"fmt"
 	"log/slog"
@@ -10,9 +11,12 @@ import (
 	"github.com/go-chi/chi/v5"
 	"github.com/jackc/pgx/v5/pgxpool"
 
+	"github.com/sidnevart/proof-forge/backend/internal/ai"
 	"github.com/sidnevart/proof-forge/backend/internal/checkins"
+	"github.com/sidnevart/proof-forge/backend/internal/circles"
 	"github.com/sidnevart/proof-forge/backend/internal/goals"
-	"github.com/sidnevart/proof-forge/backend/internal/milestones"
+	"github.com/sidnevart/proof-forge/backend/internal/inspiration"
+	"github.com/sidnevart/proof-forge/backend/internal/notifications"
 	platformconfig "github.com/sidnevart/proof-forge/backend/internal/platform/config"
 	"github.com/sidnevart/proof-forge/backend/internal/platform/email"
 	"github.com/sidnevart/proof-forge/backend/internal/platform/httpx"
@@ -20,8 +24,10 @@ import (
 	"github.com/sidnevart/proof-forge/backend/internal/platform/postgres"
 	"github.com/sidnevart/proof-forge/backend/internal/platform/readiness"
 	"github.com/sidnevart/proof-forge/backend/internal/recaps"
-	"github.com/sidnevart/proof-forge/backend/internal/stakes"
 	"github.com/sidnevart/proof-forge/backend/internal/telegram"
+	"github.com/sidnevart/proof-forge/backend/internal/telegram/bot"
+	"github.com/sidnevart/proof-forge/backend/internal/telegram/callbacks"
+	"github.com/sidnevart/proof-forge/backend/internal/telegram/commands"
 	"github.com/sidnevart/proof-forge/backend/internal/users"
 )
 
@@ -85,12 +91,14 @@ func RunAPI(ctx context.Context, cfg platformconfig.Config) error {
 
 func registerAPIRoutes(router *chi.Mux, log *slog.Logger, pool *pgxpool.Pool, cfg platformconfig.Config) {
 	usersRepo := users.NewPostgresRepository(pool)
+	usersSvc := users.NewService(usersRepo, usersRepo, cfg.Session.TTL)
 	usersHandler := users.NewHandler(
 		platformlogger.WithComponent(log, "users"),
-		users.NewService(usersRepo, usersRepo, cfg.Session.TTL),
+		usersSvc,
 		cfg.Session.CookieName,
 		cfg.App.Env == "production",
 	)
+
 	var emailSender email.Sender
 	if cfg.SMTP.Enabled {
 		emailSender = email.NewSMTPSender(cfg.SMTP)
@@ -98,10 +106,29 @@ func registerAPIRoutes(router *chi.Mux, log *slog.Logger, pool *pgxpool.Pool, cf
 		emailSender = email.NoopSender{}
 	}
 
+	var goalRefineProvider ai.RefineProvider
+	if cfg.AI.Enabled {
+		goalRefineProvider = ai.NewOpenAIRefineProvider(cfg.AI.BaseURL, cfg.AI.APIKey, cfg.AI.Model)
+	} else {
+		goalRefineProvider = ai.NewFakeGoalRefineProvider()
+	}
+	notifRepo := notifications.NewPostgresRepository(pool)
+
+	circlesService := circles.NewService(circles.NewPostgresRepository(pool))
 	goalsHandler := goals.NewHandler(
 		platformlogger.WithComponent(log, "goals"),
-		goals.NewService(goals.NewPostgresRepository(pool), emailSender, cfg.App.WebOrigin, platformlogger.WithComponent(log, "goals"), cfg.Invite.TTL),
+		goals.NewService(
+			goals.NewPostgresRepository(pool),
+			emailSender,
+			cfg.App.WebOrigin,
+			platformlogger.WithComponent(log, "goals"),
+			cfg.Invite.TTL,
+			goals.WithRefineProvider(goalRefineProvider),
+			goals.WithNotifEmitter(notifRepo),
+			goals.WithCircleLister(circlesService),
+		),
 	)
+	circlesHandler := circles.NewHandler(circlesService)
 
 	var objStorage checkins.Storage
 	if cfg.Storage.Enabled {
@@ -116,9 +143,12 @@ func registerAPIRoutes(router *chi.Mux, log *slog.Logger, pool *pgxpool.Pool, cf
 	} else {
 		objStorage = checkins.NoopStorage{}
 	}
+
+	checkinsSvc := checkins.NewService(checkins.NewPostgresRepository(pool), objStorage, notifRepo).
+		WithMembershipChecker(circlesService)
 	checkinsHandler := checkins.NewHandler(
 		platformlogger.WithComponent(log, "checkins"),
-		checkins.NewService(checkins.NewPostgresRepository(pool), objStorage),
+		checkinsSvc,
 	)
 
 	var aiProvider recaps.AIProvider
@@ -132,35 +162,80 @@ func registerAPIRoutes(router *chi.Mux, log *slog.Logger, pool *pgxpool.Pool, cf
 		recaps.NewService(recaps.NewPostgresRepository(pool), aiProvider, platformlogger.WithComponent(log, "recaps")),
 	)
 
-	stakesHandler := stakes.NewHandler(
-		platformlogger.WithComponent(log, "stakes"),
-		stakes.NewService(stakes.NewPostgresRepository(pool)),
-	)
-
-	milestonesHandler := milestones.NewHandler(
-		platformlogger.WithComponent(log, "milestones"),
-		milestones.NewService(milestones.NewPostgresRepository(pool)),
-	)
-
 	if cfg.Telegram.Enabled {
-		telegramHandler := telegram.NewHandler(
-			cfg.Telegram.WebhookSecret,
-			platformlogger.WithComponent(log, "telegram"),
+		var sender bot.Sender
+		sender = bot.New(cfg.Telegram.BotToken)
+
+		tgRepo := telegram.NewRepository(pool)
+		notifDispatcher := notifications.NewDispatcher(sender, notifRepo, platformlogger.WithComponent(log, "notifications"))
+
+		startCmd := commands.NewStartHandler(tgRepo, sender, platformlogger.WithComponent(log, "telegram.start"))
+		cmdHandler := commands.NewCommandHandler(
+			tgRepo, notifRepo, sender, cfg.App.WebOrigin,
+			platformlogger.WithComponent(log, "telegram.commands"),
 		)
+		reviewCb := callbacks.NewReviewHandler(checkinsSvc, tgRepo, sender, platformlogger.WithComponent(log, "telegram.review"))
+
+		telegramHandler := telegram.NewHandler(telegram.HandlerConfig{
+			Secret:         cfg.Telegram.WebhookSecret,
+			StartHandler:   startCmd,
+			CommandHandler: cmdHandler,
+			ReviewCallback: reviewCb,
+			Log:            platformlogger.WithComponent(log, "telegram"),
+		})
 		telegramHandler.RegisterRoutes(router)
+
+		_ = notifDispatcher // used by worker; here for compile-time wiring check
 	}
+
+	inspRepo := inspiration.NewPostgresRepository(pool)
+	inspSvc := inspiration.NewService(inspRepo)
+	inspHandler := inspiration.NewHandler(platformlogger.WithComponent(log, "inspiration"), inspSvc)
 
 	router.Route("/v1", func(r chi.Router) {
 		usersHandler.RegisterPublicRoutes(r)
 		goalsHandler.RegisterPublicRoutes(r)
+		inspHandler.RegisterPublicRoutes(r)
 		r.Group(func(r chi.Router) {
 			r.Use(usersHandler.AuthMiddleware)
 			usersHandler.RegisterProtectedRoutes(r)
+			circlesHandler.RegisterRoutes(r)
 			goalsHandler.RegisterRoutes(r)
 			checkinsHandler.RegisterRoutes(r)
 			recapsHandler.RegisterRoutes(r)
-			stakesHandler.RegisterRoutes(r)
-			milestonesHandler.RegisterRoutes(r)
+			inspHandler.RegisterRoutes(r)
+
+			// Telegram link token endpoint.
+			if cfg.Telegram.Enabled {
+				tgRepo := telegram.NewRepository(pool)
+				botUsername := cfg.Telegram.BotUsername
+				r.Post("/telegram/link-token", makeLinkTokenHandler(tgRepo, botUsername, log))
+			}
 		})
 	})
+}
+
+func makeLinkTokenHandler(repo *telegram.Repository, botUsername string, log *slog.Logger) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		actor, ok := users.CurrentUser(r.Context())
+		if !ok {
+			http.Error(w, "unauthorized", http.StatusUnauthorized)
+			return
+		}
+
+		token, err := commands.GenerateToken(r.Context(), repo, actor.ID)
+		if err != nil {
+			log.Error("link token: generate", "err", err)
+			http.Error(w, "internal error", http.StatusInternalServerError)
+			return
+		}
+
+		deeplink := fmt.Sprintf("https://t.me/%s?start=link_%s", botUsername, token)
+
+		w.Header().Set("Content-Type", "application/json")
+		_ = json.NewEncoder(w).Encode(map[string]string{
+			"token":    token,
+			"deeplink": deeplink,
+		})
+	}
 }

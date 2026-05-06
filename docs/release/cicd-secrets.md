@@ -10,7 +10,7 @@
 - `DEPLOY_SSH_PRIVATE_KEY`
 
 ## Рекомендуемые значения
-- `DEPLOY_HOST=80.74.25.43`
+- `DEPLOY_HOST=YOUR_VPS_IP`
 - `DEPLOY_PORT=22`
 - `DEPLOY_USER=proofforge-deploy`
 - `DEPLOY_PATH=/opt/proofforge-prod`

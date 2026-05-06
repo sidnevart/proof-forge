@@ -1,0 +1,90 @@
+.root {
+  background: var(--bg-surface);
+  border: 2px solid var(--border-strong);
+}
+
+.header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 12px 20px;
+  border-bottom: 2px solid var(--border-strong);
+}
+
+.silenceTag {
+  font-family: var(--font-mono);
+  font-size: 11px;
+  letter-spacing: 0.06em;
+  color: var(--ink-mono);
+}
+
+.activeTag {
+  font-family: var(--font-mono);
+  font-size: 11px;
+  letter-spacing: 0.06em;
+  color: var(--win);
+}
+
+.title {
+  font-family: var(--font-display);
+  font-size: 16px;
+  letter-spacing: 0.1em;
+}
+
+.feed {
+  max-height: 400px;
+  overflow-y: auto;
+}
+
+.empty {
+  padding: 32px 20px;
+  text-align: center;
+}
+
+.emptyText {
+  font-family: var(--font-display);
+  font-size: 18px;
+  letter-spacing: 0.08em;
+  color: var(--ink-mono);
+}
+
+.event {
+  display: grid;
+  grid-template-columns: 24px 1fr auto;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 20px;
+  border-bottom: 1px solid var(--border);
+}
+
+.event:last-child {
+  border-bottom: none;
+}
+
+.newEvent {
+  animation: event-slide-in 300ms ease;
+}
+
+.eventIcon {
+  font-size: 14px;
+  text-align: center;
+}
+
+.eventMessage {
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  line-height: 1.4;
+}
+
+.eventTime {
+  font-family: var(--font-mono);
+  font-size: 11px;
+  color: var(--ink-mono);
+  flex-shrink: 0;
+}
+
+.eventApproved .eventMessage { color: var(--win); }
+.eventComeback .eventMessage { color: var(--warn); }
+.eventDropped .eventMessage { color: var(--frost); }
+.eventAtRisk .eventMessage { color: var(--warn); }

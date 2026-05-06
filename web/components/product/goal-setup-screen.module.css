@@ -1,58 +1,112 @@
 .page {
   display: grid;
-  gap: 32px;
-  padding: 48px 0 96px;
+  gap: 16px;
+  /* Bound the form to a readable column on big screens; clamp side padding
+   * so the form never hugs the viewport edges on mobile.               */
+  max-width: 1100px;
+  margin: 0 auto;
+  padding: 24px clamp(16px, 4vw, 32px) 48px;
 }
 
-.header h1 {
-  margin: 8px 0 0;
-  font-family: var(--font-heading);
-  font-size: 28px;
-  font-weight: 600;
-  letter-spacing: -0.03em;
-  line-height: 1.15;
+.header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+/*
+ * Compact header pattern (eyebrow + headline). Replaces the old `.header h1`
+ * rule that filled the whole top of the viewport with a wrapping Bebas Neue
+ * heading. Now: small mono eyebrow tells the user where they are in the
+ * onboarding, then a tight Bebas Neue line states what the screen is for.
+ */
+.headerCompact {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  margin-bottom: 8px;
+}
+
+.headerCompact h1 {
+  margin: 0;
+  font-family: var(--font-display);
+  font-size: clamp(28px, 4vw, 40px);
+  color: var(--ink-primary);
+  line-height: 1.05;
+  letter-spacing: 0.03em;
+}
+
+.eyebrow {
+  margin: 0;
+  font-family: var(--font-mono);
+  font-size: 11px;
+  font-weight: 700;
+  color: var(--ink-mono);
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+}
+
+.headerTitle {
+  margin: 0;
+  font-size: 17px;
+  font-weight: 700;
+}
+
+.authGrid {
+  display: grid;
+  grid-template-columns: 1fr 1fr auto;
+  gap: 14px;
+  align-items: start;
+}
+
+.authNote {
+  display: flex;
+  align-items: flex-start;
+  padding-top: 8px;
 }
 
 .grid {
   display: grid;
-  grid-template-columns: 1.2fr 0.8fr;
-  gap: 16px;
+  grid-template-columns: 1.15fr 0.85fr;
+  gap: 18px;
 }
 
 .form,
 .copy {
   display: grid;
-  gap: 12px;
+  gap: 16px;
 }
 
 .field {
   display: grid;
-  gap: 6px;
+  gap: 8px;
 }
 
 .field span {
-  color: var(--text-dim);
-  font-size: 11px;
-  font-weight: 500;
-  letter-spacing: 0.04em;
+  color: var(--ink-mono);
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0.08em;
   text-transform: uppercase;
 }
 
 .field input,
+.field select,
 .field textarea {
   width: 100%;
-  padding: 10px 14px;
-  border: 1px solid var(--border);
-  border-radius: var(--radius-sm);
-  background: var(--bg);
-  color: var(--text);
+  padding: 14px 16px;
+  border: 2px solid var(--border-strong);
+  border-radius: 0;
+  background: var(--bg-elevated);
+  color: var(--ink-primary);
   outline: none;
-  font-size: 14px;
 }
 
 .field input:focus,
+.field select:focus,
 .field textarea:focus {
-  border-color: var(--accent);
+  border-color: var(--ink-primary);
 }
 
 .inlineFields {
@@ -65,41 +119,78 @@
 .copy p,
 .rules {
   margin: 0;
-  color: var(--text-muted);
-  font-size: 14px;
-  line-height: 1.5;
+  color: var(--ink-mono);
+  line-height: 1.6;
 }
 
 .error {
-  color: var(--fn-red);
-  font-size: 13px;
+  color: var(--danger);
 }
 
 .actions {
   display: flex;
   flex-wrap: wrap;
-  gap: 8px;
+  gap: 12px;
 }
 
 .backLink {
   display: inline-flex;
   align-items: center;
-  height: 40px;
-  color: var(--text);
+  min-height: 48px;
+  color: var(--ink-primary);
   padding: 0 20px;
-  border-radius: var(--radius-sm);
-  border: 1px solid var(--border-strong);
+  border-radius: 0;
+  border: 2px solid var(--border-strong);
   background: transparent;
-  font-size: 14px;
-  font-weight: 500;
-}
-
-.backLink:hover {
-  border-color: var(--text-dim);
+  font-weight: 700;
 }
 
 .rules {
   padding-left: 18px;
+}
+
+/*
+ * Numbered timeline for the right-hand "Шаг 2" column. Each step is prefixed
+ * by a square mono badge (counter) in the win-green token, mirroring the
+ * dashboard accent. The CSS counter avoids the default `<ol>` numerals
+ * which clash with the brutal mono aesthetic.
+ */
+.timeline {
+  list-style: none;
+  counter-reset: step;
+  padding: 0;
+  margin: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.timeline li {
+  counter-increment: step;
+  position: relative;
+  padding-left: 40px;
+  font-family: var(--font-body);
+  font-size: 14px;
+  line-height: 1.5;
+  color: var(--ink-primary);
+}
+
+.timeline li::before {
+  content: counter(step);
+  position: absolute;
+  left: 0;
+  top: 0;
+  width: 26px;
+  height: 26px;
+  border: 2px solid var(--win);
+  color: var(--win);
+  font-family: var(--font-mono);
+  font-size: 12px;
+  font-weight: 700;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  letter-spacing: 0;
 }
 
 @media (max-width: 960px) {
@@ -110,10 +201,6 @@
 }
 
 @media (max-width: 720px) {
-  .page {
-    padding: 32px 0 64px;
-  }
-
   .actions {
     flex-direction: column;
   }
@@ -121,4 +208,77 @@
   .backLink {
     justify-content: center;
   }
+}
+
+.refineBtn {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 8px 14px;
+  background: transparent;
+  border: 1px solid var(--border-strong);
+  color: var(--ink-mono);
+  font-family: var(--font-mono);
+  font-size: 12px;
+  letter-spacing: 0.05em;
+  cursor: pointer;
+  margin-top: 8px;
+  transition: color 0.15s, border-color 0.15s;
+}
+
+.refineBtn:hover {
+  color: var(--ink-primary);
+  border-color: var(--ink-primary);
+}
+
+.proofExamplesHint {
+  margin-top: 12px;
+  padding: 10px 12px;
+  background: var(--bg-elevated);
+  border-left: 2px solid var(--win);
+}
+
+.proofHintLabel {
+  display: block;
+  font-family: var(--font-mono);
+  font-size: 10px;
+  color: var(--ink-mono);
+  letter-spacing: 0.08em;
+  margin-bottom: 6px;
+}
+
+.proofHintList {
+  list-style: none;
+  padding: 0;
+  margin: 0 0 8px;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.proofHintList li {
+  font-family: var(--font-body);
+  font-size: 13px;
+  color: var(--ink-primary);
+  padding-left: 10px;
+  position: relative;
+}
+
+.proofHintList li::before {
+  content: "✓";
+  position: absolute;
+  left: 0;
+  color: var(--win);
+  font-size: 11px;
+}
+
+.clearVariantBtn {
+  background: none;
+  border: none;
+  color: var(--ink-mono);
+  font-family: var(--font-body);
+  font-size: 12px;
+  cursor: pointer;
+  padding: 0;
+  text-decoration: underline;
 }

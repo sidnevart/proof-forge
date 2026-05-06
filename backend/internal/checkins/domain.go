@@ -47,8 +47,9 @@ const (
 )
 
 var (
-	ErrNotBuddy     = errors.New("only the goal buddy can review this check-in")
-	ErrCannotReview = errors.New("check-in is not in a reviewable state")
+	ErrNotBuddy         = errors.New("only the goal buddy can review this check-in")
+	ErrCannotReview     = errors.New("check-in is not in a reviewable state")
+	ErrCannotReviewOwn  = errors.New("cannot review your own check-in")
 )
 
 type ReviewInput struct {
@@ -102,9 +103,10 @@ type EvidenceItem struct {
 // CheckInView is the read model for a single check-in with all its evidence.
 // BuddyUserID is included for service-layer permission checks and is not serialised.
 type CheckInView struct {
-	CheckIn      CheckIn        `json:"check_in"`
-	Evidence     []EvidenceItem `json:"evidence"`
-	BuddyUserID  int64          `json:"-"`
+	CheckIn           CheckIn        `json:"check_in"`
+	Evidence          []EvidenceItem `json:"evidence"`
+	BuddyUserID       int64          `json:"-"`
+	GoalProofExamples string         `json:"goal_proof_examples,omitempty"`
 }
 
 type AddTextInput struct {

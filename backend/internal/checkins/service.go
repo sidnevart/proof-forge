@@ -11,17 +11,40 @@ import (
 )
 
 type Service struct {
-	repo    Repository
-	storage Storage
-	clock   func() time.Time
+	repo       Repository
+	storage    Storage
+	emitter    DomainEventEmitter
+	membership MembershipChecker
+	clock      func() time.Time
 }
 
-func NewService(repo Repository, storage Storage) *Service {
-	return &Service{
-		repo:    repo,
-		storage: storage,
-		clock:   time.Now,
+// NoopMembershipChecker satisfies MembershipChecker without doing anything.
+// Used when circles service is not wired (tests, etc).
+type NoopMembershipChecker struct{}
+
+func (NoopMembershipChecker) IsCircleMemberForGoal(_ context.Context, _, _ int64) (bool, error) {
+	return false, nil
+}
+
+func NewService(repo Repository, storage Storage, emitter ...DomainEventEmitter) *Service {
+	var em DomainEventEmitter = NoopEmitter{}
+	if len(emitter) > 0 && emitter[0] != nil {
+		em = emitter[0]
 	}
+	return &Service{
+		repo:       repo,
+		storage:    storage,
+		emitter:    em,
+		membership: NoopMembershipChecker{},
+		clock:      time.Now,
+	}
+}
+
+// WithMembershipChecker injects a circle membership checker so the Review()
+// method can authorise any circle member (Round-A pivot).
+func (s *Service) WithMembershipChecker(m MembershipChecker) *Service {
+	s.membership = m
+	return s
 }
 
 func (s *Service) CreateCheckIn(ctx context.Context, actor users.User, goalID int64) (CheckIn, error) {
@@ -41,7 +64,16 @@ func (s *Service) GetDetail(ctx context.Context, actor users.User, checkInID int
 	if err != nil {
 		return CheckInView{}, err
 	}
-	if actor.ID != view.CheckIn.OwnerUserID && actor.ID != view.BuddyUserID {
+	// Owner or legacy buddy always have access.
+	if actor.ID == view.CheckIn.OwnerUserID || actor.ID == view.BuddyUserID {
+		return view, nil
+	}
+	// Round-A: any active circle member can view the check-in.
+	isMember, err := s.membership.IsCircleMemberForGoal(ctx, actor.ID, view.CheckIn.GoalID)
+	if err != nil {
+		return CheckInView{}, fmt.Errorf("check membership: %w", err)
+	}
+	if !isMember {
 		return CheckInView{}, ErrNotAuthorized
 	}
 	return view, nil
@@ -68,12 +100,26 @@ func (s *Service) Submit(ctx context.Context, actor users.User, checkInID int64)
 	}
 
 	now := s.clock().UTC()
-	return s.repo.UpdateCheckInStatus(ctx, UpdateStatusParams{
+	if err := s.repo.UpdateCheckInStatus(ctx, UpdateStatusParams{
 		ID:          checkInID,
 		Status:      StatusSubmitted,
 		SubmittedAt: &now,
 		Now:         now,
+	}); err != nil {
+		return err
+	}
+
+	ownerName := actor.DisplayName
+	if ownerName == "" {
+		ownerName = actor.Email
+	}
+	_ = s.emitter.Emit(ctx, "checkin.submitted", map[string]any{
+		"check_in_id":          checkInID,
+		"owner_user_id":        actor.ID,
+		"owner_display_name":   ownerName,
+		"goal_id":              view.CheckIn.GoalID,
 	})
+	return nil
 }
 
 func (s *Service) AddTextEvidence(ctx context.Context, actor users.User, checkInID int64, input AddTextInput) (EvidenceItem, error) {
@@ -165,15 +211,30 @@ func (s *Service) Review(ctx context.Context, actor users.User, checkInID int64,
 	if err != nil {
 		return ReviewRecord{}, err
 	}
-	if actor.ID != view.BuddyUserID {
-		return ReviewRecord{}, ErrNotBuddy
+
+	// Cannot review your own check-in.
+	if actor.ID == view.CheckIn.OwnerUserID {
+		return ReviewRecord{}, ErrCannotReviewOwn
 	}
+
+	// Round-A pivot: any active circle member may review, not just the buddy.
+	// Fallback: legacy buddy path still works if membership check fails.
+	if actor.ID != view.BuddyUserID {
+		isMember, err := s.membership.IsCircleMemberForGoal(ctx, actor.ID, view.CheckIn.GoalID)
+		if err != nil {
+			return ReviewRecord{}, fmt.Errorf("check membership: %w", err)
+		}
+		if !isMember {
+			return ReviewRecord{}, ErrNotAuthorized
+		}
+	}
+
 	if view.CheckIn.Status != StatusSubmitted {
 		return ReviewRecord{}, ErrCannotReview
 	}
 
 	now := s.clock().UTC()
-	return s.repo.RecordReview(ctx, RecordReviewParams{
+	record, err := s.repo.RecordReview(ctx, RecordReviewParams{
 		CheckInID:      checkInID,
 		GoalID:         view.CheckIn.GoalID,
 		ReviewerUserID: actor.ID,
@@ -181,6 +242,22 @@ func (s *Service) Review(ctx context.Context, actor users.User, checkInID int64,
 		Comment:        strings.TrimSpace(input.Comment),
 		Now:            now,
 	})
+	if err != nil {
+		return ReviewRecord{}, err
+	}
+
+	eventKind := "checkin.approved"
+	if input.Decision == DecisionReject {
+		eventKind = "checkin.rejected"
+	}
+	_ = s.emitter.Emit(ctx, eventKind, map[string]any{
+		"check_in_id":   checkInID,
+		"owner_user_id": view.CheckIn.OwnerUserID,
+		"goal_id":       view.CheckIn.GoalID,
+		"decision":      string(input.Decision),
+	})
+
+	return record, nil
 }
 
 func (s *Service) requireOwnerEditable(ctx context.Context, actor users.User, checkInID int64) (CheckInView, error) {

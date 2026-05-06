@@ -1,6 +1,6 @@
 .list {
   display: grid;
-  gap: 8px;
+  gap: 12px;
   margin: 0;
   padding: 0;
   list-style: none;
@@ -8,9 +8,10 @@
 
 .card {
   display: grid;
-  gap: 8px;
-  padding: 14px 16px;
-  border-radius: var(--radius-sm);
+  gap: 10px;
+  padding: 16px 18px;
+  border-radius: var(--radius-xs);
+  background: rgba(255, 255, 255, 0.03);
   border: 1px solid var(--border);
 }
 
@@ -22,17 +23,17 @@
 }
 
 .period {
-  font-size: 12px;
+  font-size: 13px;
   font-weight: 500;
-  color: var(--text-dim);
+  color: var(--ink-mono);
   letter-spacing: 0.02em;
 }
 
 .summary {
   margin: 0;
   font-size: 14px;
-  line-height: 1.5;
-  color: var(--text-muted);
+  line-height: 1.6;
+  color: var(--text);
 }
 
 .meta {
@@ -45,13 +46,13 @@
 .metaError {
   margin: 0;
   font-size: 13px;
-  color: var(--fn-red);
+  color: var(--accent-red);
 }
 
 .model {
   margin: 0;
   font-size: 11px;
   color: var(--text-dim);
-  letter-spacing: 0.04em;
+  letter-spacing: 0.06em;
   text-transform: uppercase;
 }

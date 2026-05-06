@@ -1,0 +1,62 @@
+.banner {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 12px 16px;
+  background: var(--bg-elevated);
+  border: 2px solid var(--warn);
+  margin-bottom: 16px;
+  flex-wrap: wrap;
+}
+
+.icon {
+  font-size: 18px;
+  flex-shrink: 0;
+}
+
+.text {
+  font-family: var(--font-body);
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--ink-primary);
+  flex: 1;
+  min-width: 0;
+  letter-spacing: 0.04em;
+}
+
+.connectButton {
+  padding: 8px 16px;
+  background: var(--warn);
+  color: var(--bg-base);
+  border: none;
+  font-family: var(--font-display);
+  font-size: 14px;
+  font-weight: 400;
+  letter-spacing: 0.05em;
+  cursor: pointer;
+  flex-shrink: 0;
+  transition: opacity 0.15s;
+}
+
+.connectButton:hover:not(:disabled) {
+  opacity: 0.85;
+}
+
+.connectButton:disabled {
+  opacity: 0.5;
+}
+
+.dismissButton {
+  background: none;
+  border: none;
+  color: var(--ink-mono);
+  font-size: 20px;
+  cursor: pointer;
+  padding: 0 4px;
+  flex-shrink: 0;
+  line-height: 1;
+}
+
+.dismissButton:hover {
+  color: var(--ink-primary);
+}

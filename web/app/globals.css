@@ -1,48 +1,78 @@
-@import url("https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&display=swap&subset=cyrillic");
-
 :root {
-  /* Palette — 3 colors */
-  --bg: #09090b;
-  --bg-elevated: #18181b;
-  --bg-panel: #18181b;
+  --bg-base: #000000;
+  --bg-surface: #0a0a0a;
+  --bg-elevated: #141414;
 
-  /* Borders */
-  --border: rgba(255, 255, 255, 0.06);
-  --border-strong: rgba(255, 255, 255, 0.12);
+  --ink-primary: #ffffff;
+  --ink-mono: #a0a0a0;
 
-  /* Text */
-  --text: #fafafa;
-  --text-muted: #a1a1aa;
-  --text-dim: #71717a;
+  --danger: #ff2a2a;
+  --danger-glow: rgba(255, 42, 42, 0.35);
+  --frost: #9fdfff;
+  --fire: #ff7a1a;
+  --win: #1ce783;
+  --warn: #ffb01f;
 
-  /* Accent — single color */
-  --accent: #3b82f6;
-  --accent-hover: #2563eb;
+  --border: #1f1f1f;
+  --border-strong: #2a2a2a;
 
-  /* Functional — used only for status */
-  --fn-green: #22c55e;
-  --fn-red: #ef4444;
-  --fn-amber: #eab308;
+  --font-display: var(--display, "Impact", "Arial Black", sans-serif);
+  --font-body: var(--body, "Helvetica Neue", "Arial", sans-serif);
+  --font-mono: var(--mono, "Courier New", monospace);
 
-  /* Keep old names as aliases for existing components */
-  --accent-blue: var(--accent);
-  --accent-green: var(--fn-green);
-  --accent-amber: var(--fn-amber);
-  --accent-red: var(--fn-red);
+  --max-width: 1240px;
 
-  /* Radius — tighter */
-  --radius-xs: 6px;
-  --radius-sm: 8px;
-  --radius-md: 12px;
-  --radius-lg: 16px;
+  /* Reactive cursor coordinates — mutated by hero mousemove handler */
+  --cursor-x: 50%;
+  --cursor-y: 50%;
+}
 
-  /* Layout */
-  --max-width: 1080px;
+@keyframes pulse-danger {
+  0%, 100% { box-shadow: 0 0 0 0 rgba(255, 42, 42, 0.4); }
+  50% { box-shadow: 0 0 0 10px rgba(255, 42, 42, 0); }
+}
 
-  /* Typography */
-  --font-heading: "Inter", system-ui, -apple-system, sans-serif;
-  --font-body: "Inter", system-ui, -apple-system, sans-serif;
-  --font-mono: "SF Mono", "Fira Code", ui-monospace, monospace;
+@keyframes pulse-win {
+  0%, 100% { box-shadow: 0 0 0 0 rgba(0, 200, 83, 0.4); }
+  50% { box-shadow: 0 0 0 10px rgba(0, 200, 83, 0); }
+}
+
+@keyframes event-slide-in {
+  from { opacity: 0; transform: translateY(-10px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes digit-roll {
+  from { transform: translateY(-100%); opacity: 0; }
+  to { transform: translateY(0); opacity: 1; }
+}
+
+@keyframes frost-creep {
+  from { opacity: 0.35; }
+  to { opacity: 1; }
+}
+
+/* ── New ambient keyframes for "тревожный пульс" ───── */
+@keyframes ambient-breath {
+  0%, 100% { opacity: 0.55; transform: scale(1); }
+  50%      { opacity: 1;    transform: scale(1.06); }
+}
+
+@keyframes scanline-drift {
+  from { background-position: 0 0; }
+  to   { background-position: 0 120px; }
+}
+
+@keyframes grid-drift {
+  from { background-position: 0 0, 0 0; }
+  to   { background-position: 12px 18px, -12px -18px; }
+}
+
+@keyframes glitch-digit {
+  0%, 91%, 95%, 100% { transform: translate3d(0,0,0) skewX(0); opacity: 1; }
+  92% { transform: translate3d(-1px, 0, 0) skewX(0.6deg); opacity: 0.92; }
+  93% { transform: translate3d(1px, 0, 0)  skewX(-0.4deg); opacity: 0.85; }
+  94% { transform: translate3d(0, 0, 0)    skewX(0.2deg);  opacity: 0.95; }
 }
 
 * {
@@ -51,19 +81,26 @@
 
 html {
   scroll-behavior: smooth;
-  -webkit-font-smoothing: antialiased;
-  -moz-osx-font-smoothing: grayscale;
 }
 
 body {
   margin: 0;
   min-height: 100vh;
-  background: var(--bg);
-  color: var(--text);
+  background-color: var(--bg-base);
+  /*
+   * Ambient base: dot-grid + soft crosshatch only.
+   * Section-specific glows / scanlines / frost live in landing-page.module.css
+   * via ::before/::after — keeps body neutral and reusable for non-marketing pages.
+   */
+  background-image:
+    radial-gradient(rgba(255, 255, 255, 0.06) 1px, transparent 1px),
+    repeating-linear-gradient(45deg, rgba(255, 255, 255, 0.018) 0 1px, transparent 1px 140px),
+    repeating-linear-gradient(-45deg, rgba(255, 255, 255, 0.018) 0 1px, transparent 1px 140px);
+  background-size: 28px 28px, auto, auto;
+  color: var(--ink-primary);
   font-family: var(--font-body);
   font-size: 15px;
-  line-height: 1.6;
-  letter-spacing: -0.01em;
+  line-height: 1.5;
 }
 
 a {
@@ -73,7 +110,8 @@ a {
 
 button,
 input,
-textarea {
+textarea,
+select {
   font: inherit;
 }
 
@@ -82,32 +120,48 @@ textarea {
 }
 
 .page-shell {
-  width: min(100% - 48px, var(--max-width));
+  width: min(100% - 32px, var(--max-width));
   margin: 0 auto;
-}
-
-.eyebrow {
-  display: inline-block;
-  color: var(--text-dim);
-  letter-spacing: 0.05em;
-  font-size: 11px;
-  font-weight: 500;
-  text-transform: uppercase;
-}
-
-.grid-lines {
-  display: none;
-}
-
-.status-dot {
-  width: 6px;
-  height: 6px;
-  border-radius: 999px;
-  background: currentColor;
 }
 
 @media (max-width: 720px) {
   .page-shell {
-    width: min(100% - 24px, var(--max-width));
+    width: min(100% - 20px, var(--max-width));
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}
+
+/* ── Mobile-first layout tokens ────────────────── */
+.container-fluid {
+  width: min(100% - 32px, 720px);
+  margin-inline: auto;
+}
+
+.touch-target {
+  min-height: 44px;
+  min-width: 44px;
+}
+
+/*
+ * product-content — обёртка контента продуктовых страниц.
+ * На мобайле добавляет нижний отступ под BottomNav,
+ * чтобы последний элемент не перекрывался таббаром.
+ */
+.product-content {
+  flex: 1;
+}
+
+@media (max-width: 640px) {
+  .product-content {
+    padding-bottom: calc(60px + env(safe-area-inset-bottom, 0px) + 16px);
   }
 }

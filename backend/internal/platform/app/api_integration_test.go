@@ -64,10 +64,12 @@ func TestRegistrationGoalCreationAndDashboardFlow(t *testing.T) {
 	}
 
 	createGoalBody, _ := json.Marshal(map[string]any{
-		"title":       "Ship MVP vertical slice",
-		"description": "Registration + goals dashboard",
-		"buddy_name":  "Serious Peer",
-		"buddy_email": "peer@example.com",
+		"title":          "Ship MVP vertical slice",
+		"description":    "Registration + goals dashboard",
+		"buddy_name":     "Serious Peer",
+		"buddy_email":    "peer@example.com",
+		"proof_examples": "- Ссылка на стенд\n- Скриншот формы\n- PR с финальной сборкой",
+		"category":       "работа",
 	})
 	createGoalReq := httptest.NewRequest(http.MethodPost, "/v1/goals", bytes.NewReader(createGoalBody))
 	createGoalReq.AddCookie(sessionCookie)
@@ -81,8 +83,10 @@ func TestRegistrationGoalCreationAndDashboardFlow(t *testing.T) {
 	var createGoalResp struct {
 		Goal struct {
 			Goal struct {
-				Status string `json:"status"`
-				Title  string `json:"title"`
+				Status        string `json:"status"`
+				Title         string `json:"title"`
+				ProofExamples string `json:"proof_examples"`
+				Category      string `json:"category"`
 			} `json:"goal"`
 		} `json:"goal"`
 	}
@@ -91,6 +95,12 @@ func TestRegistrationGoalCreationAndDashboardFlow(t *testing.T) {
 	}
 	if createGoalResp.Goal.Goal.Status != "pending_buddy_acceptance" {
 		t.Fatalf("expected pending_buddy_acceptance, got %q", createGoalResp.Goal.Goal.Status)
+	}
+	if createGoalResp.Goal.Goal.Category != "работа" {
+		t.Fatalf("expected category работа, got %q", createGoalResp.Goal.Goal.Category)
+	}
+	if createGoalResp.Goal.Goal.ProofExamples == "" {
+		t.Fatal("expected proof_examples in create goal response")
 	}
 
 	dashboardReq := httptest.NewRequest(http.MethodGet, "/v1/dashboard", nil)
@@ -107,7 +117,12 @@ func TestRegistrationGoalCreationAndDashboardFlow(t *testing.T) {
 			TotalGoals             int `json:"total_goals"`
 			PendingBuddyAcceptance int `json:"pending_buddy_acceptance"`
 		} `json:"summary"`
-		Goals []any `json:"goals"`
+		Goals []struct {
+			Goal struct {
+				ProofExamples string `json:"proof_examples"`
+				Category      string `json:"category"`
+			} `json:"goal"`
+		} `json:"goals"`
 	}
 	if err := json.NewDecoder(dashboardRec.Body).Decode(&dashboardResp); err != nil {
 		t.Fatalf("decode dashboard response: %v", err)
@@ -120,5 +135,11 @@ func TestRegistrationGoalCreationAndDashboardFlow(t *testing.T) {
 	}
 	if len(dashboardResp.Goals) != 1 {
 		t.Fatalf("expected 1 goal in dashboard, got %d", len(dashboardResp.Goals))
+	}
+	if dashboardResp.Goals[0].Goal.Category != "работа" {
+		t.Fatalf("expected dashboard goal category работа, got %q", dashboardResp.Goals[0].Goal.Category)
+	}
+	if dashboardResp.Goals[0].Goal.ProofExamples == "" {
+		t.Fatal("expected dashboard goal proof_examples to be present")
 	}
 }

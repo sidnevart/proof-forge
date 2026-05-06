@@ -5,7 +5,7 @@ DEPLOY_PATH="${DEPLOY_PATH:-/opt/proofforge-prod}"
 CERT_DIR="$DEPLOY_PATH/nginx/certs"
 CERT_FILE="$CERT_DIR/cert.pem"
 KEY_FILE="$CERT_DIR/key.pem"
-COMMON_NAME="${COMMON_NAME:-80.74.25.43}"
+COMMON_NAME="${COMMON_NAME:-localhost}"
 DEPLOY_OWNER="${DEPLOY_OWNER:-proofforge-deploy}"
 DEPLOY_GROUP="${DEPLOY_GROUP:-$DEPLOY_OWNER}"
 

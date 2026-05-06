@@ -1,0 +1,358 @@
+.page {
+  padding: 24px clamp(16px, 4vw, 32px) 48px;
+  max-width: 1100px;
+  margin: 0 auto;
+}
+
+.title {
+  font-family: var(--font-display);
+  font-size: clamp(28px, 4vw, 40px);
+  letter-spacing: 0.04em;
+  margin: 0 0 16px;
+  color: var(--ink-primary);
+}
+
+/* ── Tab bar ──────────────────────────────────── */
+.tabs {
+  display: flex;
+  gap: 0;
+  border-bottom: 2px solid var(--border-strong);
+  margin-bottom: 24px;
+}
+
+.tab {
+  padding: 12px 20px;
+  background: transparent;
+  border: none;
+  border-bottom: 2px solid transparent;
+  margin-bottom: -2px;
+  font-family: var(--font-display);
+  font-size: 16px;
+  letter-spacing: 0.06em;
+  color: var(--ink-mono);
+  cursor: pointer;
+  transition: color 150ms, border-color 150ms;
+  white-space: nowrap;
+}
+
+.tab:hover {
+  color: var(--ink-primary);
+}
+
+.tabActive {
+  color: var(--ink-primary);
+  border-bottom-color: var(--win);
+}
+
+.tab:focus-visible {
+  outline: 2px solid var(--win);
+  outline-offset: 2px;
+}
+
+/* ── Proof card grid ─────────────────────────── */
+.grid {
+  columns: 2;
+  column-gap: 16px;
+}
+
+@media (min-width: 768px) {
+  .grid { columns: 3; }
+}
+
+@media (min-width: 1024px) {
+  .grid { columns: 4; }
+}
+
+/* ── Individual proof card ───────────────────── */
+.card {
+  break-inside: avoid;
+  background: var(--bg-surface);
+  border: 2px solid var(--border-strong);
+  padding: 16px;
+  margin-bottom: 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.cardMeta {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.alias {
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--ink-mono);
+  letter-spacing: 0.06em;
+}
+
+.streak {
+  font-size: 12px;
+  color: var(--win);
+}
+
+.cat {
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  color: #000;
+  background: var(--ink-mono);
+  padding: 2px 6px;
+}
+
+.circleBadge {
+  font-family: var(--font-mono);
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  color: var(--win);
+  border: 1px solid var(--win);
+  padding: 1px 5px;
+}
+
+.goalTitle {
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--ink-primary);
+  margin: 0;
+  letter-spacing: 0.02em;
+}
+
+.proofText {
+  font-size: 13px;
+  color: var(--ink-mono);
+  margin: 0;
+  line-height: 1.5;
+}
+
+.proofLink {
+  font-size: 11px;
+  color: var(--ink-mono);
+  text-decoration: underline;
+  word-break: break-all;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  display: block;
+}
+
+.cardFooter {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  margin-top: 4px;
+  flex-wrap: wrap;
+}
+
+.time {
+  font-size: 11px;
+  color: var(--ink-mono);
+  font-family: var(--font-mono);
+}
+
+.likeBtn {
+  background: none;
+  border: none;
+  color: var(--ink-mono);
+  font-size: 13px;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  cursor: pointer;
+  padding: 0;
+  transition: color 120ms, transform 100ms;
+  line-height: 1;
+}
+
+.likeBtn:hover {
+  color: #e05260;
+  transform: scale(1.15);
+}
+
+.likeBtnActive {
+  color: #e05260;
+}
+
+/* ── Inline approve/reject buttons ─────────────── */
+.approveRow {
+  display: flex;
+  gap: 8px;
+  margin-top: 4px;
+}
+
+.approveBtn {
+  flex: 1;
+  padding: 8px 12px;
+  background: transparent;
+  border: 2px solid var(--win);
+  color: var(--win);
+  font-family: var(--font-mono);
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  cursor: pointer;
+  transition: background 150ms, color 150ms;
+}
+
+.approveBtn:hover:not(:disabled) {
+  background: var(--win);
+  color: #000;
+}
+
+.rejectBtn {
+  flex: 1;
+  padding: 8px 12px;
+  background: transparent;
+  border: 2px solid var(--danger);
+  color: var(--danger);
+  font-family: var(--font-mono);
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  cursor: pointer;
+  transition: background 150ms, color 150ms;
+}
+
+.rejectBtn:hover:not(:disabled) {
+  background: var(--danger);
+  color: #fff;
+}
+
+.approveBtn:disabled,
+.rejectBtn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.approvedBadge {
+  font-family: var(--font-mono);
+  font-size: 10px;
+  font-weight: 700;
+  color: var(--win);
+  letter-spacing: 0.08em;
+  padding: 4px 0;
+}
+
+/* ── Filters (similar tab) ───────────────────── */
+.filters {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  margin-bottom: 24px;
+}
+
+.search {
+  background: var(--bg-elevated);
+  border: 2px solid var(--border-strong);
+  color: var(--ink-primary);
+  padding: 10px 16px;
+  font-size: 14px;
+  width: 100%;
+  max-width: 400px;
+  outline: none;
+  border-radius: 0;
+}
+
+.search:focus {
+  border-color: var(--ink-primary);
+}
+
+.categoryTabs {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.catBtn {
+  background: none;
+  border: 2px solid var(--border-strong);
+  color: var(--ink-mono);
+  padding: 6px 14px;
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  cursor: pointer;
+  border-radius: 0;
+  transition: all 0.15s;
+}
+
+.catBtn:hover {
+  border-color: var(--ink-primary);
+  color: var(--ink-primary);
+}
+
+.catActive {
+  border-color: var(--ink-primary);
+  background: var(--ink-primary);
+  color: #000;
+}
+
+/* ── Empty / loading states ──────────────────── */
+.empty {
+  font-family: var(--font-display);
+  font-size: 32px;
+  color: var(--ink-mono);
+  text-align: center;
+  padding: 80px 0;
+}
+
+.loadingMore {
+  text-align: center;
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  color: var(--ink-mono);
+  padding: 24px;
+}
+
+.emptyCard {
+  padding: 32px;
+  background: var(--bg-surface);
+  border: 2px solid var(--border-strong);
+  border-left: 4px solid var(--win);
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  max-width: 480px;
+  margin: 40px auto;
+}
+
+.emptyHeading {
+  margin: 0;
+  font-family: var(--font-display);
+  font-size: clamp(28px, 5vw, 40px);
+  color: var(--ink-primary);
+  letter-spacing: 0.04em;
+  line-height: 1.05;
+}
+
+.emptySub {
+  margin: 0;
+  color: var(--ink-mono);
+  font-size: 14px;
+  line-height: 1.5;
+}
+
+.ctaSolid {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  align-self: flex-start;
+  padding: 12px 24px;
+  background: var(--ink-primary);
+  color: #000;
+  font-family: var(--font-display);
+  font-size: 16px;
+  letter-spacing: 0.06em;
+  text-decoration: none;
+  border: 2px solid var(--ink-primary);
+  transition: background 150ms, color 150ms;
+}
+
+.ctaSolid:hover {
+  background: transparent;
+  color: var(--ink-primary);
+}

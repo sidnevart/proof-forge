@@ -1,0 +1,42 @@
+.strip {
+  display: flex;
+  gap: 0;
+  border: 1px solid var(--border);
+  width: fit-content;
+}
+
+.cell {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  padding: 12px 20px;
+  border-right: 1px solid var(--border);
+  transition: opacity 150ms ease;
+}
+
+.cell:last-child {
+  border-right: none;
+}
+
+/* Micro-flicker when a value ticks up */
+.cellFlash {
+  opacity: 0.4;
+}
+
+.number {
+  font-family: var(--font-display);
+  font-size: 28px;
+  line-height: 1;
+  color: var(--danger);
+  font-variant-numeric: tabular-nums;
+  letter-spacing: 0.02em;
+}
+
+.label {
+  font-family: var(--font-mono);
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.14em;
+  color: var(--ink-mono);
+  white-space: nowrap;
+}

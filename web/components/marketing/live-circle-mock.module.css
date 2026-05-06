@@ -1,0 +1,191 @@
+.root {
+  background: var(--bg-surface);
+  border: 2px solid var(--border-strong);
+  overflow: hidden;
+}
+
+.header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 14px 20px;
+  border-bottom: 2px solid var(--border-strong);
+  background: var(--bg-elevated);
+}
+
+.headerLeft {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.circleName {
+  font-family: var(--font-display);
+  font-size: 20px;
+  letter-spacing: 0.1em;
+}
+
+.circleDay {
+  font-family: var(--font-mono);
+  font-size: 10px;
+  color: var(--ink-mono);
+  letter-spacing: 0.08em;
+}
+
+.countdown {
+  font-family: var(--font-mono);
+  font-size: 22px;
+  letter-spacing: 0.05em;
+  color: var(--warn);
+}
+
+/* Standings */
+.standings {
+  display: flex;
+  flex-direction: column;
+}
+
+.member {
+  display: grid;
+  grid-template-columns: 28px 36px 1fr auto auto;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 20px;
+  border-bottom: 1px solid var(--border);
+}
+
+.member:last-child {
+  border-bottom: none;
+}
+
+.memberFrozen {
+  background: rgba(159, 223, 255, 0.03);
+}
+
+.memberMe {
+  border-left: 3px solid var(--danger);
+  padding-left: 17px;
+}
+
+.rank {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 24px;
+  height: 24px;
+  font-family: var(--font-display);
+  font-size: 12px;
+  flex-shrink: 0;
+}
+
+.rankGold { background: #c9a227; color: #000; }
+.rankSilver { background: var(--ink-primary); color: #000; }
+.rankGray { background: #2a2a2a; color: var(--ink-mono); }
+
+.avatar {
+  position: relative;
+  width: 32px;
+  height: 32px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--bg-elevated);
+  font-size: 11px;
+  font-weight: 700;
+  flex-shrink: 0;
+}
+
+.avatarFrozen {
+  filter: blur(0.5px);
+  color: var(--frost);
+}
+
+.frozenCross {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+}
+
+.frozenCross::before,
+.frozenCross::after {
+  content: "";
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 100%;
+  height: 2px;
+  background: var(--danger);
+  transform-origin: center;
+}
+
+.frozenCross::before { transform: translate(-50%, -50%) rotate(45deg); }
+.frozenCross::after { transform: translate(-50%, -50%) rotate(-45deg); }
+
+.memberName {
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+}
+
+.memberStreak {
+  font-size: 11px;
+  color: var(--ink-mono);
+}
+
+.statusBadge {
+  font-size: 9px;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  padding: 3px 6px;
+}
+
+.statusWin { background: rgba(28, 231, 131, 0.15); color: var(--win); }
+.statusPending { background: rgba(255, 176, 31, 0.15); color: var(--warn); }
+.statusWarn { background: rgba(255, 176, 31, 0.1); color: var(--warn); }
+.statusDanger { background: rgba(159, 223, 255, 0.1); color: var(--frost); }
+
+/* Pulse */
+.pulseSection {
+  border-top: 2px solid var(--border-strong);
+  background: var(--bg-elevated);
+}
+
+.pulseHeader {
+  font-family: var(--font-display);
+  font-size: 12px;
+  letter-spacing: 0.12em;
+  color: var(--ink-mono);
+  padding: 8px 20px;
+  border-bottom: 1px solid var(--border);
+}
+
+.pulseEvents {
+  display: flex;
+  flex-direction: column;
+}
+
+.pulseEvent {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 20px;
+  border-bottom: 1px solid var(--border);
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.03em;
+}
+
+.pulseEvent:last-child {
+  border-bottom: none;
+}
+
+.newEvent {
+  animation: event-slide-in 300ms ease;
+}
+
+.pulseIcon { flex-shrink: 0; }
+.pulseText { flex: 1; }
+
+.event_win .pulseText { color: var(--win); }
+.event_warn .pulseText { color: var(--warn); }
+.event_danger .pulseText { color: var(--frost); }

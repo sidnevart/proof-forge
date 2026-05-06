@@ -1,0 +1,77 @@
+.nav {
+  position: sticky;
+  top: 0;
+  z-index: 100;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  /* Same gutter math as the landing page so the nav lines up with section content */
+  padding-inline: max(24px, calc((100% - 1240px) / 2));
+  height: 56px;
+  border-bottom: 1px solid var(--border-strong);
+  background: rgba(0, 0, 0, 0.85);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+}
+
+.logo {
+  font-family: var(--font-display);
+  font-size: 20px;
+  letter-spacing: 0.12em;
+  color: var(--ink-primary);
+}
+
+.actions {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+
+.loading {
+  font-size: 20px;
+  color: var(--ink-mono);
+  animation: blink 1s step-end infinite;
+}
+
+@keyframes blink {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.2; }
+}
+
+.link {
+  font-family: var(--font-display);
+  font-size: 13px;
+  letter-spacing: 0.1em;
+  color: var(--ink-mono);
+  transition: color 120ms;
+}
+
+.link:hover {
+  color: var(--ink-primary);
+}
+
+.name {
+  font-family: var(--font-mono);
+  font-size: 12px;
+  letter-spacing: 0.06em;
+  color: var(--ink-mono);
+}
+
+.cta {
+  display: inline-flex;
+  align-items: center;
+  padding: 8px 20px;
+  height: 36px;
+  border: 2px solid var(--ink-primary);
+  color: #000;
+  background: var(--ink-primary);
+  font-family: var(--font-display);
+  font-size: 13px;
+  letter-spacing: 0.1em;
+  transition: background 140ms, color 140ms;
+}
+
+.cta:hover {
+  background: transparent;
+  color: var(--ink-primary);
+}

@@ -66,9 +66,11 @@ func OpenIntegrationPool(t *testing.T) *pgxpool.Pool {
 
 	if _, err := pool.Exec(ctx, `
 		TRUNCATE TABLE
-			milestones,
-			stake_forfeitures,
-			stakes,
+			goal_refine_requests,
+			goal_refine_cache,
+			circle_seasons,
+			circle_memberships,
+			circles,
 			weekly_recaps,
 			check_in_reviews,
 			evidence_items,
@@ -76,6 +78,10 @@ func OpenIntegrationPool(t *testing.T) *pgxpool.Pool {
 			invites,
 			pacts,
 			goals,
+			domain_events,
+			notifications_log,
+			telegram_links,
+			telegram_link_pending,
 			user_sessions,
 			users
 		RESTART IDENTITY CASCADE

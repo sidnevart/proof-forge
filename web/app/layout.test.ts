@@ -3,10 +3,10 @@ import { describe, expect, it } from "vitest";
 import { metadata } from "./layout";
 
 describe("app layout metadata", () => {
-  it("uses russian product description", () => {
-    expect(metadata.title).toBe("ProofForge");
+  it("uses russian product title and description", () => {
+    expect(metadata.title).toBe("ProofForge — круг друзей, где не сдать = заморозка");
     expect(metadata.description).toBe(
-      "Система внешней ответственности для серьёзных целей и подтверждённого прогресса.",
+      "Соревнуйся с друзьями за дисциплину. Сдавай пруф каждый день. Пропустил — все видят.",
     );
   });
 });

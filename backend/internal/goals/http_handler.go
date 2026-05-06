@@ -32,6 +32,7 @@ func (h *Handler) RegisterPublicRoutes(r chi.Router) {
 
 func (h *Handler) RegisterRoutes(r chi.Router) {
 	r.Post("/goals", h.handleCreateGoal)
+	r.Post("/goals/refine", h.handleRefineGoal)
 	r.Get("/goals", h.handleListGoals)
 	r.Get("/goals/{goalID}", h.handleGetGoal)
 	r.Get("/dashboard", h.handleDashboard)
@@ -56,6 +57,12 @@ func (h *Handler) handleCreateGoal(w http.ResponseWriter, r *http.Request) {
 		switch {
 		case errors.Is(err, ErrInvalidGoalInput):
 			writeError(w, http.StatusBadRequest, "invalid_input", err.Error())
+		case errors.Is(err, ErrOwnerNotInCircle):
+			writeError(w, http.StatusForbidden, "circle_membership_required", "You must join the circle before creating a goal in it")
+		case errors.Is(err, ErrBuddyNotInCircle):
+			writeError(w, http.StatusBadRequest, "buddy_not_in_circle", "Buddy must already be a member of the selected circle")
+		case errors.Is(err, ErrActiveGoalAlreadyExists):
+			writeError(w, http.StatusConflict, "active_goal_already_exists", "This circle already has your active goal for the current season")
 		default:
 			if h.log != nil {
 				h.log.Error("create goal", "err", err)
@@ -68,6 +75,38 @@ func (h *Handler) handleCreateGoal(w http.ResponseWriter, r *http.Request) {
 	writeJSON(w, http.StatusCreated, map[string]any{
 		"goal": goal,
 	})
+}
+
+func (h *Handler) handleRefineGoal(w http.ResponseWriter, r *http.Request) {
+	actor, ok := users.CurrentUser(r.Context())
+	if !ok {
+		writeError(w, http.StatusUnauthorized, "auth_required", "Authentication required")
+		return
+	}
+
+	var input RefineInput
+	if err := json.NewDecoder(r.Body).Decode(&input); err != nil {
+		writeError(w, http.StatusBadRequest, "invalid_json", "Request body must be valid JSON")
+		return
+	}
+
+	response, err := h.service.RefineGoal(r.Context(), actor, input)
+	if err != nil {
+		switch {
+		case errors.Is(err, ErrInvalidGoalRefineInput):
+			writeError(w, http.StatusBadRequest, "invalid_input", err.Error())
+		case errors.Is(err, ErrGoalRefineRateLimited):
+			writeError(w, http.StatusTooManyRequests, "refine_rate_limited", "Goal refine limit reached for the last 24 hours")
+		default:
+			if h.log != nil {
+				h.log.Error("refine goal", "err", err)
+			}
+			writeError(w, http.StatusInternalServerError, "internal_error", "Could not refine goal")
+		}
+		return
+	}
+
+	writeJSON(w, http.StatusOK, response)
 }
 
 func (h *Handler) handleListGoals(w http.ResponseWriter, r *http.Request) {
@@ -111,6 +150,7 @@ func (h *Handler) handleDashboard(w http.ResponseWriter, r *http.Request) {
 		"user":    actor,
 		"summary": dashboard.Summary,
 		"goals":   dashboard.Goals,
+		"circles": dashboard.Circles,
 	})
 }
 

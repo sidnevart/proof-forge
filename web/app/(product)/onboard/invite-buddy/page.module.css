@@ -1,0 +1,132 @@
+/*
+ * Invite-buddy success screen — onboarding step 2 of 2.
+ *
+ * Mirrors the dashboard `.emptyCard` language: dark surface, sharp 2px
+ * borders, green accent stripe on the left, Bebas Neue display headline,
+ * mono micro-copy. No raw hex; everything via tokens.
+ */
+
+.page {
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: clamp(16px, 4vw, 32px);
+  background: var(--bg-base);
+}
+
+.card {
+  width: min(100%, 560px);
+  background: var(--bg-surface);
+  border: 2px solid var(--border-strong);
+  border-left: 4px solid var(--win);
+  padding: clamp(24px, 4vw, 40px);
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.eyebrow {
+  margin: 0;
+  font-family: var(--font-mono);
+  font-size: 11px;
+  font-weight: 700;
+  color: var(--ink-mono);
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+}
+
+.heading {
+  margin: 0;
+  font-family: var(--font-display);
+  font-size: clamp(28px, 5vw, 42px);
+  color: var(--ink-primary);
+  line-height: 1.05;
+  letter-spacing: 0.04em;
+}
+
+.urlBox {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  padding: 14px;
+  background: var(--bg-base);
+  border: 2px solid var(--border-strong);
+}
+
+.urlText {
+  flex: 1;
+  font-family: var(--font-mono);
+  font-size: 12px;
+  color: var(--ink-mono);
+  word-break: break-all;
+  line-height: 1.5;
+}
+
+.copyBtn {
+  flex-shrink: 0;
+  min-height: 44px;
+  padding: 0 20px;
+  background: transparent;
+  border: 2px solid var(--border-strong);
+  color: var(--ink-primary);
+  font-family: var(--font-mono);
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  cursor: pointer;
+  transition: border-color 150ms, color 150ms;
+}
+
+.copyBtn:hover {
+  border-color: var(--win);
+  color: var(--win);
+}
+
+.copyBtn:focus-visible {
+  outline: 2px solid var(--win);
+  outline-offset: 2px;
+}
+
+.subtext {
+  margin: 0;
+  font-size: 14px;
+  color: var(--ink-mono);
+  line-height: 1.6;
+}
+
+.ctaSolid {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  align-self: flex-start;
+  margin-top: 4px;
+  padding: 14px 24px;
+  background: var(--ink-primary);
+  color: #000;
+  font-family: var(--font-display);
+  font-size: 18px;
+  letter-spacing: 0.06em;
+  min-height: 44px;
+  text-decoration: none;
+  border: 2px solid var(--ink-primary);
+  transition: transform 150ms, background 150ms, color 150ms;
+}
+
+.ctaSolid:hover {
+  background: transparent;
+  color: var(--ink-primary);
+  transform: translateY(-1px);
+}
+
+.ctaSolid:focus-visible {
+  outline: 2px solid var(--win);
+  outline-offset: 3px;
+}
+
+@media (min-width: 640px) {
+  .urlBox {
+    flex-direction: row;
+    align-items: center;
+  }
+}

@@ -1,0 +1,77 @@
+.page {
+  padding: 32px 0 80px;
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+}
+
+.header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  flex-wrap: wrap;
+}
+
+.title {
+  margin: 0;
+  font-family: var(--font-display);
+  font-size: 48px;
+  letter-spacing: 0.04em;
+  color: var(--ink-primary);
+}
+
+.actions {
+  display: flex;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+.primary,
+.secondary {
+  display: inline-flex;
+  align-items: center;
+  padding: 12px 20px;
+  font-family: var(--font-display);
+  font-size: 13px;
+  letter-spacing: 0.1em;
+  text-decoration: none;
+  border: 2px solid var(--ink-primary);
+  transition: background 120ms, color 120ms;
+}
+
+.primary {
+  color: var(--ink-primary);
+}
+
+.primary:hover,
+.primary:focus-visible {
+  background: var(--ink-primary);
+  color: #000;
+  outline: none;
+}
+
+.secondary {
+  color: var(--ink-mono);
+  border-color: var(--ink-mono);
+}
+
+.secondary:hover,
+.secondary:focus-visible {
+  color: var(--ink-primary);
+  border-color: var(--ink-primary);
+  outline: none;
+}
+
+.loading,
+.error {
+  font-family: var(--font-display);
+  font-size: 18px;
+  letter-spacing: 0.04em;
+  padding: 40px 0;
+  color: var(--ink-mono);
+}
+
+.error {
+  color: var(--danger);
+}

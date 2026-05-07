@@ -1,20 +1,28 @@
 import type {
+  AssembleProofResult,
   CheckIn,
   CheckInDetail,
   CircleDetail,
   CircleFeedItem,
   CircleInvitation,
+  DailyLogEntry,
+  DailyLogStreak,
   DashboardResponse,
   EvidenceItem,
   GoalRefineResponse,
   GoalView,
   InvitePreview,
+  LeadBriefing,
   Milestone,
+  ProofComment,
   PublicGoal,
   PublicProof,
   ReviewRecord,
   SeasonEndResult,
   StakeView,
+  TeamAIMode,
+  TeamDetail,
+  TeamRole,
   TelegramLinkToken,
   User,
   WeeklyAssembly,
@@ -506,5 +514,271 @@ export async function forfeitStake(stakeID: number, reason: string): Promise<{ s
   return request<{ stake: StakeView }>(`/v1/stakes/${stakeID}/forfeit`, {
     method: "POST",
     body: JSON.stringify({ reason }),
+  });
+}
+
+// ── Teams (Phase 0) ─────────────────────────────────────────────────────────
+//
+// REST surface: backend/internal/teams/http_handler.go.
+// All responses follow the {data: ...} envelope; helpers below unwrap it
+// so callers can deal with the raw payload shape.
+
+type TeamEnvelope<T> = { data: T };
+
+export type CreateTeamInput = {
+  name: string;
+  ai_mode?: TeamAIMode;
+};
+
+export async function createTeam(input: CreateTeamInput): Promise<TeamDetail> {
+  const res = await request<TeamEnvelope<TeamDetail>>("/v1/teams", {
+    method: "POST",
+    body: JSON.stringify(input),
+  });
+  return res.data;
+}
+
+export async function listMyTeams(): Promise<TeamDetail[]> {
+  const res = await request<TeamEnvelope<{ teams: TeamDetail[] }>>("/v1/teams");
+  return res.data.teams ?? [];
+}
+
+export async function getTeam(id: number): Promise<TeamDetail> {
+  const res = await request<TeamEnvelope<TeamDetail>>(`/v1/teams/${id}`);
+  return res.data;
+}
+
+export async function joinTeam(invite_code: string): Promise<TeamDetail> {
+  const res = await request<TeamEnvelope<TeamDetail>>("/v1/teams/join", {
+    method: "POST",
+    body: JSON.stringify({ invite_code }),
+  });
+  return res.data;
+}
+
+export async function changeMemberRole(
+  teamId: number,
+  userId: number,
+  role: TeamRole,
+): Promise<void> {
+  await request<TeamEnvelope<{ role: TeamRole }>>(
+    `/v1/teams/${teamId}/members/${userId}/role`,
+    {
+      method: "POST",
+      body: JSON.stringify({ role }),
+    },
+  );
+}
+
+export async function removeMember(teamId: number, userId: number): Promise<void> {
+  await request<TeamEnvelope<{ removed: boolean }>>(
+    `/v1/teams/${teamId}/members/${userId}`,
+    { method: "DELETE" },
+  );
+}
+
+export async function leaveTeam(teamId: number): Promise<void> {
+  await request<TeamEnvelope<{ left: boolean }>>(`/v1/teams/${teamId}/leave`, {
+    method: "POST",
+  });
+}
+
+export async function regenerateTeamInvite(teamId: number): Promise<string> {
+  const res = await request<TeamEnvelope<{ invite_code: string }>>(
+    `/v1/teams/${teamId}/regenerate-invite`,
+    { method: "POST" },
+  );
+  return res.data.invite_code;
+}
+
+export async function archiveTeam(teamId: number): Promise<void> {
+  await request<TeamEnvelope<{ archived: boolean }>>(
+    `/v1/teams/${teamId}/archive`,
+    { method: "POST" },
+  );
+}
+
+export async function setMyAIConsent(
+  teamId: number,
+  userId: number,
+  consent: boolean,
+): Promise<void> {
+  await request<TeamEnvelope<{ ai_consent: boolean }>>(
+    `/v1/teams/${teamId}/members/${userId}/ai-consent`,
+    {
+      method: "POST",
+      body: JSON.stringify({ consent }),
+    },
+  );
+}
+
+// ── Daily Log (Phase 1) ─────────────────────────────────────────────────────
+
+export type SubmitDailyLogInput = {
+  log_date: string;
+  text_content: string;
+  external_url?: string;
+  client_source?: string;
+};
+
+export async function submitDailyLog(
+  teamId: number,
+  input: SubmitDailyLogInput,
+): Promise<{ entry_id: number; status: string; streak: DailyLogStreak }> {
+  const res = await request<{ data: { entry_id: number; status: string; streak: DailyLogStreak } }>(
+    `/v1/teams/${teamId}/daily-log`,
+    { method: "POST", body: JSON.stringify(input) },
+  );
+  return res.data;
+}
+
+export async function freezeDailyLog(
+  teamId: number,
+  logDate: string,
+  reason?: string,
+): Promise<{ entry_id: number; status: string }> {
+  const res = await request<{ data: { entry_id: number; status: string } }>(
+    `/v1/teams/${teamId}/daily-log/freeze`,
+    { method: "POST", body: JSON.stringify({ log_date: logDate, reason }) },
+  );
+  return res.data;
+}
+
+export async function listDailyLogs(
+  teamId: number,
+  from: string,
+  to: string,
+): Promise<{ entries: DailyLogEntry[] }> {
+  const res = await request<{ data: { entries: DailyLogEntry[] } }>(
+    `/v1/teams/${teamId}/daily-log?from=${from}&to=${to}`,
+  );
+  return res.data;
+}
+
+export async function getDailyLogStreak(teamId: number): Promise<DailyLogStreak> {
+  const res = await request<{ data: { streak: DailyLogStreak } }>(
+    `/v1/teams/${teamId}/daily-log/streak`,
+  );
+  return res.data.streak;
+}
+
+// ── Team Proof / Feed (Phase 2) ─────────────────────────────────────────────
+
+export type EvidenceInput = {
+  kind: string;
+  external_url?: string;
+  label?: string;
+};
+
+export type SubmitProofInput = {
+  goal_id: number;
+  daily_log_entry_ids?: number[];
+  proof_text: string;
+  evidence?: EvidenceInput[];
+};
+
+export type FeedItem = {
+  id: number;
+  owner_user_id: number;
+  owner_alias: string;
+  goal_title: string;
+  status: string;
+  comments_count: number;
+  submitted_at: string;
+  can_approve: boolean;
+};
+
+export async function submitProof(
+  teamId: number,
+  input: SubmitProofInput,
+): Promise<{ proof_id: number; status: string; team_id: number }> {
+  const res = await request<{ data: { proof_id: number; status: string; team_id: number } }>(
+    `/v1/teams/${teamId}/proofs`,
+    { method: "POST", body: JSON.stringify(input) },
+  );
+  return res.data;
+}
+
+export async function getTeamFeed(
+  teamId: number,
+  cursor?: number,
+  limit?: number,
+): Promise<{ items: FeedItem[]; next_cursor: number | null }> {
+  const qs = new URLSearchParams();
+  if (cursor) qs.set("cursor", String(cursor));
+  if (limit) qs.set("limit", String(limit));
+  const url = `/v1/teams/${teamId}/feed${qs.toString() ? "?" + qs.toString() : ""}`;
+  const res = await request<{ data: { items: FeedItem[]; next_cursor: number | null } }>(url);
+  return res.data;
+}
+
+export async function approveProof(proofId: number): Promise<{ approved: boolean }> {
+  const res = await request<{ data: { approved: boolean } }>(
+    `/v1/proofs/${proofId}/approve`,
+    { method: "POST" },
+  );
+  return res.data;
+}
+
+export async function rejectProof(proofId: number, comment: string): Promise<{ rejected: boolean }> {
+  const res = await request<{ data: { rejected: boolean } }>(
+    `/v1/proofs/${proofId}/reject`,
+    { method: "POST", body: JSON.stringify({ comment }) },
+  );
+  return res.data;
+}
+
+export async function addProofComment(proofId: number, text: string): Promise<ProofComment> {
+  const res = await request<{ data: ProofComment }>(
+    `/v1/proofs/${proofId}/comments`,
+    { method: "POST", body: JSON.stringify({ text }) },
+  );
+  return res.data;
+}
+
+export async function getProofComments(proofId: number): Promise<ProofComment[]> {
+  const res = await request<{ data: { comments: ProofComment[] } }>(
+    `/v1/proofs/${proofId}/comments`,
+  );
+  return res.data.comments ?? [];
+}
+
+// ── Personalization (Phase 3) ────────────────────────────────────────────────
+
+export async function assembleProofWithAI(
+  teamId: number,
+  goalId?: number,
+): Promise<AssembleProofResult> {
+  const res = await request<{ data: AssembleProofResult }>(
+    `/v1/teams/${teamId}/personalization/assemble-proof`,
+    { method: "POST", body: JSON.stringify({ goal_id: goalId }) },
+  );
+  return res.data;
+}
+
+export async function getLeadBriefing(
+  teamId: number,
+  userId: number,
+): Promise<LeadBriefing> {
+  const res = await request<{ data: LeadBriefing }>(
+    `/v1/teams/${teamId}/members/${userId}/briefing`,
+  );
+  return res.data;
+}
+
+// ── Analytics (Phase 4) ───────────────────────────────────────────────────────
+
+export async function trackEvent(
+  eventName: string,
+  properties?: Record<string, string | number | boolean>,
+  teamId?: number,
+): Promise<void> {
+  await request<void>("/v1/analytics/event", {
+    method: "POST",
+    body: JSON.stringify({
+      event_name: eventName,
+      team_id: teamId,
+      properties: properties ?? {},
+    }),
   });
 }

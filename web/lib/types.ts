@@ -334,3 +334,83 @@ export type StakeView = {
   stake: Stake;
   forfeiture?: StakeForfeiture | null;
 };
+
+// ── Teams (Phase 0) ─────────────────────────────────────────────────────────
+//
+// Mirror the JSON shapes from backend/internal/teams/http_handler.go.
+// Field names match the backend DTOs exactly.
+
+export type TeamRole = "lead" | "trusted_approver" | "member";
+export type TeamAIMode = "off" | "metadata-only" | "full";
+export type TeamMembershipStatus = "active" | "left" | "removed";
+
+export type Team = {
+  id: number;
+  lead_user_id: number;
+  name: string;
+  invite_code?: string;
+  member_limit: number;
+  ai_mode: TeamAIMode;
+  created_at: string;
+  archived_at: string | null;
+};
+
+export type TeamMembership = {
+  team_id: number;
+  user_id: number;
+  role: TeamRole;
+  status: TeamMembershipStatus;
+  ai_consent: boolean;
+  timezone: string;
+  joined_at: string;
+};
+
+export type TeamDetail = {
+  team: Team;
+  my_membership: TeamMembership;
+  member_count: number;
+};
+
+// ── Daily Log (Phase 1) ─────────────────────────────────────────────────────
+
+export type DailyLogEntry = {
+  id: number;
+  log_date: string;
+  status: "logged" | "skipped" | "frozen" | "missed";
+  text_content?: string;
+  has_artifact: boolean;
+  external_url?: string | null;
+  submitted_at: string;
+};
+
+export type DailyLogStreak = {
+  current: number;
+  best: number;
+  is_new_record: boolean;
+  freezes_used_this_month: number;
+};
+
+export type ProofComment = {
+  id: number;
+  user_id: number;
+  user_alias: string;
+  text: string;
+  created_at: string;
+};
+
+export type ProofCandidate = {
+  goal_id: number;
+  note_ids: number[];
+  rationale: string;
+  confidence: string;
+};
+
+export type AssembleProofResult = {
+  candidates: ProofCandidate[];
+  provider: string;
+};
+
+export type LeadBriefing = {
+  text: string;
+  provider: string;
+};

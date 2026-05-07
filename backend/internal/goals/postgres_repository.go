@@ -87,6 +87,7 @@ func (r *PostgresRepository) ListGoalsForUser(ctx context.Context, userID int64)
 		SELECT
 			g.id,
 			g.circle_id,
+			COALESCE(g.team_id, 0) AS team_id,
 			g.title,
 			g.description,
 			g.proof_examples,
@@ -129,6 +130,7 @@ func (r *PostgresRepository) ListGoalsForUser(ctx context.Context, userID int64)
 		if err := rows.Scan(
 			&item.Goal.ID,
 			&item.Goal.CircleID,
+			&item.Goal.TeamID,
 			&item.Goal.Title,
 			&item.Goal.Description,
 			&proofExamples,

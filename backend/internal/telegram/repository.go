@@ -3,6 +3,7 @@ package telegram
 import (
 	"context"
 	"errors"
+	"fmt"
 	"time"
 
 	"github.com/jackc/pgx/v5"
@@ -92,6 +93,22 @@ func (r *Repository) GetTelegramLinkByChatID(ctx context.Context, chatID int64) 
 		return TelegramLink{}, err
 	}
 	return link, nil
+}
+
+// GetFirstActiveTeamMembership returns the first active team_id for a user.
+func (r *Repository) GetFirstActiveTeamMembership(ctx context.Context, userID int64) (int64, error) {
+	var teamID int64
+	err := r.pool.QueryRow(ctx,
+		`SELECT team_id FROM team_memberships WHERE user_id = $1 AND status = 'active' LIMIT 1`,
+		userID,
+	).Scan(&teamID)
+	if err != nil {
+		if errors.Is(err, pgx.ErrNoRows) {
+			return 0, fmt.Errorf("no active team membership")
+		}
+		return 0, err
+	}
+	return teamID, nil
 }
 
 func (r *Repository) GetLinkedUsersByChatIDs(ctx context.Context, userIDs []int64) ([]TelegramLink, error) {

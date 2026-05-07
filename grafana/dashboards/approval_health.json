@@ -1,0 +1,62 @@
+{
+  "uid": "pf-approval-health",
+  "title": "Approval Health",
+  "tags": ["teams", "proof", "approval"],
+  "timezone": "browser",
+  "schemaVersion": 36,
+  "refresh": "5m",
+  "panels": [
+    {
+      "id": 1,
+      "title": "Pending Proofs >48h",
+      "type": "stat",
+      "gridPos": { "h": 4, "w": 6, "x": 0, "y": 0 },
+      "targets": [
+        {
+          "datasource": { "type": "postgres", "uid": "${datasource}" },
+          "rawSql": "SELECT COUNT(*) FROM check_ins WHERE status = 'submitted' AND team_id IS NOT NULL AND submitted_at < NOW() - INTERVAL '48 hours'",
+          "format": "table"
+        }
+      ]
+    },
+    {
+      "id": 2,
+      "title": "Approved / Rejected Ratio (30d)",
+      "type": "piechart",
+      "gridPos": { "h": 8, "w": 12, "x": 6, "y": 0 },
+      "targets": [
+        {
+          "datasource": { "type": "postgres", "uid": "${datasource}" },
+          "rawSql": "SELECT event_name, COUNT(*) FROM analytics_events WHERE event_name IN ('proof_approved', 'proof_rejected') AND ts >= NOW() - INTERVAL '30 days' GROUP BY event_name",
+          "format": "table"
+        }
+      ]
+    },
+    {
+      "id": 3,
+      "title": "Approver Role Split",
+      "type": "piechart",
+      "gridPos": { "h": 8, "w": 12, "x": 0, "y": 8 },
+      "targets": [
+        {
+          "datasource": { "type": "postgres", "uid": "${datasource}" },
+          "rawSql": "SELECT approver_role, COUNT(*) FROM check_ins WHERE status IN ('approved', 'rejected') AND team_id IS NOT NULL AND submitted_at >= NOW() - INTERVAL '30 days' GROUP BY approver_role",
+          "format": "table"
+        }
+      ]
+    },
+    {
+      "id": 4,
+      "title": "Proofs Submitted per Team / Week",
+      "type": "timeseries",
+      "gridPos": { "h": 8, "w": 12, "x": 12, "y": 8 },
+      "targets": [
+        {
+          "datasource": { "type": "postgres", "uid": "${datasource}" },
+          "rawSql": "SELECT team_id, DATE_TRUNC('week', ts) as week, COUNT(*) FROM analytics_events WHERE event_name = 'proof_submitted' AND ts >= NOW() - INTERVAL '90 days' GROUP BY team_id, week ORDER BY week",
+          "format": "table"
+        }
+      ]
+    }
+  ]
+}

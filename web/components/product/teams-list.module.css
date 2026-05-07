@@ -1,0 +1,110 @@
+/* List of team cards. Each card is a brutalist row with a name, a role
+   badge, and a member count. */
+
+.list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+  border: 2px solid var(--border-strong);
+}
+
+.item {
+  border-bottom: 2px solid var(--border-strong);
+}
+
+.item:last-child {
+  border-bottom: none;
+}
+
+.card {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  padding: 24px 28px;
+  background: var(--bg-surface);
+  text-decoration: none;
+  transition: background 120ms;
+}
+
+.card:hover,
+.card:focus-visible {
+  background: color-mix(in srgb, var(--ink-primary) 4%, var(--bg-surface));
+  outline: none;
+}
+
+.name {
+  font-family: var(--font-display);
+  font-size: 22px;
+  letter-spacing: 0.04em;
+  color: var(--ink-primary);
+}
+
+.meta {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-family: var(--font-display);
+  font-size: 12px;
+  letter-spacing: 0.1em;
+  color: var(--ink-mono);
+}
+
+.role {
+  color: var(--danger);
+  font-weight: 700;
+}
+
+.dot {
+  opacity: 0.4;
+}
+
+.count {
+  /* default mono color */
+}
+
+.archived {
+  color: var(--ink-mono);
+  opacity: 0.6;
+}
+
+/* Empty state */
+
+.empty {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 24px;
+  padding: 48px 28px;
+  border: 2px solid var(--border-strong);
+  background: var(--bg-surface);
+}
+
+.emptyText {
+  font-family: var(--font-display);
+  font-size: 24px;
+  letter-spacing: 0.04em;
+  color: var(--ink-mono);
+}
+
+.emptyCta {
+  display: inline-flex;
+  align-items: center;
+  padding: 14px 24px;
+  border: 2px solid var(--ink-primary);
+  color: var(--ink-primary);
+  font-family: var(--font-display);
+  font-size: 14px;
+  letter-spacing: 0.08em;
+  text-decoration: none;
+  transition: background 120ms, color 120ms;
+}
+
+.emptyCta:hover,
+.emptyCta:focus-visible {
+  background: var(--ink-primary);
+  color: #000;
+  outline: none;
+}

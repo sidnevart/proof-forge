@@ -1,0 +1,62 @@
+{
+  "uid": "pf-habit-health",
+  "title": "Habit Health",
+  "tags": ["teams", "daily-log", "habit"],
+  "timezone": "browser",
+  "schemaVersion": 36,
+  "refresh": "5m",
+  "panels": [
+    {
+      "id": 1,
+      "title": "Daily Log Submitted by Local Hour",
+      "type": "timeseries",
+      "gridPos": { "h": 8, "w": 12, "x": 0, "y": 0 },
+      "targets": [
+        {
+          "datasource": { "type": "postgres", "uid": "${datasource}" },
+          "rawSql": "SELECT EXTRACT(HOUR FROM ts) as hr, COUNT(*) FROM analytics_events WHERE event_name = 'daily_log_submitted' AND ts >= NOW() - INTERVAL '7 days' GROUP BY hr ORDER BY hr",
+          "format": "table"
+        }
+      ]
+    },
+    {
+      "id": 2,
+      "title": "Active Streak Distribution",
+      "type": "barchart",
+      "gridPos": { "h": 8, "w": 12, "x": 12, "y": 0 },
+      "targets": [
+        {
+          "datasource": { "type": "postgres", "uid": "${datasource}" },
+          "rawSql": "SELECT current_streak, COUNT(*) FROM user_streak GROUP BY current_streak ORDER BY current_streak",
+          "format": "table"
+        }
+      ]
+    },
+    {
+      "id": 3,
+      "title": "Freeze Usage per Team",
+      "type": "timeseries",
+      "gridPos": { "h": 8, "w": 12, "x": 0, "y": 8 },
+      "targets": [
+        {
+          "datasource": { "type": "postgres", "uid": "${datasource}" },
+          "rawSql": "SELECT team_id, COUNT(*) FROM analytics_events WHERE event_name = 'streak_frozen' AND ts >= NOW() - INTERVAL '30 days' GROUP BY team_id",
+          "format": "table"
+        }
+      ]
+    },
+    {
+      "id": 4,
+      "title": "Streak Broken by Week",
+      "type": "timeseries",
+      "gridPos": { "h": 8, "w": 12, "x": 12, "y": 8 },
+      "targets": [
+        {
+          "datasource": { "type": "postgres", "uid": "${datasource}" },
+          "rawSql": "SELECT DATE_TRUNC('week', ts) as week, COUNT(*) FROM analytics_events WHERE event_name = 'streak_broken' AND ts >= NOW() - INTERVAL '90 days' GROUP BY week ORDER BY week",
+          "format": "table"
+        }
+      ]
+    }
+  ]
+}

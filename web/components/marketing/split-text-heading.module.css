@@ -22,6 +22,17 @@
   white-space: pre;
 }
 
+/*
+ * Word wrapper. Each word becomes its own nowrap inline-block so the browser
+ * never breaks a word in the middle when the line overflows — it wraps the
+ * whole word to the next line. The actual visual break opportunity is the
+ * adjacent .space span (which is breakable).
+ */
+.word {
+  display: inline-block;
+  white-space: nowrap;
+}
+
 /* Each letter: start invisible and shifted down */
 .letter {
   display: inline-block;

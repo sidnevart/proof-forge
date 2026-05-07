@@ -76,6 +76,7 @@ export function ProductNav() {
   const links = [
     { href: "/dashboard", label: "ДАШБОРД" },
     { href: "/goals/new", label: "КРУГ" },
+    { href: "/teams", label: "КОМАНДЫ" },
     { href: "/feed", label: "ЛЕНТА" },
   ];
 

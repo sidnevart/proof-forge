@@ -12,11 +12,14 @@ import (
 	"github.com/jackc/pgx/v5/pgxpool"
 
 	"github.com/sidnevart/proof-forge/backend/internal/ai"
+	"github.com/sidnevart/proof-forge/backend/internal/analytics"
 	"github.com/sidnevart/proof-forge/backend/internal/checkins"
 	"github.com/sidnevart/proof-forge/backend/internal/circles"
+	"github.com/sidnevart/proof-forge/backend/internal/dailylog"
 	"github.com/sidnevart/proof-forge/backend/internal/goals"
 	"github.com/sidnevart/proof-forge/backend/internal/inspiration"
 	"github.com/sidnevart/proof-forge/backend/internal/notifications"
+	"github.com/sidnevart/proof-forge/backend/internal/personalization"
 	platformconfig "github.com/sidnevart/proof-forge/backend/internal/platform/config"
 	"github.com/sidnevart/proof-forge/backend/internal/platform/email"
 	"github.com/sidnevart/proof-forge/backend/internal/platform/httpx"
@@ -24,10 +27,13 @@ import (
 	"github.com/sidnevart/proof-forge/backend/internal/platform/postgres"
 	"github.com/sidnevart/proof-forge/backend/internal/platform/readiness"
 	"github.com/sidnevart/proof-forge/backend/internal/recaps"
+	"github.com/sidnevart/proof-forge/backend/internal/teamproof"
+	"github.com/sidnevart/proof-forge/backend/internal/teams"
 	"github.com/sidnevart/proof-forge/backend/internal/telegram"
 	"github.com/sidnevart/proof-forge/backend/internal/telegram/bot"
 	"github.com/sidnevart/proof-forge/backend/internal/telegram/callbacks"
 	"github.com/sidnevart/proof-forge/backend/internal/telegram/commands"
+	tgdailylog "github.com/sidnevart/proof-forge/backend/internal/telegram/dailylog"
 	"github.com/sidnevart/proof-forge/backend/internal/users"
 )
 
@@ -136,6 +142,31 @@ func registerAPIRoutes(router *chi.Mux, log *slog.Logger, pool *pgxpool.Pool, cf
 	)
 	circlesHandler := circles.NewHandler(circlesService)
 
+	teamsService := teams.NewService(teams.NewPostgresRepository(pool))
+	teamsHandler := teams.NewHandler(teamsService)
+
+	analyticsRecorder := analytics.NewPostgresRecorder(pool)
+	analyticsHandler := analytics.NewHandler(analyticsRecorder)
+
+	dailylogService := dailylog.NewService(dailylog.NewPostgresRepository(pool), dailylog.WithRecorder(analyticsRecorder))
+	dailylogHandler := dailylog.NewHandler(dailylogService)
+
+	teamproofService := teamproof.NewService(teamproof.NewPostgresRepository(pool), teamproof.WithRecorder(analyticsRecorder))
+	teamproofHandler := teamproof.NewHandler(teamproofService)
+
+	var llmProvider *personalization.LLMProvider
+	if cfg.AI.Enabled {
+		llmProvider = personalization.NewLLMProvider(cfg.AI.BaseURL, cfg.AI.APIKey, cfg.AI.Model)
+	}
+	persService := personalization.NewService(
+		cfg.AI.Enabled,
+		personalization.NewPostgresCircuitBreakerStore(pool),
+		personalization.NewPostgresBudgetStore(pool),
+		llmProvider,
+		personalization.WithRecorder(analyticsRecorder),
+	)
+	persHandler := personalization.NewHandler(persService, pool, platformlogger.WithComponent(log, "personalization"))
+
 	var objStorage checkins.Storage
 	if cfg.Storage.Enabled {
 		objStorage = checkins.NewS3Storage(checkins.S3Config{
@@ -182,12 +213,17 @@ func registerAPIRoutes(router *chi.Mux, log *slog.Logger, pool *pgxpool.Pool, cf
 		)
 		reviewCb := callbacks.NewReviewHandler(checkinsSvc, tgRepo, sender, platformlogger.WithComponent(log, "telegram.review"))
 
+		dlCallback := tgdailylog.NewCallbackHandler(dailylogService, tgRepo, sender, platformlogger.WithComponent(log, "telegram.dailylog"))
+		dlMsgHandler := tgdailylog.NewMessageHandler(dailylogService, tgRepo, sender, platformlogger.WithComponent(log, "telegram.dailylog"))
+
 		telegramHandler := telegram.NewHandler(telegram.HandlerConfig{
-			Secret:         cfg.Telegram.WebhookSecret,
-			StartHandler:   startCmd,
-			CommandHandler: cmdHandler,
-			ReviewCallback: reviewCb,
-			Log:            platformlogger.WithComponent(log, "telegram"),
+			Secret:             cfg.Telegram.WebhookSecret,
+			StartHandler:       startCmd,
+			CommandHandler:     cmdHandler,
+			ReviewCallback:     reviewCb,
+			DailyLogCallback:   dlCallback,
+			DailyLogMsgHandler: dlMsgHandler,
+			Log:                platformlogger.WithComponent(log, "telegram"),
 		})
 		telegramHandler.RegisterRoutes(router)
 
@@ -206,10 +242,15 @@ func registerAPIRoutes(router *chi.Mux, log *slog.Logger, pool *pgxpool.Pool, cf
 			r.Use(usersHandler.AuthMiddleware)
 			usersHandler.RegisterProtectedRoutes(r)
 			circlesHandler.RegisterRoutes(r)
+			teamsHandler.RegisterRoutes(r)
+			dailylogHandler.RegisterRoutes(r)
+			teamproofHandler.RegisterRoutes(r)
+			persHandler.RegisterRoutes(r)
 			goalsHandler.RegisterRoutes(r)
 			checkinsHandler.RegisterRoutes(r)
 			recapsHandler.RegisterRoutes(r)
 			inspHandler.RegisterRoutes(r)
+			analyticsHandler.RegisterRoutes(r)
 
 			// Telegram link token endpoint.
 			if cfg.Telegram.Enabled {

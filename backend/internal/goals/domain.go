@@ -86,6 +86,10 @@ type GoalRefineResponse struct {
 type Goal struct {
 	ID                    int64          `json:"id"`
 	CircleID              int64          `json:"circle_id"`
+	// TeamID — phase 0 read-only field. 0 means "not bound to any team".
+	// Write-paths still create goals with team_id = NULL; team binding lands
+	// in phase 2 of the ProofForge Teams initiative.
+	TeamID                int64          `json:"team_id,omitempty"`
 	Title                 string         `json:"title"`
 	Description           string         `json:"description"`
 	ProofExamples         string         `json:"proof_examples,omitempty"`

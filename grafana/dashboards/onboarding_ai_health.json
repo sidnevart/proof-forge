@@ -1,0 +1,62 @@
+{
+  "uid": "pf-onboarding-ai",
+  "title": "Onboarding and AI Health",
+  "tags": ["teams", "onboarding", "ai"],
+  "timezone": "browser",
+  "schemaVersion": 36,
+  "refresh": "5m",
+  "panels": [
+    {
+      "id": 1,
+      "title": "AI Fallback Rate by Feature",
+      "type": "timeseries",
+      "gridPos": { "h": 8, "w": 12, "x": 0, "y": 0 },
+      "targets": [
+        {
+          "datasource": { "type": "postgres", "uid": "${datasource}" },
+          "rawSql": "SELECT properties->>'feature' as feature, COUNT(*) FROM analytics_events WHERE event_name = 'personalization_fallback' AND ts >= NOW() - INTERVAL '7 days' GROUP BY feature",
+          "format": "table"
+        }
+      ]
+    },
+    {
+      "id": 2,
+      "title": "AI Latency p50 / p90 by Feature",
+      "type": "timeseries",
+      "gridPos": { "h": 8, "w": 12, "x": 12, "y": 0 },
+      "targets": [
+        {
+          "datasource": { "type": "postgres", "uid": "${datasource}" },
+          "rawSql": "SELECT properties->>'feature' as feature, PERCENTILE_CONT(0.5) WITHIN GROUP (ORDER BY (properties->>'latency_ms')::bigint) as p50, PERCENTILE_CONT(0.9) WITHIN GROUP (ORDER BY (properties->>'latency_ms')::bigint) as p90 FROM analytics_events WHERE event_name = 'personalization_invoked' AND ts >= NOW() - INTERVAL '7 days' GROUP BY feature",
+          "format": "table"
+        }
+      ]
+    },
+    {
+      "id": 3,
+      "title": "Daily Budget Usage",
+      "type": "stat",
+      "gridPos": { "h": 4, "w": 6, "x": 0, "y": 8 },
+      "targets": [
+        {
+          "datasource": { "type": "postgres", "uid": "${datasource}" },
+          "rawSql": "SELECT COALESCE(SUM(tokens_used), 0) FROM ai_daily_budget WHERE budget_date = CURRENT_DATE",
+          "format": "table"
+        }
+      ]
+    },
+    {
+      "id": 4,
+      "title": "Circuit Breaker States",
+      "type": "table",
+      "gridPos": { "h": 8, "w": 12, "x": 6, "y": 8 },
+      "targets": [
+        {
+          "datasource": { "type": "postgres", "uid": "${datasource}" },
+          "rawSql": "SELECT feature, state, opened_until, reason FROM ai_circuit_breakers",
+          "format": "table"
+        }
+      ]
+    }
+  ]
+}

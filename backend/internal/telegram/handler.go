@@ -24,29 +24,35 @@ type CallbackHandler interface {
 
 // Handler receives Telegram webhook updates and dispatches to sub-handlers.
 type Handler struct {
-	secret         string
-	startHandler   MessageHandler
-	commandHandler MessageHandler
-	reviewCallback CallbackHandler
-	log            *slog.Logger
+	secret               string
+	startHandler         MessageHandler
+	commandHandler       MessageHandler
+	reviewCallback       CallbackHandler
+	dailyLogCallback     CallbackHandler
+	dailyLogMsgHandler   MessageHandler
+	log                  *slog.Logger
 }
 
 // HandlerConfig wires sub-handlers into the top-level webhook handler.
 type HandlerConfig struct {
-	Secret         string
-	StartHandler   MessageHandler
-	CommandHandler MessageHandler
-	ReviewCallback CallbackHandler
-	Log            *slog.Logger
+	Secret               string
+	StartHandler         MessageHandler
+	CommandHandler       MessageHandler
+	ReviewCallback       CallbackHandler
+	DailyLogCallback     CallbackHandler
+	DailyLogMsgHandler   MessageHandler
+	Log                  *slog.Logger
 }
 
 func NewHandler(cfg HandlerConfig) *Handler {
 	return &Handler{
-		secret:         cfg.Secret,
-		startHandler:   cfg.StartHandler,
-		commandHandler: cfg.CommandHandler,
-		reviewCallback: cfg.ReviewCallback,
-		log:            cfg.Log,
+		secret:             cfg.Secret,
+		startHandler:       cfg.StartHandler,
+		commandHandler:     cfg.CommandHandler,
+		reviewCallback:     cfg.ReviewCallback,
+		dailyLogCallback:   cfg.DailyLogCallback,
+		dailyLogMsgHandler: cfg.DailyLogMsgHandler,
+		log:                cfg.Log,
 	}
 }
 
@@ -83,8 +89,11 @@ func (h *Handler) dispatch(ctx context.Context, update bot.Update) {
 	switch {
 	case update.CallbackQuery != nil:
 		cq := update.CallbackQuery
-		if strings.HasPrefix(cq.Data, "review_") && h.reviewCallback != nil {
+		switch {
+		case strings.HasPrefix(cq.Data, "review_") && h.reviewCallback != nil:
 			h.reviewCallback.Handle(ctx, cq)
+		case strings.HasPrefix(cq.Data, "log:") && h.dailyLogCallback != nil:
+			h.dailyLogCallback.Handle(ctx, cq)
 		}
 
 	case update.Message != nil:
@@ -103,7 +112,11 @@ func (h *Handler) dispatch(ctx context.Context, update bot.Update) {
 				h.commandHandler.Handle(ctx, msg)
 			}
 		default:
-			h.log.Debug("telegram webhook: unhandled message", "text", text)
+			if h.dailyLogMsgHandler != nil {
+				h.dailyLogMsgHandler.Handle(ctx, msg)
+			} else {
+				h.log.Debug("telegram webhook: unhandled message", "text", text)
+			}
 		}
 	}
 }

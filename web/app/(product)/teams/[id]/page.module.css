@@ -1,0 +1,675 @@
+.page {
+  padding: 32px 0 80px;
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+}
+
+.back {
+  font-family: var(--font-display);
+  font-size: 12px;
+  letter-spacing: 0.12em;
+  color: var(--ink-mono);
+  text-decoration: none;
+  width: fit-content;
+}
+
+.back:hover,
+.back:focus-visible {
+  color: var(--ink-primary);
+  outline: none;
+}
+
+.header {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.title {
+  margin: 0;
+  font-family: var(--font-display);
+  font-size: 48px;
+  letter-spacing: 0.04em;
+  color: var(--ink-primary);
+}
+
+.meta {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+  font-family: var(--font-display);
+  font-size: 12px;
+  letter-spacing: 0.1em;
+  color: var(--ink-mono);
+}
+
+.dot {
+  opacity: 0.4;
+}
+
+.aiMode {
+  color: var(--ink-mono);
+}
+
+.role {
+  color: var(--danger);
+  font-weight: 700;
+}
+
+.archived {
+  color: var(--ink-mono);
+  opacity: 0.6;
+}
+
+.loading,
+.error {
+  font-family: var(--font-display);
+  font-size: 18px;
+  letter-spacing: 0.04em;
+  padding: 40px 0;
+  color: var(--ink-mono);
+}
+
+.error {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  flex-wrap: wrap;
+}
+
+.errorLink {
+  color: var(--danger);
+  text-decoration: none;
+  letter-spacing: 0.12em;
+}
+
+/* Sections */
+
+.section {
+  border: 2px solid var(--border-strong);
+  background: var(--bg-surface);
+  padding: 24px;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.sectionLabel {
+  font-family: var(--font-display);
+  font-size: 12px;
+  letter-spacing: 0.16em;
+  color: var(--ink-mono);
+}
+
+.inviteRow {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  flex-wrap: wrap;
+}
+
+.code {
+  font-family: var(--font-mono, monospace);
+  font-size: 22px;
+  letter-spacing: 0.16em;
+  color: var(--ink-primary);
+  padding: 10px 16px;
+  background: rgba(0, 0, 0, 0.4);
+  border: 1px solid var(--border-strong);
+}
+
+.copyBtn,
+.subtleBtn {
+  background: transparent;
+  border: 2px solid var(--ink-primary);
+  color: var(--ink-primary);
+  padding: 10px 18px;
+  font-family: var(--font-display);
+  font-size: 13px;
+  letter-spacing: 0.08em;
+  cursor: pointer;
+  transition: background 120ms, color 120ms;
+}
+
+.subtleBtn {
+  border-color: var(--ink-mono);
+  color: var(--ink-mono);
+  width: fit-content;
+}
+
+.copyBtn:hover:not(:disabled),
+.copyBtn:focus-visible:not(:disabled),
+.subtleBtn:hover:not(:disabled),
+.subtleBtn:focus-visible:not(:disabled) {
+  background: var(--ink-primary);
+  color: #000;
+  border-color: var(--ink-primary);
+  outline: none;
+}
+
+.dangerBtn {
+  background: transparent;
+  border: 2px solid var(--danger);
+  color: var(--danger);
+  padding: 12px 20px;
+  font-family: var(--font-display);
+  font-size: 13px;
+  letter-spacing: 0.1em;
+  cursor: pointer;
+  width: fit-content;
+  transition: background 120ms, color 120ms;
+}
+
+.dangerBtn:hover:not(:disabled),
+.dangerBtn:focus-visible:not(:disabled) {
+  background: var(--danger);
+  color: #000;
+  outline: none;
+}
+
+.dangerBtn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.note {
+  font-size: 13px;
+  line-height: 1.5;
+  color: var(--ink-mono);
+  padding: 16px;
+  border: 1px dashed var(--ink-mono);
+}
+
+/* Daily Log */
+
+.streakRow {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  flex-wrap: wrap;
+}
+
+.streakValue {
+  font-family: var(--font-display);
+  font-size: 24px;
+  letter-spacing: 0.04em;
+  color: var(--ink-primary);
+}
+
+.streakLabel {
+  font-size: 13px;
+  color: var(--ink-mono);
+}
+
+.freezeLabel {
+  font-size: 12px;
+  color: var(--ink-mono);
+  opacity: 0.7;
+}
+
+.logForm {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.logInput,
+.urlInput {
+  background: rgba(0, 0, 0, 0.3);
+  border: 2px solid var(--border-strong);
+  color: var(--ink-primary);
+  padding: 12px;
+  font-family: var(--font-body);
+  font-size: 14px;
+  width: 100%;
+  resize: vertical;
+}
+
+.logInput:focus-visible,
+.urlInput:focus-visible {
+  border-color: var(--ink-primary);
+  outline: none;
+}
+
+.logActions {
+  display: flex;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+.primaryBtn {
+  background: var(--ink-primary);
+  border: 2px solid var(--ink-primary);
+  color: #000;
+  padding: 10px 20px;
+  font-family: var(--font-display);
+  font-size: 13px;
+  letter-spacing: 0.08em;
+  cursor: pointer;
+  transition: opacity 120ms;
+}
+
+.primaryBtn:hover:not(:disabled),
+.primaryBtn:focus-visible:not(:disabled) {
+  opacity: 0.85;
+  outline: none;
+}
+
+.primaryBtn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.entryList {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.entryItem {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 8px 0;
+  border-bottom: 1px solid var(--border-strong);
+  font-size: 13px;
+}
+
+.entryDate {
+  font-family: var(--font-mono, monospace);
+  color: var(--ink-mono);
+  min-width: 90px;
+}
+
+.entryPreview {
+  color: var(--ink-primary);
+  flex: 1;
+}
+
+.entryArtifact {
+  opacity: 0.7;
+}
+
+.statusLogged {
+  color: #4caf50;
+  min-width: 20px;
+}
+
+.statusFrozen {
+  color: #2196f3;
+  min-width: 20px;
+}
+
+.statusSkipped {
+  color: var(--ink-mono);
+  min-width: 20px;
+}
+
+.statusMissed {
+  color: var(--danger);
+  min-width: 20px;
+}
+
+/* Team Feed */
+
+.emptyFeed {
+  font-size: 13px;
+  color: var(--ink-mono);
+  opacity: 0.7;
+}
+
+.feedList {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.feedCard {
+  border: 1px solid var(--border-strong);
+  padding: 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.feedHeader {
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.feedAlias {
+  font-family: var(--font-display);
+  font-size: 13px;
+  letter-spacing: 0.08em;
+  color: var(--ink-primary);
+  font-weight: 700;
+}
+
+.feedGoal {
+  font-size: 13px;
+  color: var(--ink-mono);
+  flex: 1;
+}
+
+.feedMeta {
+  font-family: var(--font-mono, monospace);
+  font-size: 11px;
+  color: var(--ink-mono);
+  opacity: 0.6;
+}
+
+.feedStatusRow {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.feedStatusPending,
+.feedStatusApproved,
+.feedStatusRejected {
+  font-family: var(--font-display);
+  font-size: 11px;
+  letter-spacing: 0.1em;
+  padding: 4px 8px;
+  width: fit-content;
+}
+
+.feedStatusPending {
+  color: #ffc107;
+  border: 1px solid #ffc107;
+}
+
+.feedStatusApproved {
+  color: #4caf50;
+  border: 1px solid #4caf50;
+}
+
+.feedStatusRejected {
+  color: var(--danger);
+  border: 1px solid var(--danger);
+}
+
+.commentToggle {
+  background: transparent;
+  border: none;
+  color: var(--ink-mono);
+  font-size: 12px;
+  cursor: pointer;
+  padding: 0;
+}
+
+.commentToggle:hover {
+  color: var(--ink-primary);
+}
+
+.feedActions {
+  display: flex;
+  gap: 10px;
+}
+
+.approveBtn,
+.rejectBtn {
+  background: transparent;
+  border: 2px solid;
+  padding: 8px 16px;
+  font-family: var(--font-display);
+  font-size: 12px;
+  letter-spacing: 0.08em;
+  cursor: pointer;
+  transition: background 120ms, color 120ms;
+}
+
+.approveBtn {
+  border-color: #4caf50;
+  color: #4caf50;
+}
+
+.approveBtn:hover:not(:disabled),
+.approveBtn:focus-visible:not(:disabled) {
+  background: #4caf50;
+  color: #000;
+  outline: none;
+}
+
+.rejectBtn {
+  border-color: var(--danger);
+  color: var(--danger);
+}
+
+.rejectBtn:hover:not(:disabled),
+.rejectBtn:focus-visible:not(:disabled) {
+  background: var(--danger);
+  color: #000;
+  outline: none;
+}
+
+.approveBtn:disabled,
+.rejectBtn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.rejectForm {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  padding-top: 8px;
+}
+
+.rejectInput {
+  background: rgba(0, 0, 0, 0.3);
+  border: 2px solid var(--border-strong);
+  color: var(--ink-primary);
+  padding: 10px;
+  font-family: var(--font-body);
+  font-size: 13px;
+  width: 100%;
+  resize: vertical;
+}
+
+.rejectInput:focus-visible {
+  border-color: var(--ink-primary);
+  outline: none;
+}
+
+.rejectActions {
+  display: flex;
+  gap: 10px;
+}
+
+.commentPanel {
+  border-top: 1px solid var(--border-strong);
+  padding-top: 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.commentList {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.commentItem {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  padding: 8px;
+  background: rgba(0, 0, 0, 0.2);
+}
+
+.commentAlias {
+  font-family: var(--font-display);
+  font-size: 11px;
+  letter-spacing: 0.08em;
+  color: var(--ink-primary);
+}
+
+.commentText {
+  font-size: 13px;
+  color: var(--ink-primary);
+}
+
+.commentDate {
+  font-family: var(--font-mono, monospace);
+  font-size: 10px;
+  color: var(--ink-mono);
+  opacity: 0.5;
+}
+
+.commentForm {
+  display: flex;
+  gap: 8px;
+}
+
+.commentInput {
+  flex: 1;
+  background: rgba(0, 0, 0, 0.3);
+  border: 2px solid var(--border-strong);
+  color: var(--ink-primary);
+  padding: 8px 12px;
+  font-family: var(--font-body);
+  font-size: 13px;
+}
+
+.commentInput:focus-visible {
+  border-color: var(--ink-primary);
+  outline: none;
+}
+
+/* AI Features */
+
+.aiConsentRow {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding-top: 8px;
+  border-top: 1px solid var(--border-strong);
+}
+
+.aiConsentLabel {
+  font-size: 13px;
+  color: var(--ink-mono);
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  cursor: pointer;
+}
+
+.candidateList {
+  list-style: none;
+  padding: 0;
+  margin: 12px 0 0;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.candidateCard {
+  border: 1px solid var(--border-strong);
+  padding: 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.candidateHeader {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.candidateConfidence {
+  font-family: var(--font-display);
+  font-size: 10px;
+  letter-spacing: 0.1em;
+  padding: 2px 6px;
+  border: 1px solid var(--ink-mono);
+  color: var(--ink-mono);
+}
+
+.candidateGoal {
+  font-size: 12px;
+  color: var(--ink-mono);
+}
+
+.candidateRationale {
+  font-size: 13px;
+  color: var(--ink-primary);
+  margin: 0;
+  line-height: 1.4;
+}
+
+.candidateNotes {
+  font-family: var(--font-mono, monospace);
+  font-size: 11px;
+  color: var(--ink-mono);
+  opacity: 0.7;
+}
+
+.emptyCandidates {
+  font-size: 13px;
+  color: var(--ink-mono);
+  opacity: 0.7;
+  margin-top: 10px;
+}
+
+.briefingInputRow {
+  display: flex;
+  gap: 10px;
+  align-items: center;
+}
+
+.briefingInput {
+  background: rgba(0, 0, 0, 0.3);
+  border: 2px solid var(--border-strong);
+  color: var(--ink-primary);
+  padding: 8px 12px;
+  font-family: var(--font-body);
+  font-size: 13px;
+  width: 120px;
+}
+
+.briefingInput:focus-visible {
+  border-color: var(--ink-primary);
+  outline: none;
+}
+
+.briefingBox {
+  margin-top: 12px;
+  padding: 12px;
+  border: 1px solid var(--border-strong);
+  background: rgba(0, 0, 0, 0.2);
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.briefingText {
+  font-size: 13px;
+  line-height: 1.5;
+  color: var(--ink-primary);
+  margin: 0;
+}
+
+.aiBadge {
+  font-family: var(--font-display);
+  font-size: 10px;
+  letter-spacing: 0.1em;
+  color: var(--ink-mono);
+  opacity: 0.7;
+}

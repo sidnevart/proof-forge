@@ -91,6 +91,13 @@
   font-size: 96px;
   line-height: 1;
   letter-spacing: 0.02em;
+  /* Защита от разрыва слов посередине, когда «НИКТО НЕ ТЕРЯЕТСЯ» не влезает
+     в строку на узких экранах. Без этого браузер при некоторых сочетаниях
+     overflow-wrap+word-break ломает «ТЕРЯЕТСЯ» как «ТЕР / ЯЕТСЯ». */
+  overflow-wrap: normal;
+  word-break: keep-all;
+  -webkit-hyphens: none;
+  hyphens: none;
 }
 
 .heroSub {

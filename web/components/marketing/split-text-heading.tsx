@@ -17,6 +17,12 @@ interface SplitTextHeadingProps {
  *
  * Line breaks in `children` (literal `\n`) are converted to <br> elements.
  *
+ * Words inside a line are wrapped in a `.word` span with `white-space: nowrap`
+ * so the browser will never break a word in the middle when the line is too
+ * narrow — it wraps the whole word to the next line instead. Without this we
+ * got renders like «НИКТО НЕ ТЕР / ЯЕТСЯ» because each per-character span was
+ * an independent break opportunity.
+ *
  * Screen-reader fallback: the full text is rendered in a visually-hidden span
  * so assistive tech reads a single string, not many individual characters.
  *
@@ -46,26 +52,50 @@ export function SplitTextHeading({
     return () => cancelAnimationFrame(rafId);
   }, []);
 
-  // Split text into lines; render each line's chars with a <br> between lines.
+  // Build per-line markup: each word is its own nowrap unit, with a
+  // breakable space between words and a <br> between lines.
   const lines = children.split("\n");
   let charIndex = 0;
   const lineNodes = lines.flatMap((line, lineIdx) => {
-    const charSpans = line.split("").map((char) => {
-      const idx = charIndex++;
-      return (
-        <span
-          key={`c${idx}`}
-          className={char === " " ? styles.space : styles.letter}
-          style={{ "--char-index": idx } as React.CSSProperties}
-        >
-          {char === " " ? " " : char}
+    const words = line.split(" ");
+    const lineChildren: React.ReactNode[] = [];
+
+    words.forEach((word, wordIdx) => {
+      const charSpans = word.split("").map((char) => {
+        const idx = charIndex++;
+        return (
+          <span
+            key={`c${idx}`}
+            className={styles.letter}
+            style={{ "--char-index": idx } as React.CSSProperties}
+          >
+            {char}
+          </span>
+        );
+      });
+      lineChildren.push(
+        <span key={`w${lineIdx}-${wordIdx}`} className={styles.word}>
+          {charSpans}
         </span>
       );
+      if (wordIdx < words.length - 1) {
+        const spaceIdx = charIndex++;
+        lineChildren.push(
+          <span
+            key={`s${lineIdx}-${wordIdx}`}
+            className={styles.space}
+            style={{ "--char-index": spaceIdx } as React.CSSProperties}
+          >
+            {" "}
+          </span>
+        );
+      }
     });
+
     if (lineIdx < lines.length - 1) {
-      charSpans.push(<br key={`br${lineIdx}`} />);
+      lineChildren.push(<br key={`br${lineIdx}`} />);
     }
-    return charSpans;
+    return lineChildren;
   });
 
   return (

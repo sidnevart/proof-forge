@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { useParams, useRouter } from "next/navigation";
-import { useEffect, useState } from "react";
+import { useEffect, useState, useCallback } from "react";
 
 import {
   ApiError,
@@ -92,21 +92,7 @@ export default function TeamDetailPage() {
     listDailyLogs(teamId, weekAgo, today).then((d) => setEntries(d.entries)).catch(() => setEntries([]));
   }, [teamId]);
 
-  useEffect(() => {
-    if (!Number.isFinite(teamId) || teamId <= 0) return;
-    loadFeed(0);
-    trackEvent("team_feed_opened", { source_surface: "web", team_id: teamId }, teamId).catch(() => {
-      // silently fail
-    });
-  }, [teamId]);
-
-  useEffect(() => {
-    if (state.kind === "ready") {
-      setAiConsent(state.detail.my_membership.ai_consent);
-    }
-  }, [state]);
-
-  async function loadFeed(cursor: number) {
+  const loadFeed = useCallback(async (cursor: number) => {
     if (feedBusy) return;
     setFeedBusy(true);
     try {
@@ -122,7 +108,21 @@ export default function TeamDetailPage() {
     } finally {
       setFeedBusy(false);
     }
-  }
+  }, [teamId, feedBusy]);
+
+  useEffect(() => {
+    if (!Number.isFinite(teamId) || teamId <= 0) return;
+    loadFeed(0);
+    trackEvent("team_feed_opened", { source_surface: "web", team_id: teamId }, teamId).catch(() => {
+      // silently fail
+    });
+  }, [teamId, loadFeed]);
+
+  useEffect(() => {
+    if (state.kind === "ready") {
+      setAiConsent(state.detail.my_membership.ai_consent);
+    }
+  }, [state]);
 
   if (state.kind === "loading") {
     return (

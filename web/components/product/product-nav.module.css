@@ -78,6 +78,13 @@
   gap: 10px;
   height: 100%;
   padding: 0 16px;
+  /* Reset UA <button> styles — same class is used for <Link> (logged-out)
+     and <button> (logged-in dropdown trigger). Without explicit reset the
+     button shows the default light-grey UA fill on the dark navbar. */
+  background: transparent;
+  border: none;
+  font: inherit;
+  cursor: pointer;
   color: var(--ink-primary);
   font-family: var(--font-display);
   font-size: 13px;
@@ -85,8 +92,10 @@
   transition: background 120ms;
 }
 
-.userBtn:hover {
+.userBtn:hover,
+.userBtn:focus-visible {
   background: var(--bg-elevated);
+  outline: none;
 }
 
 .avatar {

@@ -120,6 +120,73 @@
   flex-shrink: 0;
 }
 
+/* ── User menu (dropdown) ──────────────────────── */
+.userMenu {
+  position: relative;
+  height: 100%;
+}
+
+.caret {
+  font-size: 10px;
+  color: var(--ink-mono);
+  margin-left: -4px;
+}
+
+.menuPanel {
+  position: absolute;
+  top: 100%;
+  right: 0;
+  margin-top: 4px;
+  min-width: 160px;
+  background: rgba(0, 0, 0, 0.95);
+  border: 1px solid var(--border-strong);
+  display: flex;
+  flex-direction: column;
+  z-index: 200;
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+}
+
+.menuItem {
+  display: flex;
+  align-items: center;
+  padding: 12px 16px;
+  font-family: var(--font-display);
+  font-size: 12px;
+  letter-spacing: 0.1em;
+  color: var(--ink-primary);
+  background: transparent;
+  border: none;
+  border-bottom: 1px solid var(--border);
+  text-align: left;
+  cursor: pointer;
+  transition: background 120ms, color 120ms;
+}
+
+.menuItem:last-child {
+  border-bottom: none;
+}
+
+.menuItem:hover:not(:disabled),
+.menuItem:focus-visible {
+  background: var(--bg-elevated);
+  outline: none;
+}
+
+.menuItem:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.menuItemDanger {
+  color: var(--danger);
+}
+
+.menuItemDanger:hover:not(:disabled),
+.menuItemDanger:focus-visible {
+  background: color-mix(in srgb, var(--danger) 12%, transparent);
+}
+
 @media (max-width: 640px) {
   .links {
     display: none;

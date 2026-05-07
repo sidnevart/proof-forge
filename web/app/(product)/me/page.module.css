@@ -592,3 +592,80 @@
     border-bottom: none;
   }
 }
+
+/* ── Аккаунт (внизу /me) ─────────────────────────
+ *
+ * Logout живёт здесь намеренно: внизу страницы, не в hero.
+ * Стиль — нейтральный, не destructive — это не «удалить аккаунт»,
+ * а просто выйти. Confirm() в JS добавляет ещё один шаг от
+ * случайного нажатия.
+ */
+.accountSection {
+  margin-top: 32px;
+  border: 2px solid var(--border-strong);
+  background: var(--bg-surface);
+}
+
+.accountHead {
+  padding: 12px 20px;
+  font-family: var(--font-display);
+  font-size: 12px;
+  letter-spacing: 0.16em;
+  color: var(--ink-mono);
+  border-bottom: 1px solid var(--border);
+}
+
+.accountRow {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 16px 20px;
+  gap: 16px;
+}
+
+.accountEmail {
+  font-family: var(--font-mono, var(--font-display));
+  font-size: 13px;
+  letter-spacing: 0.04em;
+  color: var(--ink-mono);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.logoutBtn {
+  flex-shrink: 0;
+  padding: 10px 20px;
+  background: transparent;
+  border: 2px solid var(--danger);
+  color: var(--danger);
+  font-family: var(--font-display);
+  font-size: 13px;
+  letter-spacing: 0.1em;
+  cursor: pointer;
+  transition: background 120ms, color 120ms;
+}
+
+.logoutBtn:hover:not(:disabled),
+.logoutBtn:focus-visible {
+  background: var(--danger);
+  color: #000;
+  outline: none;
+}
+
+.logoutBtn:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+@media (max-width: 640px) {
+  .accountRow {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 12px;
+  }
+
+  .accountEmail {
+    text-align: center;
+  }
+}

@@ -1,9 +1,10 @@
 "use client";
 
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 
-import { getDashboard, getWeeklyAssembly, listCircles } from "@/lib/api";
+import { getDashboard, getWeeklyAssembly, listCircles, logoutUser } from "@/lib/api";
 import type { CircleDetail, DashboardResponse, WeeklyAssembly } from "@/lib/types";
 import { pluralizeRu } from "@/lib/plural";
 import styles from "./page.module.css";
@@ -18,10 +19,26 @@ type PageState =
     };
 
 export default function MePage() {
+  const router = useRouter();
   const [state, setState] = useState<PageState>({ kind: "loading" });
   const [activeCircleId, setActiveCircleId] = useState<number | null>(null);
   const [assembly, setAssembly] = useState<WeeklyAssembly | null>(null);
   const [assemblyError, setAssemblyError] = useState(false);
+  const [loggingOut, setLoggingOut] = useState(false);
+
+  async function handleLogout() {
+    if (loggingOut) return;
+    const ok = window.confirm(
+      "Выйти из аккаунта?\n\nЛогин и пароль понадобятся, чтобы вернуться."
+    );
+    if (!ok) return;
+    setLoggingOut(true);
+    try {
+      await logoutUser();
+    } finally {
+      router.push("/");
+    }
+  }
 
   useEffect(() => {
     async function load() {
@@ -247,6 +264,23 @@ export default function MePage() {
         <Link href="/dashboard" className={styles.quickLink}>← ДАШБОРД</Link>
         <Link href="/feed" className={styles.quickLink}>ЛЕНТА →</Link>
         <Link href="/settings/sharing" className={styles.quickLink}>НАСТРОЙКИ</Link>
+      </section>
+
+      {/* Аккаунт — кнопка выхода. Внизу намеренно: чтобы не нажать
+          случайно, и чтобы первый экран был про прогресс, а не про auth. */}
+      <section className={styles.accountSection}>
+        <div className={styles.accountHead}>АККАУНТ</div>
+        <div className={styles.accountRow}>
+          <span className={styles.accountEmail}>{user.email}</span>
+          <button
+            type="button"
+            className={styles.logoutBtn}
+            onClick={handleLogout}
+            disabled={loggingOut}
+          >
+            {loggingOut ? "ВЫХОД…" : "ВЫЙТИ"}
+          </button>
+        </div>
       </section>
 
     </div>

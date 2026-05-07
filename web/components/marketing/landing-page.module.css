@@ -155,6 +155,77 @@
   margin-bottom: 40px;
 }
 
+/* ── Ты не один (support) ────────────────────────
+ *
+ * Сразу после Hero. Структурно повторяет .howSection +
+ * 3-колонный grid карточек (как .stepsGrid + .step), но
+ * без номеров шагов и с менее агрессивной подсветкой.
+ */
+.supportSection {
+  position: relative;
+  isolation: isolate;
+  padding: 80px var(--landing-gutter);
+  border-bottom: 2px solid var(--border-strong);
+}
+
+.supportGrid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 0;
+  border: 2px solid var(--border-strong);
+}
+
+.supportCard {
+  padding: 40px 32px;
+  border-right: 2px solid var(--border-strong);
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  /* Tilt glow — softer than .step (12% → 6%) */
+  position: relative;
+  isolation: isolate;
+  overflow: hidden;
+}
+
+.supportCard::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background: radial-gradient(
+    circle 120px at var(--tilt-cx, 50%) var(--tilt-cy, 50%),
+    color-mix(in srgb, var(--win) 6%, transparent) 0%,
+    transparent 70%
+  );
+  opacity: 0;
+  transition: opacity 200ms ease;
+  z-index: 0;
+}
+
+@media (hover: hover) and (pointer: fine) {
+  .supportCard:hover::after {
+    opacity: 1;
+  }
+}
+
+.supportCard:last-child {
+  border-right: none;
+}
+
+.supportTitle {
+  font-family: var(--font-display);
+  font-size: 28px;
+  letter-spacing: 0.06em;
+  color: var(--ink-primary);
+}
+
+.supportDesc {
+  margin: 0;
+  font-size: 14px;
+  line-height: 1.6;
+  color: var(--ink-mono);
+}
+
 /* ── How it works ────────────────────────────── */
 .howSection {
   position: relative;
@@ -552,6 +623,117 @@
   }
 }
 
+/* ── Approval hint (под кнопками карточки) ─── */
+.approvalHint {
+  padding: 10px 20px;
+  font-family: var(--font-mono, var(--font-display));
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  color: var(--ink-mono);
+  border-top: 1px solid var(--border);
+  text-align: center;
+}
+
+/* ── Для команд (teams) ──────────────────────────
+ *
+ * Между Approval и Glossary. Двойной path — solo / team.
+ * Структурно похож на .supportSection, но с 2-колонным grid
+ * и CTA-кнопкой в каждой карточке.
+ */
+.teamsSection {
+  position: relative;
+  isolation: isolate;
+  padding: 80px var(--landing-gutter);
+  border-bottom: 2px solid var(--border-strong);
+}
+
+.teamsLead {
+  margin: -24px 0 32px;
+  font-size: 16px;
+  line-height: 1.5;
+  color: var(--ink-mono);
+  max-width: 640px;
+}
+
+.teamsGrid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 0;
+  border: 2px solid var(--border-strong);
+}
+
+.teamsCard {
+  padding: 40px 32px;
+  border-right: 2px solid var(--border-strong);
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  position: relative;
+  isolation: isolate;
+  overflow: hidden;
+}
+
+.teamsCard::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background: radial-gradient(
+    circle 140px at var(--tilt-cx, 50%) var(--tilt-cy, 50%),
+    color-mix(in srgb, var(--danger) 6%, transparent) 0%,
+    transparent 70%
+  );
+  opacity: 0;
+  transition: opacity 200ms ease;
+  z-index: 0;
+}
+
+@media (hover: hover) and (pointer: fine) {
+  .teamsCard:hover::after {
+    opacity: 1;
+  }
+}
+
+.teamsCard:last-child {
+  border-right: none;
+}
+
+.teamsCardTitle {
+  font-family: var(--font-display);
+  font-size: 28px;
+  letter-spacing: 0.06em;
+  color: var(--ink-primary);
+}
+
+.teamsCardDesc {
+  margin: 0;
+  font-size: 14px;
+  line-height: 1.6;
+  color: var(--ink-mono);
+  flex: 1;
+}
+
+.teamsCardCta {
+  display: inline-flex;
+  align-items: center;
+  padding: 12px 20px;
+  border: 2px solid var(--ink-primary);
+  color: var(--ink-primary);
+  font-family: var(--font-display);
+  font-size: 14px;
+  letter-spacing: 0.08em;
+  width: fit-content;
+  transition: background 150ms, color 150ms;
+  position: relative;
+  z-index: 1;
+}
+
+.teamsCardCta:hover {
+  background: var(--ink-primary);
+  color: #000;
+}
+
 /* ── FAQ ──────────────────────────────────────── */
 .faqSection {
   position: relative;
@@ -840,6 +1022,22 @@
   }
 
   .step:last-child {
+    border-bottom: none;
+  }
+
+  .supportGrid,
+  .teamsGrid {
+    grid-template-columns: 1fr;
+  }
+
+  .supportCard,
+  .teamsCard {
+    border-right: none;
+    border-bottom: 2px solid var(--border-strong);
+  }
+
+  .supportCard:last-child,
+  .teamsCard:last-child {
     border-bottom: none;
   }
 }

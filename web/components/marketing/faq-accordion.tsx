@@ -7,6 +7,8 @@ import styles from "./faq-accordion.module.css";
 interface FaqItem {
   q: string;
   a: string;
+  /** Optional anchor id for deep-linking (e.g. "team-faq"). */
+  anchorId?: string;
 }
 
 interface FaqAccordionProps {
@@ -69,7 +71,10 @@ function FaqItemRow({ item, isOpen, onToggle }: FaqItemRowProps) {
   };
 
   return (
-    <div className={`${styles.item} ${isOpen ? styles.itemOpen : ""}`}>
+    <div
+      className={`${styles.item} ${isOpen ? styles.itemOpen : ""}`}
+      id={item.anchorId}
+    >
       <button
         className={styles.question}
         aria-expanded={isOpen}

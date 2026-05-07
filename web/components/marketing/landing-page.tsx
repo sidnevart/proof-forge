@@ -125,11 +125,12 @@ export function LandingPage() {
       <section ref={heroRef} className={styles.hero}>
         <div className={styles.heroCopy}>
           <SplitTextHeading tag="h1" className={styles.heroH1}>
-            {"ТВОИ ДРУЗЬЯ\nУЖЕ РАБОТАЮТ.\nТЫ ЕЩЁ НЕТ."}
+            {"ТЫ ДЕЛАЕШЬ.\nКРУГ ВИДИТ.\nНИКТО НЕ ТЕРЯЕТСЯ."}
           </SplitTextHeading>
           <p className={styles.heroSub}>
-            Круг из 8 человек. 28 дней. Сдавай пруф каждый день.
-            Пропустил — все видят. Заморозка публичная.
+            8 человек. 28 дней. Один пруф в день.
+            Фотка, ссылка, строчка текста — годится всё.
+            Пропустил — заметят. Это и есть смысл.
           </p>
           <Link
             ref={ctaRef}
@@ -149,7 +150,34 @@ export function LandingPage() {
         </div>
       </section>
 
-      {/* 2. Как это работает */}
+      {/* 2. Ты не один */}
+      <section className={styles.supportSection} data-animate>
+        <div className={styles.sectionHeader}>ТЫ НЕ ОДИН.</div>
+        <div className={styles.supportGrid}>
+          <TiltCard className={styles.supportCard}>
+            <span className={styles.supportTitle}>БАДДИ</span>
+            <p className={styles.supportDesc}>
+              Видит пруф первым. Спрашивает, если непонятно.
+              Один человек, не комитет.
+            </p>
+          </TiltCard>
+          <TiltCard className={styles.supportCard}>
+            <span className={styles.supportTitle}>БОТ</span>
+            <p className={styles.supportDesc}>
+              Молчишь весь день — напомнит вечером.
+              Ровно один раз. Без капса.
+            </p>
+          </TiltCard>
+          <TiltCard className={styles.supportCard}>
+            <span className={styles.supportTitle}>КРУГ</span>
+            <p className={styles.supportDesc}>
+              До 7 человек. Не лидерборд. Просто рядом.
+            </p>
+          </TiltCard>
+        </div>
+      </section>
+
+      {/* 3. Как это работает */}
       <section className={styles.howSection} data-animate>
         <div className={styles.sectionHeader}>КАК ЭТО РАБОТАЕТ</div>
         <div className={styles.stepsGrid}>
@@ -157,7 +185,7 @@ export function LandingPage() {
             <span className={styles.stepNum}>01</span>
             <span className={styles.stepTitle}>СОБЕРИ КРУГ</span>
             <p className={styles.stepDesc}>
-              Пригласи 2–7 друзей. Без них платформа не работает. Давление — это они.
+              Пригласи 2–7 человек. Без них платформа не работает. Видимость — это они.
             </p>
           </TiltCard>
           <TiltCard className={styles.step}>
@@ -177,24 +205,24 @@ export function LandingPage() {
         </div>
       </section>
 
-      {/* 3. ДО ЗАМОРОЗКИ — data-animate здесь тоже, но reveal-observer его пропускает */}
+      {/* 4. ДО КОНЦА ДНЯ — data-animate здесь тоже, но reveal-observer его пропускает */}
       <section ref={tiksiRef} className={styles.tiksiSection} data-animate>
         <div className={styles.tiksiLeft}>
           <div className={styles.tiksiCountdown}>14:23:47</div>
-          <div className={styles.tiksiLabel}>ДО ЗАМОРОЗКИ</div>
+          <div className={styles.tiksiLabel}>ДО КОНЦА ДНЯ</div>
         </div>
         <div className={styles.tiksiRight}>
-          <h2 className={styles.tiksiTitle}>ДАВЛЕНИЕ НАРАСТАЕТ К НОЧИ.</h2>
+          <h2 className={styles.tiksiTitle}>КРУГ ИДЁТ В ОДНОМ РИТМЕ.</h2>
           <ul className={styles.tiksiList}>
-            <li><span className={styles.tiksiTime}>&lt;4ч</span> Напоминание в Telegram.</li>
-            <li><span className={styles.tiksiTime} style={{ color: "var(--danger)" }}>&lt;2ч</span> Таймер краснеет. Все видят твой статус.</li>
-            <li><span className={styles.tiksiTime} style={{ color: "var(--danger)" }}>&lt;30мин</span> Пульс таймера. Круг следит.</li>
-            <li><span className={styles.tiksiTime} style={{ color: "var(--danger)" }}>0:00</span> Заморозка. Публично.</li>
+            <li><span className={styles.tiksiTime}>&lt;4ч</span> Бот пишет: «как там сегодня?». Можешь не отвечать.</li>
+            <li><span className={styles.tiksiTime} style={{ color: "var(--danger)" }}>&lt;2ч</span> Таймер ярче. Бадди уже видит, что ты в работе.</li>
+            <li><span className={styles.tiksiTime} style={{ color: "var(--danger)" }}>&lt;30мин</span> Бот пинганёт ещё раз. Без капса.</li>
+            <li><span className={styles.tiksiTime} style={{ color: "var(--danger)" }}>0:00</span> Заморозка. Пометка, не наказание. Завтра одного пруфа достаточно.</li>
           </ul>
         </div>
       </section>
 
-      {/* 4. Telegram */}
+      {/* 5. Telegram */}
       <section className={styles.telegramSection} data-animate>
         <div className={styles.telegramHeader}>
           <div className={styles.sectionHeader}>БОТ В TELEGRAM ВЕДЁТ ТЕБЯ ОБРАТНО.</div>
@@ -202,13 +230,14 @@ export function LandingPage() {
         <TelegramFeed messages={TELEGRAM_MESSAGES} />
       </section>
 
-      {/* 5. Approval */}
+      {/* 6. Approval */}
       <section className={styles.approvalSection} data-animate>
         <div className={styles.approvalLeft}>
-          <h2 className={styles.approvalTitle}>ТВОЙ БАДДИ ПРОВЕРЯЕТ. БЕЗ ОБМАНА.</h2>
+          <h2 className={styles.approvalTitle}>БАДДИ — НЕ КОНТРОЛЁР.</h2>
           <p className={styles.approvalDesc}>
-            После каждого пруфа — два тапа в Telegram. Одобрить или отклонить.
-            Без обхода. Без накруток.
+            Смотрит пруф, тапает «✓» или пишет «не понял, перепиши».
+            Молчаливого реджекта не бывает — без комментария кнопка
+            не работает.
           </p>
         </div>
         <div className={styles.approvalRight}>
@@ -216,7 +245,36 @@ export function LandingPage() {
         </div>
       </section>
 
-      {/* 6. Словарь */}
+      {/* 7. Для команд */}
+      <section className={styles.teamsSection} data-animate>
+        <div className={styles.sectionHeader}>НЕ ТОЛЬКО ДЛЯ ДРУЗЕЙ.</div>
+        <p className={styles.teamsLead}>
+          Тимлиды, сотрудники, ИПР. То же самое, только круг — твоя команда.
+        </p>
+        <div className={styles.teamsGrid}>
+          <TiltCard className={styles.teamsCard}>
+            <span className={styles.teamsCardTitle}>ДЛЯ СЕБЯ</span>
+            <p className={styles.teamsCardDesc}>
+              Личные цели. Друзья как круг. Бадди — кто-то один.
+            </p>
+            <Link href="/dashboard" className={styles.teamsCardCta}>
+              НАЧНИ С СЕБЯ →
+            </Link>
+          </TiltCard>
+          <TiltCard className={styles.teamsCard}>
+            <span className={styles.teamsCardTitle}>ДЛЯ КОМАНДЫ</span>
+            <p className={styles.teamsCardDesc}>
+              Тимлид как бадди. Команда как круг. У каждого свой ИПР,
+              тимлид видит всё. Без квартальных ревью-агоний.
+            </p>
+            <Link href="#team-faq" className={styles.teamsCardCta}>
+              УЗНАТЬ ПРО КОМАНДЫ →
+            </Link>
+          </TiltCard>
+        </div>
+      </section>
+
+      {/* 8. Словарь */}
       <section className={styles.glossarySection} data-animate>
         <div className={styles.sectionHeader}>СЛОВАРЬ</div>
         <div className={styles.glossaryGrid}>
@@ -229,19 +287,22 @@ export function LandingPage() {
         </div>
       </section>
 
-      {/* 7. FAQ */}
+      {/* 9. FAQ */}
       <section className={styles.faqSection} data-animate>
         <div className={styles.sectionHeader}>ВОПРОСЫ</div>
         <FaqAccordion items={FAQ} />
       </section>
 
-      {/* 8. Final CTA */}
+      {/* 10. Final CTA */}
       <section className={styles.finalCta} data-animate>
         <h2 className={styles.finalTitle}>СОБЕРИ КРУГ.<br />НАЧНИ СЕГОДНЯ.</h2>
         <Link href="/dashboard" className={styles.finalCtaBtn}>
           СОЗДАТЬ КРУГ →
         </Link>
-        <p className={styles.finalFine}>Бесплатно. Telegram-нотификации включены.</p>
+        <p className={styles.finalFine}>
+          Бесплатно. Через Telegram. Можно начать одному —
+          и пригласить круг, когда будешь готов.
+        </p>
       </section>
 
       {/* Footer */}
@@ -287,16 +348,19 @@ function ApprovalCard() {
         </div>
         <div className={styles.approvalBtnMuted}>✏️ ДОПИСАТЬ</div>
       </div>
+      <div className={styles.approvalHint}>
+        ОТКЛОНИТЬ → ПОПРОСИТ КОММЕНТАРИЙ
+      </div>
     </TiltCard>
   );
 }
 
 const TELEGRAM_MESSAGES: TgMessage[] = [
-  { icon: "🟢", text: "АРТЁМ ПЕРВЫЙ. ТЫ ЕЩЁ НЕТ.", kind: "win" },
-  { icon: "🥶", text: "МАША ЗАМОРОЖЕНА. НЕ ПРИСОЕДИНЯЙСЯ.", kind: "danger" },
-  { icon: "⏱", text: "2 ЧАСА ДО ЗАМОРОЗКИ. СДАЙ.", kind: "warn" },
-  { icon: "⚡", text: "КАМБЭК. ДЕНИС ВЕРНУЛСЯ.", kind: "win" },
-  { icon: "🏆", text: "ОБОГНАЛ ИЛЬЮ. РАНГ 4 → 3.", kind: "win" },
+  { icon: "🟢", text: "АРТЁМ СДАЛ. ВТОРОЙ ДЕНЬ ПОДРЯД.", kind: "win" },
+  { icon: "💬", text: "МАША МОЛЧИТ ВТОРОЙ ДЕНЬ. БАДДИ НАПИСАЛ.", kind: "warn" },
+  { icon: "⏱", text: "2 ЧАСА ДО ПОЛУНОЧИ. ОДНА СТРОЧКА.", kind: "warn" },
+  { icon: "⚡", text: "ДЕНИС НАПИСАЛ ПЕРВЫМ ЗА ДВЕ НЕДЕЛИ.", kind: "win" },
+  { icon: "📈", text: "У ИЛЬИ 14 ДНЕЙ ПОДРЯД.", kind: "win" },
 ];
 
 const GLOSSARY = [
@@ -306,7 +370,7 @@ const GLOSSARY = [
   },
   {
     word: "СЕРИЯ",
-    def: "Количество дней подряд без пропуска. Упал до нуля — начинаешь с нуля. Рекорд виден всему кругу.",
+    def: "Сколько дней подряд сдавал. Прервалась — окей, начинаешь снова. Прошлый максимум видно отдельно.",
   },
   {
     word: "РАНГ",
@@ -314,7 +378,7 @@ const GLOSSARY = [
   },
   {
     word: "ЗАМОРОЗКА",
-    def: "Публичный статус за пропущенный день. Виден всем в круге. Один одобренный пруф снимает.",
+    def: "Значит «сегодня без пруфа». Все в круге видят. Сдашь завтра — снимется. Это просто такая пометка.",
   },
   {
     word: "БАДДИ",
@@ -324,8 +388,8 @@ const GLOSSARY = [
 
 const FAQ = [
   {
-    q: "ЧТО ЕСЛИ Я ВЫПАЛ?",
-    a: "Заморозка видна всему кругу. Один одобренный пруф — и ты снят с заморозки. Это называется камбэк.",
+    q: "ЧТО ЕСЛИ Я ПРОПУСТИЛ ДЕНЬ?",
+    a: "Ничего. Будет пометка «вчера без пруфа» — её видит круг. Сдашь сегодня — снимется. Бадди обычно пишет первым: «заболел? занят? давай сегодня?».",
   },
   {
     q: "ЭТО БЕСПЛАТНО?",
@@ -338,5 +402,10 @@ const FAQ = [
   {
     q: "МОЙ КРУГ БУДЕТ ВИДЕН ВСЕМ?",
     a: "Только участникам твоего круга. Публичная лента — opt-in, можно не включать.",
+  },
+  {
+    q: "А ДЛЯ КОМАНДЫ ЭТО РАБОТАЕТ?",
+    a: "Да. Тимлид — это бадди, команда — это круг. Каждый ведёт свой ИПР, тимлид видит и реагирует. Когда подходит ревью — у вас уже есть вся история, не надо ничего вспоминать.",
+    anchorId: "team-faq",
   },
 ];

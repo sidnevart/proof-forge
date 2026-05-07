@@ -44,12 +44,23 @@ describe("LandingPage", () => {
   it("renders brutal landing with hero and CTA", () => {
     render(<LandingPage />);
 
-    expect(screen.getByText(/ТВОИ ДРУЗЬЯ/)).toBeInTheDocument();
+    // New supportive hero copy (replaces «ТВОИ ДРУЗЬЯ УЖЕ РАБОТАЮТ. ТЫ ЕЩЁ НЕТ.»)
+    expect(screen.getByText(/ТЫ ДЕЛАЕШЬ/)).toBeInTheDocument();
     expect(screen.getByText("КАК ЭТО РАБОТАЕТ")).toBeInTheDocument();
-    expect(screen.getByText("ДО ЗАМОРОЗКИ")).toBeInTheDocument();
+    // Countdown label changed: «ДО ЗАМОРОЗКИ» → «ДО КОНЦА ДНЯ»
+    expect(screen.getByText("ДО КОНЦА ДНЯ")).toBeInTheDocument();
+    // New "Ты не один" support section above "Как это работает"
+    expect(screen.getByText("ТЫ НЕ ОДИН.")).toBeInTheDocument();
+    // New "Для команд" dual-path section
+    expect(screen.getByText("НЕ ТОЛЬКО ДЛЯ ДРУЗЕЙ.")).toBeInTheDocument();
+    expect(
+      screen.getByRole("link", { name: /НАЧНИ С СЕБЯ/ })
+    ).toBeInTheDocument();
+    expect(
+      screen.getByRole("link", { name: /УЗНАТЬ ПРО КОМАНДЫ/ })
+    ).toBeInTheDocument();
     // Hero CTA "СОБРАТЬ КРУГ" + final CTA "СОЗДАТЬ КРУГ" are the two primary
-    // links to /dashboard. The old "ВОЙТИ В КРУГ" copy was confusing because
-    // an anonymous user has no circle to enter yet.
+    // links to /dashboard.
     expect(screen.getByRole("link", { name: "СОБРАТЬ КРУГ" })).toBeInTheDocument();
     expect(screen.getByRole("link", { name: /СОЗДАТЬ КРУГ/ })).toBeInTheDocument();
   });
@@ -133,11 +144,16 @@ describe("LandingPage", () => {
 
   it("renders FAQ accordion with first item expanded", () => {
     render(<LandingPage />);
-    const firstBtn = screen.getByRole("button", { name: /ЧТО ЕСЛИ Я ВЫПАЛ/ });
+    // First FAQ question reworded: «ЧТО ЕСЛИ Я ВЫПАЛ?» → «ЧТО ЕСЛИ Я ПРОПУСТИЛ ДЕНЬ?»
+    const firstBtn = screen.getByRole("button", { name: /ЧТО ЕСЛИ Я ПРОПУСТИЛ ДЕНЬ/ });
     expect(firstBtn).toHaveAttribute("aria-expanded", "true");
 
     // Other FAQ buttons are collapsed
     const secondBtn = screen.getByRole("button", { name: /ЭТО БЕСПЛАТНО/ });
     expect(secondBtn).toHaveAttribute("aria-expanded", "false");
+
+    // New question about teams is rendered (collapsed)
+    const teamBtn = screen.getByRole("button", { name: /ДЛЯ КОМАНДЫ/ });
+    expect(teamBtn).toHaveAttribute("aria-expanded", "false");
   });
 });

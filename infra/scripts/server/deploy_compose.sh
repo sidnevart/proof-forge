@@ -15,7 +15,16 @@ if [[ ! -f .env.prod ]]; then
 fi
 
 export IMAGE_TAG IMAGE_NAMESPACE
-COMPOSE_ARGS=(--env-file .env.prod -f compose.prod.yml)
+# Pick up local-only deployment overrides if the operator has dropped a
+# compose.override.yml next to compose.prod.yml. We use this on the
+# proof-forge.ru host to publish api/web on 127.0.0.1 so the system nginx
+# (which terminates TLS for the domain) can reverse-proxy them. The override
+# stays out of git because it's host-specific.
+if [[ -f compose.override.yml ]]; then
+  COMPOSE_ARGS=(--env-file .env.prod -f compose.prod.yml -f compose.override.yml)
+else
+  COMPOSE_ARGS=(--env-file .env.prod -f compose.prod.yml)
+fi
 
 printf '%s' "$GHCR_TOKEN" | docker login ghcr.io -u "$GHCR_USERNAME" --password-stdin
 trap 'docker logout ghcr.io >/dev/null 2>&1 || true' EXIT

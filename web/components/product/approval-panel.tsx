@@ -129,7 +129,7 @@ export function ApprovalPanel({ checkInID }: { checkInID: number }) {
         <StatePanel
           tone="empty"
           title="Подтверждение ещё не отправлено"
-          description="Владелец цели ещё не отправил материалы на проверку. Как только они появятся, вы сможете вынести решение."
+          description="Автор круга ещё не отправил материалы на проверку. Как только они появятся, вы сможете вынести решение."
         />
       </main>
     );
@@ -142,9 +142,9 @@ export function ApprovalPanel({ checkInID }: { checkInID: number }) {
       changes_requested: "Запрошена доработка",
     };
     const descs: Record<typeof state.decision, string> = {
-      approved: "Владелец цели получит подтверждение, что результат принят.",
-      rejected: "Владелец цели получит отклонение и сможет начать новый цикл позже.",
-      changes_requested: "Владелец цели получит запрос на уточнение материалов.",
+      approved: "Автор круга получит подтверждение, что результат принят.",
+      rejected: "Автор круга получит отклонение и сможет начать новый цикл позже.",
+      changes_requested: "Автор круга получит запрос на уточнение материалов.",
     };
     const tones: Record<typeof state.decision, "success" | "error" | "pending"> = {
       approved: "success",
@@ -168,7 +168,7 @@ export function ApprovalPanel({ checkInID }: { checkInID: number }) {
       <div className={styles.grid}>
         <SectionShell eyebrow="Подтверждение" title={`Артефакты (${evidence.length})`}>
           {evidence.length === 0 ? (
-            <StatePanel tone="empty" title="Нет материалов" description="Владелец цели пока не добавил подтверждения." />
+            <StatePanel tone="empty" title="Нет материалов" description="Автор круга пока не добавил подтверждения." />
           ) : (
             <ol className={styles.evidenceList}>
               {evidence.map((item) => (
@@ -182,7 +182,7 @@ export function ApprovalPanel({ checkInID }: { checkInID: number }) {
           <div className={styles.actions}>
             <p>
               Проверьте материалы и вынесите решение. Подтверждение фиксирует движение
-              по цели, возврат на доработку просит уточнить материалы, отклонение
+              в круге, возврат на доработку просит уточнить материалы, отклонение
               завершает этот цикл без подтверждения результата.
             </p>
             {state.kind === "reviewing" && state.proofExamples && (
@@ -238,7 +238,7 @@ function ApprovalHeader() {
     <header className={styles.header}>
       <div>
         <span className="eyebrow">Проверка партнёром</span>
-        <h1>Проверьте подтверждение по цели</h1>
+        <h1>Проверьте подтверждение в круге</h1>
       </div>
       <StatusPill status="pending" label="Ожидает решения" />
     </header>

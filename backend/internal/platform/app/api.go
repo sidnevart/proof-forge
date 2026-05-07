@@ -91,13 +91,19 @@ func RunAPI(ctx context.Context, cfg platformconfig.Config) error {
 
 func registerAPIRoutes(router *chi.Mux, log *slog.Logger, pool *pgxpool.Pool, cfg platformconfig.Config) {
 	usersRepo := users.NewPostgresRepository(pool)
-	usersSvc := users.NewService(usersRepo, usersRepo, cfg.Session.TTL)
-	usersHandler := users.NewHandler(
-		platformlogger.WithComponent(log, "users"),
-		usersSvc,
-		cfg.Session.CookieName,
-		cfg.App.Env == "production",
+	usersSvc := users.NewService(
+		usersRepo, usersRepo, cfg.Session.TTL,
+		users.WithRefreshRepo(usersRepo),
+		users.WithRefreshTTL(cfg.Session.RefreshTTL),
 	)
+	usersHandler := users.NewHandlerWithConfig(users.HandlerConfig{
+		Log:               platformlogger.WithComponent(log, "users"),
+		Service:           usersSvc,
+		CookieName:        cfg.Session.CookieName,
+		RefreshCookieName: cfg.Session.RefreshCookieName,
+		CookieDomain:      cfg.Session.CookieDomain,
+		SecureCookie:      cfg.App.Env == "production",
+	})
 
 	var emailSender email.Sender
 	if cfg.SMTP.Enabled {

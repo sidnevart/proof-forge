@@ -48,7 +48,7 @@ export default function FeedPage() {
           className={`${styles.tab} ${activeTab === "similar" ? styles.tabActive : ""}`}
           onClick={() => setTab("similar")}
         >
-          ПОХОЖИЕ ЦЕЛИ
+          ПОХОЖИЕ КРУГИ
         </button>
       </div>
 
@@ -158,10 +158,10 @@ function CircleFeed() {
         <p className={styles.emptyHeading}>ПОКА ТИХО.</p>
         <p className={styles.emptySub}>
           Ты ещё не в круге или участники кругов не сдавали пруфы.
-          Создай цель и пригласи людей — лента оживёт.
+          Создай круг и пригласи людей — лента оживёт.
         </p>
         <Link href="/onboard/goal" className={styles.ctaSolid}>
-          СОЗДАТЬ ЦЕЛЬ →
+          СОЗДАТЬ КРУГ →
         </Link>
       </div>
     );
@@ -274,7 +274,7 @@ function CircleProofCard({ item, onApprove, onReject }: CircleProofCardProps) {
 }
 
 // ─────────────────────────────────────────
-// SimilarFeed — ПОХОЖИЕ ЦЕЛИ tab (migrated from /inspiration)
+// SimilarFeed — ПОХОЖИЕ КРУГИ tab (migrated from /inspiration)
 // ─────────────────────────────────────────
 
 const CATEGORIES = [

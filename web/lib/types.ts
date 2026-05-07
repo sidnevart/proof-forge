@@ -19,6 +19,11 @@ export type SeasonEndResult = {
   redirect_to_goals?: boolean;
 };
 
+// ViewerRole tells the UI whether the requesting user is the goal's owner
+// (creator) or the invited buddy (partner). Computed in the list query, not
+// stored. Powers the «вы — автор» / «вы — партнёр» card label.
+export type ViewerRole = "owner" | "buddy";
+
 export type GoalView = {
   goal: {
     id: number;
@@ -49,6 +54,7 @@ export type GoalView = {
     expires_at: string;
     acceptance_token?: string;
   };
+  viewer_role: ViewerRole;
 };
 
 export type CheckInStatus =
@@ -278,4 +284,53 @@ export type CircleFeedItem = {
   status: "submitted" | "approved" | "rejected";
   can_approve: boolean;
   streak: number;
+};
+
+// GoalRole identifies whether the requesting user is the goal's owner (creator)
+// or its buddy (invited reviewer). Equivalent to ViewerRole on GoalView, kept
+// as a separate alias because the stake/milestone panels accept it as an
+// explicit prop.
+export type GoalRole = "owner" | "buddy";
+
+export type MilestoneStatus = "pending" | "completed";
+
+export type Milestone = {
+  id: number;
+  goal_id: number;
+  title: string;
+  description: string;
+  status: MilestoneStatus;
+  sort_order: number;
+  completed_at?: string | null;
+  completed_by_user_id?: number | null;
+  created_at: string;
+  updated_at: string;
+};
+
+export type StakeStatus = "active" | "forfeited" | "completed" | "cancelled";
+
+export type Stake = {
+  id: number;
+  goal_id: number;
+  owner_user_id: number;
+  description: string;
+  status: StakeStatus;
+  forfeited_at?: string | null;
+  completed_at?: string | null;
+  cancelled_at?: string | null;
+  created_at: string;
+  updated_at: string;
+};
+
+export type StakeForfeiture = {
+  id: number;
+  stake_id: number;
+  declared_by_user_id: number;
+  reason: string;
+  created_at: string;
+};
+
+export type StakeView = {
+  stake: Stake;
+  forfeiture?: StakeForfeiture | null;
 };

@@ -27,7 +27,7 @@ export default function InviteBuddyPage() {
       <article className={styles.card}>
         <p className={styles.eyebrow}>ШАГ 2 ИЗ 2 · ПРИГЛАСИ ПАРТНЁРА</p>
         <h1 className={styles.heading}>
-          {title ? `«${title}» СОЗДАНА!` : "ЦЕЛЬ СОЗДАНА!"} ТЕПЕРЬ ПРИГЛАСИ ПАРТНЁРА
+          {title ? `«${title}» СОЗДАН!` : "КРУГ СОЗДАН!"} ТЕПЕРЬ ПРИГЛАСИ ПАРТНЁРА
         </h1>
 
         <div className={styles.urlBox}>
@@ -43,7 +43,7 @@ export default function InviteBuddyPage() {
         </div>
 
         <p className={styles.subtext}>
-          Отправь эту ссылку своему партнёру — он должен принять приглашение, чтобы цель стала активной.
+          Отправь эту ссылку своему партнёру — он должен принять приглашение, чтобы круг стал активным.
         </p>
 
         <Link href="/dashboard" className={styles.ctaSolid}>

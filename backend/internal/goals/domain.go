@@ -29,6 +29,7 @@ const (
 
 var (
 	ErrInvalidGoalInput        = errors.New("invalid goal input")
+	ErrGoalNotFound            = errors.New("goal not found")
 	ErrInviteNotFound          = errors.New("invite not found")
 	ErrInviteExpired           = errors.New("invite expired")
 	ErrInviteAlreadyAccepted   = errors.New("invite already accepted")
@@ -115,11 +116,23 @@ type Invite struct {
 	AcceptanceToken string       `json:"acceptance_token,omitempty"`
 }
 
+// ViewerRole captures the relationship between the requesting user and the
+// goal returned in a list view. The dashboard uses it to label «вы — автор» vs
+// «вы — партнёр» on each card without a second roundtrip. It is computed in the
+// list query (CASE on owner_user_id), not stored.
+type ViewerRole string
+
+const (
+	ViewerRoleOwner ViewerRole = "owner"
+	ViewerRoleBuddy ViewerRole = "buddy"
+)
+
 type GoalView struct {
-	Goal   Goal   `json:"goal"`
-	Buddy  Buddy  `json:"buddy"`
-	Pact   Pact   `json:"pact"`
-	Invite Invite `json:"invite"`
+	Goal       Goal       `json:"goal"`
+	Buddy      Buddy      `json:"buddy"`
+	Pact       Pact       `json:"pact"`
+	Invite     Invite     `json:"invite"`
+	ViewerRole ViewerRole `json:"viewer_role"`
 }
 
 type DashboardSummary struct {

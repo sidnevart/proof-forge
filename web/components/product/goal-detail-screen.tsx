@@ -40,12 +40,12 @@ export function GoalDetailScreen({ goalID }: { goalID: number }) {
         return;
       }
       if (err instanceof ApiError && err.status === 404) {
-        setState({ kind: "error", message: "Цель не найдена или у вас нет к ней доступа." });
+        setState({ kind: "error", message: "Круг не найден или у вас нет к ней доступа." });
         return;
       }
       setState({
         kind: "error",
-        message: err instanceof Error ? err.message : "Не удалось загрузить цель.",
+        message: err instanceof Error ? err.message : "Не удалось загрузить круг.",
       });
     }
   }, [goalID]);
@@ -57,7 +57,7 @@ export function GoalDetailScreen({ goalID }: { goalID: number }) {
   if (state.kind === "loading") {
     return (
       <main className={styles.page}>
-        <StatePanel tone="loading" title="Загружаем цель" description="Собираем все данные." />
+        <StatePanel tone="loading" title="Загружаем круг" description="Собираем все данные." />
       </main>
     );
   }
@@ -68,7 +68,7 @@ export function GoalDetailScreen({ goalID }: { goalID: number }) {
         <StatePanel
           tone="error"
           title="Нужна сессия"
-          description="Войдите, чтобы открыть страницу цели."
+          description="Войдите, чтобы открыть страницу круга."
         />
       </main>
     );
@@ -83,7 +83,7 @@ export function GoalDetailScreen({ goalID }: { goalID: number }) {
   }
 
   const { view, checkIns } = state;
-  const counterpart = view.role === "owner" ? view.buddy : view.owner;
+  const counterpart = view.viewer_role === "owner" ? view.buddy : view.buddy;
   const goalActive = view.goal.status === "active";
 
   const submittedCount = checkIns.filter((ci) => ci.status === "submitted").length;
@@ -97,7 +97,7 @@ export function GoalDetailScreen({ goalID }: { goalID: number }) {
 
       <header className={styles.header}>
         <div className={styles.eyebrow}>
-          <span>{view.role === "owner" ? "Ваша цель" : "Вы — партнёр"}</span>
+          <span>{view.viewer_role === "owner" ? "Ваш круг" : "Вы — партнёр"}</span>
           <StatusPill
             status={goalActive ? "active" : "pending"}
             label={goalActive ? "В работе" : "Ждёт принятия"}
@@ -111,7 +111,7 @@ export function GoalDetailScreen({ goalID }: { goalID: number }) {
         <div className={styles.metaRow}>
           <div className={styles.metaItem}>
             <span className={styles.metaLabel}>
-              {view.role === "owner" ? "Партнёр" : "Владелец"}
+              {view.viewer_role === "owner" ? "Партнёр" : "Владелец"}
             </span>
             <span className={styles.metaValue}>{counterpart.display_name}</span>
           </div>
@@ -127,12 +127,12 @@ export function GoalDetailScreen({ goalID }: { goalID: number }) {
 
         {goalActive ? (
           <div className={styles.actionsRow}>
-            {view.role === "owner" ? (
+            {view.viewer_role === "owner" ? (
               <Link className={styles.primaryLink} href={`/goals/${goalID}/check-in`}>
                 Создать чекин
               </Link>
             ) : null}
-            {view.role === "buddy" && submittedCount > 0 ? (
+            {view.viewer_role === "buddy" && submittedCount > 0 ? (
               <span className={styles.secondaryLink}>
                 {submittedCount} {submittedCount === 1 ? "чекин на ревью" : "чекинов на ревью"}
               </span>
@@ -143,17 +143,17 @@ export function GoalDetailScreen({ goalID }: { goalID: number }) {
 
       {goalActive ? (
         <>
-          <MilestonePanel goalID={goalID} role={view.role} />
-          <StakePanel goalID={goalID} role={view.role} />
+          <MilestonePanel goalID={goalID} role={view.viewer_role} />
+          <StakePanel goalID={goalID} role={view.viewer_role} />
         </>
       ) : (
         <StatePanel
           tone="pending"
-          title="Цель ещё не активна"
+          title="Круг ещё не активен"
           description={
-            view.role === "owner"
+            view.viewer_role === "owner"
               ? "Партнёр пока не принял приглашение. Контрольные точки и ставки появятся после активации."
-              : "Примите приглашение чтобы цель стала активной."
+              : "Примите приглашение чтобы круг стал активным."
           }
         />
       )}
@@ -162,7 +162,7 @@ export function GoalDetailScreen({ goalID }: { goalID: number }) {
         <SectionShell eyebrow="История" title={`Чекины (${checkIns.length})`}>
           <ol className={styles.checkInList}>
             {recentCheckIns.map((ci) => (
-              <CheckInRow key={ci.id} checkIn={ci} role={view.role} />
+              <CheckInRow key={ci.id} checkIn={ci} role={view.viewer_role} />
             ))}
           </ol>
         </SectionShell>

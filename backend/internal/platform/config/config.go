@@ -63,8 +63,23 @@ type InviteConfig struct {
 }
 
 type SessionConfig struct {
-	CookieName string
-	TTL        time.Duration
+	CookieName        string
+	RefreshCookieName string
+	// TTL is the lifetime of the access cookie. Kept short (~15m) so a stolen
+	// access cookie has a small blast radius. The frontend silently calls
+	// /v1/auth/refresh when it gets a 401, swapping access cookie for a fresh
+	// one. Legacy long-lived sessions still validate against the same
+	// user_sessions table — they were issued with TTL=30d and continue to
+	// authenticate until they expire.
+	TTL time.Duration
+	// RefreshTTL is the lifetime of the refresh cookie (rotation horizon).
+	// Refresh tokens live in the refresh_tokens table and rotate on every
+	// /v1/auth/refresh call.
+	RefreshTTL time.Duration
+	// CookieDomain pins the cookie's Domain attribute in production so the
+	// browser scopes the cookie to the apex domain instead of the response
+	// host (which can drift between Next.js and the API). Empty in dev.
+	CookieDomain string
 }
 
 type WorkerConfig struct {
@@ -138,8 +153,16 @@ func Load() (Config, error) {
 			TTL: mustDuration("INVITE_TTL", 7*24*time.Hour),
 		},
 		Session: SessionConfig{
-			CookieName: getEnv("SESSION_COOKIE_NAME", "pf_session"),
-			TTL:        mustDuration("SESSION_TTL", 30*24*time.Hour),
+			CookieName:        getEnv("SESSION_COOKIE_NAME", "pf_session"),
+			RefreshCookieName: getEnv("REFRESH_COOKIE_NAME", "pf_refresh"),
+			// Default access TTL: 15 minutes. The frontend refreshes
+			// transparently on 401, so the user never sees this expire unless
+			// the refresh token is also gone or revoked.
+			TTL: mustDuration("SESSION_TTL", 15*time.Minute),
+			// Default refresh TTL: 30 days. After this the user is genuinely
+			// asked to log in again.
+			RefreshTTL:   mustDuration("REFRESH_TTL", 30*24*time.Hour),
+			CookieDomain: getEnv("COOKIE_DOMAIN", ""),
 		},
 		Worker: WorkerConfig{
 			RecapSweepInterval: mustDuration("WORKER_RECAP_SWEEP_INTERVAL", time.Minute),
@@ -212,6 +235,18 @@ func (c Config) Validate() error {
 	}
 	if c.Session.TTL <= 0 {
 		errs = append(errs, errors.New("SESSION_TTL must be positive"))
+	}
+	if c.Session.RefreshTTL <= 0 {
+		errs = append(errs, errors.New("REFRESH_TTL must be positive"))
+	}
+	if c.Session.RefreshTTL <= c.Session.TTL {
+		// A refresh token shorter than the access token defeats the whole point
+		// of the rotation flow: the frontend would refresh and immediately get
+		// rejected on the next request.
+		errs = append(errs, errors.New("REFRESH_TTL must be greater than SESSION_TTL"))
+	}
+	if c.Session.RefreshCookieName == "" {
+		errs = append(errs, errors.New("REFRESH_COOKIE_NAME is required"))
 	}
 
 	if len(errs) == 0 {

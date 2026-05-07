@@ -276,9 +276,11 @@ func randomCircleInviteCode() (string, error) {
 }
 
 func (s *Service) Dashboard(ctx context.Context, owner users.User) (Dashboard, error) {
-	goalViews, err := s.repo.ListGoalsByOwner(ctx, owner.ID)
+	// ListGoalsForUser returns goals where the caller is the owner OR the
+	// invited buddy, so a user who accepted an invite sees that goal too.
+	goalViews, err := s.repo.ListGoalsForUser(ctx, owner.ID)
 	if err != nil {
-		return Dashboard{}, fmt.Errorf("list goals by owner: %w", err)
+		return Dashboard{}, fmt.Errorf("list goals for user: %w", err)
 	}
 
 	summary := DashboardSummary{
@@ -318,6 +320,24 @@ func (s *Service) Dashboard(ctx context.Context, owner users.User) (Dashboard, e
 		Goals:   goalViews,
 		Circles: circleSummaries,
 	}, nil
+}
+
+// GetGoal returns a single goal view scoped to the actor. The check «is the
+// actor allowed to see this goal?» reuses ListGoalsForUser semantics (owner
+// OR buddy), so a buddy who accepted an invite can read the goal page just
+// like the owner. Anything else returns ErrGoalNotFound — we don't leak the
+// existence of goals the user has no relationship to.
+func (s *Service) GetGoal(ctx context.Context, actor users.User, goalID int64) (GoalView, error) {
+	views, err := s.repo.ListGoalsForUser(ctx, actor.ID)
+	if err != nil {
+		return GoalView{}, fmt.Errorf("list goals for user: %w", err)
+	}
+	for _, v := range views {
+		if v.Goal.ID == goalID {
+			return v, nil
+		}
+	}
+	return GoalView{}, ErrGoalNotFound
 }
 
 // GetInvitePreview looks up an invite by its raw token and returns the preview

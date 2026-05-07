@@ -76,7 +76,7 @@ export default function LibraryPage() {
     <main className={styles.page}>
       <header className={styles.header}>
         <div>
-          <span className="eyebrow">Шаблоны целей</span>
+          <span className="eyebrow">Шаблоны кругов</span>
           <h1 className={styles.heading}>БИБЛИОТЕКА. ГОТОВЫЕ ПОДХОДЫ.</h1>
         </div>
         <a href="/inspiration" className={styles.feedLink}>ЛЕНТА ПРУФОВ →</a>
@@ -85,7 +85,7 @@ export default function LibraryPage() {
       <div className={styles.filters}>
         <input
           className={styles.search}
-          placeholder="Найти цель..."
+          placeholder="Найти круг..."
           value={q}
           onChange={(e) => setQ(e.target.value)}
         />

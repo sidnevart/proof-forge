@@ -67,10 +67,18 @@ export function GoalSetupScreen() {
         setAuthState({ kind: "authenticated" });
       })
       .catch((err) => {
+        // Only a real 401 means the visitor isn't logged in. Any other failure
+        // (network, 5xx, timeout) is a transient issue — show it as an error
+        // instead of falsely flipping into «authenticated», which used to let
+        // users submit a goal that the backend would later reject.
         if (err instanceof ApiError && err.status === 401) {
           setAuthState({ kind: "unauthenticated" });
         } else {
-          setAuthState({ kind: "authenticated" });
+          setError(
+            err instanceof Error
+              ? err.message
+              : "Не удалось проверить авторизацию. Обновите страницу.",
+          );
         }
       });
   }, []);
@@ -143,7 +151,7 @@ export function GoalSetupScreen() {
           800,
         );
       } catch (cause) {
-        setError(cause instanceof Error ? cause.message : "Не удалось создать цель.");
+        setError(cause instanceof Error ? cause.message : "Не удалось создать круг.");
       }
     });
   }
@@ -155,7 +163,7 @@ export function GoalSetupScreen() {
     return (
       <main className={styles.page}>
         <header className={styles.header}>
-          <h1 className={styles.headerTitle}>СОЗДАНИЕ ЦЕЛИ</h1>
+          <h1 className={styles.headerTitle}>СОЗДАНИЕ КРУГА</h1>
           <StatusPill status="pending" label="Проверяем сессию" />
         </header>
         <StatePanel tone="loading" title="Секунду" description="Проверяем авторизацию." />
@@ -167,7 +175,7 @@ export function GoalSetupScreen() {
     return (
       <main className={styles.page}>
         <header className={styles.header}>
-          <h1 className={styles.headerTitle}>ВОЙДИТЕ, ЧТОБЫ СОЗДАТЬ ЦЕЛЬ</h1>
+          <h1 className={styles.headerTitle}>ВОЙДИТЕ, ЧТОБЫ СОЗДАТЬ КРУГ</h1>
           <StatusPill status="pending" label="Нужна сессия" />
         </header>
 
@@ -218,22 +226,22 @@ export function GoalSetupScreen() {
     <main className={styles.page}>
       <header className={styles.headerCompact}>
         <p className={styles.eyebrow}>ОНБОРДИНГ · ШАГ 1 ИЗ 2</p>
-        <h1>ОПИШИ ЦЕЛЬ. ПРИГЛАСИ ПАРТНЁРА.</h1>
+        <h1>ОПИШИ КРУГ. ПРИГЛАСИ ПАРТНЁРА.</h1>
       </header>
 
       {createdTitle ? (
         <StatePanel
           tone="success"
-          title={`Цель «${createdTitle}» создана`}
+          title={`Круг «${createdTitle}» создан`}
           description="Переходим к приглашению партнёра..."
         />
       ) : null}
 
       <section className={styles.grid}>
-        <SectionShell eyebrow="Шаг 1" title="Опишите цель">
+        <SectionShell eyebrow="Шаг 1" title="Опишите круг">
           <form className={styles.form} onSubmit={handleSubmit}>
             <label className={styles.field}>
-              <span>Название цели</span>
+              <span>Название круга</span>
               <input
                 ref={titleRef}
                 name="title"
@@ -253,7 +261,7 @@ export function GoalSetupScreen() {
                 }
               }}
             >
-              ⚡ УТОЧНИТЬ ЦЕЛЬ
+              ⚡ УТОЧНИТЬ КРУГ
             </button>
             {acceptedVariant && (
               <div className={styles.proofExamplesHint}>
@@ -295,7 +303,7 @@ export function GoalSetupScreen() {
             ) : null}
             <div className={styles.actions}>
               <Button type="submit" disabled={isPending}>
-                {isPending ? "СОЗДАЁМ ЦЕЛЬ..." : "СОЗДАТЬ ЦЕЛЬ"}
+                {isPending ? "СОЗДАЁМ КРУГ..." : "СОЗДАТЬ КРУГ"}
               </Button>
               <Link className={styles.backLink} href="/dashboard">
                 НА ГЛАВНУЮ
@@ -311,10 +319,10 @@ export function GoalSetupScreen() {
             and the steps map 1:1 to the user's actual next actions.
           */}
           <ol className={styles.timeline}>
-            <li>Создаёшь цель — она сразу появляется в твоём дашборде.</li>
+            <li>Создаёшь круг — он сразу появляется в твоём дашборде.</li>
             <li>Копируешь ссылку и отправляешь партнёру.</li>
             <li>Партнёр переходит по ссылке и принимает приглашение.</li>
-            <li>Цель становится активной — и ты сдаёшь пруфы каждый день.</li>
+            <li>Круг становится активным — и ты сдаёшь пруфы каждый день.</li>
           </ol>
         </SectionShell>
       </section>

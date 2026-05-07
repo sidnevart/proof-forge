@@ -72,7 +72,7 @@ export function StakePanel({ goalID, role }: Props) {
       <StatePanel
         tone="loading"
         title="Загружаем ставки"
-        description="Получаем данные по ставкам цели."
+        description="Получаем данные по ставкам круга."
       />
     );
   }
@@ -98,7 +98,7 @@ export function StakePanel({ goalID, role }: Props) {
       ) : (
         <p style={{ margin: 0, fontSize: 14, color: "var(--text-dim)" }}>
           {isOwner
-            ? "Пока ставок нет. Добавьте ставку, чтобы повысить серьёзность цели."
+            ? "Пока ставок нет. Добавьте ставку, чтобы повысить серьёзность круга."
             : "Владелец пока не добавил ставок."}
         </p>
       )}

@@ -77,7 +77,12 @@ func (r *PostgresRepository) CreateGoalWithInvite(ctx context.Context, params Cr
 	}, nil
 }
 
-func (r *PostgresRepository) ListGoalsByOwner(ctx context.Context, ownerID int64) ([]GoalView, error) {
+// ListGoalsForUser returns goals where the caller is either the owner OR the
+// invited buddy. The previous implementation only matched owner_user_id, which
+// hid every goal that the user had been invited to and accepted. Each row
+// carries a viewer_role computed from owner_user_id vs the caller so the UI can
+// label cards without an extra lookup.
+func (r *PostgresRepository) ListGoalsForUser(ctx context.Context, userID int64) ([]GoalView, error) {
 	const query = `
 		SELECT
 			g.id,
@@ -99,18 +104,19 @@ func (r *PostgresRepository) ListGoalsByOwner(ctx context.Context, ownerID int64
 			p.accepted_at,
 			i.id,
 			i.status,
-			i.expires_at
+			i.expires_at,
+			CASE WHEN g.owner_user_id = $1 THEN 'owner' ELSE 'buddy' END AS viewer_role
 		FROM goals g
 		JOIN users b ON b.id = g.buddy_user_id
 		JOIN pacts p ON p.goal_id = g.id
 		JOIN invites i ON i.goal_id = g.id
-		WHERE g.owner_user_id = $1
+		WHERE g.owner_user_id = $1 OR g.buddy_user_id = $1
 		ORDER BY g.created_at DESC
 	`
 
-	rows, err := r.pool.Query(ctx, query, ownerID)
+	rows, err := r.pool.Query(ctx, query, userID)
 	if err != nil {
-		return nil, fmt.Errorf("query owner goals: %w", err)
+		return nil, fmt.Errorf("query user goals: %w", err)
 	}
 	defer rows.Close()
 
@@ -119,6 +125,7 @@ func (r *PostgresRepository) ListGoalsByOwner(ctx context.Context, ownerID int64
 		var item GoalView
 		var acceptedAt sql.NullTime
 		var proofExamples, category sql.NullString
+		var viewerRole string
 		if err := rows.Scan(
 			&item.Goal.ID,
 			&item.Goal.CircleID,
@@ -140,8 +147,9 @@ func (r *PostgresRepository) ListGoalsByOwner(ctx context.Context, ownerID int64
 			&item.Invite.ID,
 			&item.Invite.Status,
 			&item.Invite.ExpiresAt,
+			&viewerRole,
 		); err != nil {
-			return nil, fmt.Errorf("scan owner goal: %w", err)
+			return nil, fmt.Errorf("scan user goal: %w", err)
 		}
 		item.Goal.ProofExamples = proofExamples.String
 		item.Goal.Category = category.String
@@ -149,11 +157,12 @@ func (r *PostgresRepository) ListGoalsByOwner(ctx context.Context, ownerID int64
 			value := acceptedAt.Time
 			item.Pact.AcceptedAt = &value
 		}
+		item.ViewerRole = ViewerRole(viewerRole)
 		goals = append(goals, item)
 	}
 
 	if err := rows.Err(); err != nil {
-		return nil, fmt.Errorf("iterate owner goals: %w", err)
+		return nil, fmt.Errorf("iterate user goals: %w", err)
 	}
 
 	return goals, nil

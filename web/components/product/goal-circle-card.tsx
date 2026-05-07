@@ -19,6 +19,9 @@ export interface GoalCircleCardProps {
   // Season end panel props
   seasonId?: number;
   onSeasonEnd?: (action: "extend" | "start_new") => void;
+  // viewerRole drives the «вы — автор» / «вы — партнёр» eyebrow so a user who
+  // joined a buddy's круг can immediately tell it isn't their own.
+  viewerRole?: "owner" | "buddy";
 }
 
 export function GoalCircleCard({
@@ -33,6 +36,7 @@ export function GoalCircleCard({
   onCheckIn,
   seasonId,
   onSeasonEnd,
+  viewerRole,
 }: GoalCircleCardProps) {
   const canCheckIn = seasonStatus === "active" && goalStatus === "active";
   const showSeasonEndPanel =
@@ -47,7 +51,14 @@ export function GoalCircleCard({
           daysLeft={seasonDaysLeft}
           status={seasonStatus}
         />
-        <h2 className={styles.goalTitle}>{goalTitle}</h2>
+        <div className={styles.titleColumn}>
+          {viewerRole ? (
+            <span className={styles.viewerRole} data-role={viewerRole}>
+              {viewerRole === "owner" ? "ВЫ — АВТОР" : "ВЫ — ПАРТНЁР"}
+            </span>
+          ) : null}
+          <h2 className={styles.goalTitle}>{goalTitle}</h2>
+        </div>
       </div>
 
       {/* Season meta */}

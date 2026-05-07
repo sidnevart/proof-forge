@@ -35,7 +35,7 @@ describe("DashboardScreen", () => {
     render(<DashboardScreen />);
 
     expect(await screen.findByRole("button", { name: "СОЗДАТЬ АККАУНТ" })).toBeInTheDocument();
-    expect(screen.getByText("ВОЙДИТЕ, ЧТОБЫ ДЕРЖАТЬ ЦЕЛЬ ПОД КОНТРОЛЕМ")).toBeInTheDocument();
+    expect(screen.getByText("ВОЙДИТЕ, ЧТОБЫ ДЕРЖАТЬ КРУГ ПОД КОНТРОЛЕМ")).toBeInTheDocument();
   });
 
   it("renders empty-state card with circle context when authenticated and goals are empty", async () => {
@@ -65,9 +65,9 @@ describe("DashboardScreen", () => {
     ).toBeInTheDocument();
     // Headline + sub.
     expect(screen.getByRole("heading", { name: "ЧТО БУДЕШЬ ДОКАЗЫВАТЬ?" })).toBeInTheDocument();
-    expect(screen.getByText(/Объяви цель/)).toBeInTheDocument();
+    expect(screen.getByText(/Создай круг/)).toBeInTheDocument();
     // Inline white CTA.
-    expect(screen.getByRole("link", { name: "ОБЪЯВИТЬ ЦЕЛЬ" })).toBeInTheDocument();
+    expect(screen.getByRole("link", { name: "СОЗДАТЬ КРУГ" })).toBeInTheDocument();
     // No identity header (display_name + email) anywhere.
     expect(screen.queryByText("АРТЁМ")).toBeNull();
     expect(screen.queryByText("owner@example.com")).toBeNull();
@@ -95,7 +95,7 @@ describe("DashboardScreen", () => {
     render(<DashboardScreen />);
 
     expect(await screen.findByText("НОВЫЙ КРУГ")).toBeInTheDocument();
-    expect(screen.getByRole("link", { name: "ОБЪЯВИТЬ ЦЕЛЬ" })).toBeInTheDocument();
+    expect(screen.getByRole("link", { name: "СОЗДАТЬ КРУГ" })).toBeInTheDocument();
   });
 
   it("registration completes and reveals empty-state card", async () => {
@@ -153,6 +153,6 @@ describe("DashboardScreen", () => {
     fireEvent.submit(screen.getByRole("button", { name: "СОЗДАТЬ АККАУНТ" }).closest("form")!);
 
     expect(await screen.findByRole("heading", { name: "ЧТО БУДЕШЬ ДОКАЗЫВАТЬ?" })).toBeInTheDocument();
-    expect(screen.getByRole("link", { name: "ОБЪЯВИТЬ ЦЕЛЬ" })).toBeInTheDocument();
+    expect(screen.getByRole("link", { name: "СОЗДАТЬ КРУГ" })).toBeInTheDocument();
   });
 });

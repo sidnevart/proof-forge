@@ -43,7 +43,7 @@ export function RecapPanel({ goalID }: { goalID: number }) {
       <StatePanel
         tone="loading"
         title="Загружаем недельные сводки"
-        description="Получаем последние итоги по цели."
+        description="Получаем последние итоги по кругу."
       />
     );
   }

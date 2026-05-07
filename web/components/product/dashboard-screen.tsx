@@ -118,7 +118,7 @@ export function DashboardScreen() {
     return (
       <main className={styles.page}>
         <header className={styles.authHeader}>
-          <h1 className={styles.authHeaderTitle}>ВОЙДИТЕ, ЧТОБЫ ДЕРЖАТЬ ЦЕЛЬ ПОД КОНТРОЛЕМ</h1>
+          <h1 className={styles.authHeaderTitle}>ВОЙДИТЕ, ЧТОБЫ ДЕРЖАТЬ КРУГ ПОД КОНТРОЛЕМ</h1>
         </header>
 
         <div className={styles.authGrid}>
@@ -180,7 +180,7 @@ export function DashboardScreen() {
           <div className={styles.authCard}>
             <div className={styles.cardLabel}>КАК ЭТО РАБОТАЕТ</div>
             <ul className={styles.ruleList}>
-              <li>Объяви цель — круг создаётся автоматически.</li>
+              <li>Создай круг — пригласи партнёра.</li>
               <li>Пригласи партнёра по ссылке. Он принимает приглашение.</li>
               <li>Каждый день сдаёшь пруф. Партнёр одобряет или нет.</li>
             </ul>
@@ -205,10 +205,10 @@ export function DashboardScreen() {
               ЧТО БУДЕШЬ ДОКАЗЫВАТЬ?
             </h1>
             <p className={styles.emptySub}>
-              Объяви цель — партнёр получит приглашение в круг.
+              Создай круг — партнёр получит приглашение.
             </p>
             <Link href="/onboard/goal" className={styles.ctaSolid}>
-              ОБЪЯВИТЬ ЦЕЛЬ
+              СОЗДАТЬ КРУГ
             </Link>
           </article>
         </div>
@@ -235,6 +235,7 @@ export function DashboardScreen() {
             seasonStatus={computeSeasonStatus(g.goal.created_at)}
             membersCount={1}
             lastCheckInAt={null}
+            viewerRole={g.viewer_role}
             onCheckIn={() => router.push(`/goals/${g.goal.id}/check-in`)}
           />
         ))}
@@ -242,7 +243,7 @@ export function DashboardScreen() {
 
       <div className={styles.addMoreWrap}>
         <Link href="/onboard/goal" className={styles.ctaGhost}>
-          + ОБЪЯВИТЬ ЕЩЁ ОДНУ ЦЕЛЬ
+          + СОЗДАТЬ ЕЩЁ ОДИН КРУГ
         </Link>
       </div>
     </main>

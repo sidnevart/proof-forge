@@ -47,11 +47,11 @@ describe("LandingPage", () => {
     expect(screen.getByText(/ТВОИ ДРУЗЬЯ/)).toBeInTheDocument();
     expect(screen.getByText("КАК ЭТО РАБОТАЕТ")).toBeInTheDocument();
     expect(screen.getByText("ДО ЗАМОРОЗКИ")).toBeInTheDocument();
-    // Hero CTA "СОБРАТЬ КРУГ" + final CTA "ОБЪЯВИТЬ ЦЕЛЬ" are the two primary
+    // Hero CTA "СОБРАТЬ КРУГ" + final CTA "СОЗДАТЬ КРУГ" are the two primary
     // links to /dashboard. The old "ВОЙТИ В КРУГ" copy was confusing because
     // an anonymous user has no circle to enter yet.
     expect(screen.getByRole("link", { name: "СОБРАТЬ КРУГ" })).toBeInTheDocument();
-    expect(screen.getByRole("link", { name: /ОБЪЯВИТЬ ЦЕЛЬ/ })).toBeInTheDocument();
+    expect(screen.getByRole("link", { name: /СОЗДАТЬ КРУГ/ })).toBeInTheDocument();
   });
 
   it("updates --cursor-x / --cursor-y on hero mousemove", () => {

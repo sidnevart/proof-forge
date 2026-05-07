@@ -42,7 +42,7 @@ func (s *SMTPSender) SendBuddyAccepted(_ context.Context, p BuddyAcceptedParams)
 }
 
 func (s *SMTPSender) buildBuddyAcceptedMessage(p BuddyAcceptedParams) []byte {
-	subject := fmt.Sprintf("Ваш партнёр принял приглашение — цель «%s» активна!", p.GoalTitle)
+	subject := fmt.Sprintf("Ваш партнёр принял приглашение — круг «%s» активен!", p.GoalTitle)
 	boundary := "proof-forge-accepted-boundary"
 	textBody := buildBuddyAcceptedText(p)
 	htmlBody := buildBuddyAcceptedHTML(p)
@@ -62,9 +62,9 @@ func (s *SMTPSender) buildBuddyAcceptedMessage(p BuddyAcceptedParams) []byte {
 
 func buildBuddyAcceptedText(p BuddyAcceptedParams) string {
 	return strings.Join([]string{
-		fmt.Sprintf("%s принял ваше приглашение по цели «%s».", p.BuddyName, p.GoalTitle),
+		fmt.Sprintf("%s принял ваше приглашение в круг «%s».", p.BuddyName, p.GoalTitle),
 		"",
-		"Цель теперь активна. Сдавайте пруф каждый день — партнёр будет проверять и одобрять.",
+		"Круг теперь активен. Сдавайте пруф каждый день — партнёр будет проверять и одобрять.",
 		"",
 		"Открыть дашборд:",
 		p.DashboardURL,
@@ -85,7 +85,7 @@ func buildBuddyAcceptedHTML(p BuddyAcceptedParams) string {
       </div>
       <h1 style="margin:20px 0 16px;font-size:34px;line-height:1.05;font-weight:800;">%s принял приглашение</h1>
       <p style="margin:0 0 24px;color:#99a7b7;font-size:16px;line-height:1.6;">
-        Цель <strong>«%s»</strong> теперь активна. Сдавайте пруф каждый день — партнёр будет проверять и одобрять.
+        Круг <strong>«%s»</strong> теперь активен. Сдавайте пруф каждый день — партнёр будет проверять и одобрять.
       </p>
       <a href="%s" style="display:inline-block;padding:14px 22px;border-radius:999px;background:linear-gradient(135deg,#4db2ff,#87d5ff);color:#081018;text-decoration:none;font-weight:800;">
         Открыть дашборд
@@ -96,7 +96,7 @@ func buildBuddyAcceptedHTML(p BuddyAcceptedParams) string {
 }
 
 func (s *SMTPSender) buildBuddyInviteMessage(p BuddyInviteParams) []byte {
-	subject := fmt.Sprintf("Вас пригласили присоединиться к цели — «%s»", p.GoalTitle)
+	subject := fmt.Sprintf("Вас пригласили в круг — «%s»", p.GoalTitle)
 	boundary := "proof-forge-invite-boundary"
 	textBody := buildBuddyInviteText(p)
 	htmlBody := buildBuddyInviteHTML(p)
@@ -117,11 +117,11 @@ func (s *SMTPSender) buildBuddyInviteMessage(p BuddyInviteParams) []byte {
 
 func buildBuddyInviteText(p BuddyInviteParams) string {
 	return strings.Join([]string{
-		fmt.Sprintf("%s приглашает вас присоединиться к цели «%s».", p.OwnerName, p.GoalTitle),
+		fmt.Sprintf("%s приглашает вас в круг «%s».", p.OwnerName, p.GoalTitle),
 		"",
 		"Что от вас ожидается:",
 		"- принять приглашение;",
-		"- смотреть подтверждения движения по цели;",
+		"- смотреть подтверждения движения в круге;",
 		"- подтверждать результат или возвращать материалы на доработку.",
 		"",
 		"Открыть приглашение:",
@@ -141,15 +141,15 @@ func buildBuddyInviteHTML(p BuddyInviteParams) string {
   <body style="margin:0;padding:24px;background:#0a1219;color:#edf2f8;font-family:Manrope,'IBM Plex Sans',sans-serif;">
     <div style="max-width:640px;margin:0 auto;border:1px solid rgba(186,202,221,0.18);border-radius:28px;background:#131a22;padding:32px;">
       <div style="display:inline-block;padding:8px 14px;border-radius:999px;border:1px solid rgba(186,202,221,0.18);color:#99a7b7;font-size:12px;font-weight:700;letter-spacing:0.08em;">
-        ПРИГЛАШЕНИЕ К ЦЕЛИ
+        ПРИГЛАШЕНИЕ В КРУГ
       </div>
-      <h1 style="margin:20px 0 16px;font-size:34px;line-height:1.05;font-weight:800;">%s приглашает вас присоединиться к цели «%s»</h1>
+      <h1 style="margin:20px 0 16px;font-size:34px;line-height:1.05;font-weight:800;">%s приглашает вас в круг «%s»</h1>
       <p style="margin:0 0 24px;color:#99a7b7;font-size:16px;line-height:1.6;">
-        Вы будете видеть подтверждения движения по цели и принимать решение: подтверждать результат, возвращать материалы на доработку или отклонять недостаточное подтверждение.
+        Вы будете видеть подтверждения движения в круге и принимать решение: подтверждать результат, возвращать материалы на доработку или отклонять недостаточное подтверждение.
       </p>
 
       <div style="padding:20px;border-radius:20px;border:1px solid rgba(77,178,255,0.22);background:linear-gradient(180deg, rgba(77,178,255,0.12), rgba(255,255,255,0.03));margin-bottom:24px;">
-        <div style="color:#708094;font-size:12px;font-weight:700;letter-spacing:0.08em;margin-bottom:10px;">ЦЕЛЬ</div>
+        <div style="color:#708094;font-size:12px;font-weight:700;letter-spacing:0.08em;margin-bottom:10px;">КРУГ</div>
         <div style="font-size:22px;font-weight:700;line-height:1.3;">%s</div>
       </div>
 
@@ -157,7 +157,7 @@ func buildBuddyInviteHTML(p BuddyInviteParams) string {
         <div style="color:#708094;font-size:12px;font-weight:700;letter-spacing:0.08em;margin-bottom:12px;">ЧТО НУЖНО СДЕЛАТЬ</div>
         <ul style="margin:0;padding-left:18px;color:#99a7b7;line-height:1.6;">
           <li>Принять приглашение.</li>
-          <li>Проверять подтверждения движения по цели.</li>
+          <li>Проверять подтверждения движения в круге.</li>
           <li>Выносить решение по результату.</li>
         </ul>
       </div>

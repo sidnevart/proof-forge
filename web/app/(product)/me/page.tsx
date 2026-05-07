@@ -136,17 +136,17 @@ export default function MePage() {
         </div>
       </section>
 
-      {/* Цели */}
+      {/* Круги */}
       <section className={styles.section}>
         <div className={styles.sectionHead}>
-          <span className={styles.sectionLabel}>МОИ ЦЕЛИ</span>
+          <span className={styles.sectionLabel}>МОИ КРУГИ</span>
           <Link href="/goals/new" className={styles.sectionCta}>+ ДОБАВИТЬ</Link>
         </div>
 
         {goals.length === 0 ? (
           <div className={styles.emptyBlock}>
-            <span className={styles.emptyText}>ЦЕЛЕЙ НЕТ.</span>
-            <Link href="/goals/new" className={styles.bigCta}>СОЗДАТЬ ПЕРВУЮ →</Link>
+            <span className={styles.emptyText}>КРУГОВ НЕТ.</span>
+            <Link href="/goals/new" className={styles.bigCta}>СОЗДАТЬ ПЕРВЫЙ →</Link>
           </div>
         ) : (
           <div className={styles.goalGrid}>
@@ -199,7 +199,7 @@ export default function MePage() {
         {circles.length === 0 ? (
           <div className={styles.emptyBlock}>
             <span className={styles.emptyText}>ТЫ ПОКА НЕ В КРУГЕ.</span>
-            <Link href="/goals/new" className={styles.bigCta}>СОЗДАТЬ ЦЕЛЬ →</Link>
+            <Link href="/goals/new" className={styles.bigCta}>СОЗДАТЬ КРУГ →</Link>
           </div>
         ) : assembly && me ? (
           <div className={styles.standingsList}>
@@ -228,8 +228,8 @@ export default function MePage() {
           </div>
         ) : assembly && !me ? (
           <div className={styles.emptyBlock}>
-            <span className={styles.emptyText}>У ТЕБЯ НЕТ АКТИВНЫХ ЦЕЛЕЙ В ЭТОМ КРУГЕ.</span>
-            <Link href="/goals/new" className={styles.bigCta}>ДОБАВИТЬ ЦЕЛЬ →</Link>
+            <span className={styles.emptyText}>В ЭТОМ КРУГЕ ПОКА ТИХО.</span>
+            <Link href="/goals/new" className={styles.bigCta}>ОТКРЫТЬ КРУГ →</Link>
           </div>
         ) : assemblyError ? (
           <div className={styles.emptyBlock}>
@@ -337,7 +337,7 @@ function getVerdict({
   return {
     tone: "neutral",
     icon: "🎯",
-    headline: "ПОСТАВЬ ЦЕЛЬ. НАЧНИ СЕГОДНЯ.",
-    sub: "Без цели нет давления. Без давления нет роста.",
+    headline: "СОБЕРИ КРУГ. НАЧНИ СЕГОДНЯ.",
+    sub: "Без круга нет давления. Без давления нет роста.",
   };
 }

@@ -7,7 +7,10 @@ import (
 
 type Repository interface {
 	CreateGoalWithInvite(context.Context, CreateGoalParams) (GoalView, error)
-	ListGoalsByOwner(context.Context, int64) ([]GoalView, error)
+	// ListGoalsForUser returns every goal where the user is either the owner
+	// or the invited buddy. Each row carries a ViewerRole computed against the
+	// caller's userID so the UI can label «вы — автор» / «вы — партнёр».
+	ListGoalsForUser(context.Context, int64) ([]GoalView, error)
 	FindGoalRefineCache(ctx context.Context, draftHash string, minCreatedAt time.Time) (GoalRefineResponse, bool, error)
 	SaveGoalRefineCache(ctx context.Context, draftHash string, response GoalRefineResponse) error
 	CountGoalRefineRequestsSince(ctx context.Context, userID int64, since time.Time) (int, error)

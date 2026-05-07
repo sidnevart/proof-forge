@@ -239,7 +239,7 @@ export function LandingPage() {
       <section className={styles.finalCta} data-animate>
         <h2 className={styles.finalTitle}>СОБЕРИ КРУГ.<br />НАЧНИ СЕГОДНЯ.</h2>
         <Link href="/dashboard" className={styles.finalCtaBtn}>
-          ОБЪЯВИТЬ ЦЕЛЬ →
+          СОЗДАТЬ КРУГ →
         </Link>
         <p className={styles.finalFine}>Бесплатно. Telegram-нотификации включены.</p>
       </section>
@@ -268,7 +268,7 @@ function ApprovalCard() {
         .filter(Boolean)
         .join(" ")}
     >
-      <div className={styles.approvalCardHeader}>АРТЁМ СДАЛ ПО ЦЕЛИ «БЕЖАТЬ 5КМ»</div>
+      <div className={styles.approvalCardHeader}>АРТЁМ СДАЛ В КРУГЕ «БЕЖАТЬ 5КМ»</div>
       <div className={styles.approvalCardBody}>Скриншот из Strava. 5.2 км. 28:14.</div>
       <div className={styles.approvalBtns}>
         <div
@@ -336,7 +336,7 @@ const FAQ = [
     a: "Нет. Всё через браузер + Telegram-бот для нотификаций и одобрений.",
   },
   {
-    q: "МОЯ ЦЕЛЬ БУДЕТ ВИДНА ВСЕМ?",
+    q: "МОЙ КРУГ БУДЕТ ВИДЕН ВСЕМ?",
     a: "Только участникам твоего круга. Публичная лента — opt-in, можно не включать.",
   },
 ];

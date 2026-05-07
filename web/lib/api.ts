@@ -9,10 +9,12 @@ import type {
   GoalRefineResponse,
   GoalView,
   InvitePreview,
+  Milestone,
   PublicGoal,
   PublicProof,
   ReviewRecord,
   SeasonEndResult,
+  StakeView,
   TelegramLinkToken,
   User,
   WeeklyAssembly,
@@ -61,7 +63,40 @@ export type CreateCircleInput = {
   name: string;
 };
 
-async function request<T>(path: string, init?: RequestInit): Promise<T> {
+// Auto-refresh dedup: while one /v1/auth/refresh call is in flight, every
+// other request that 401s waits on the same Promise instead of spawning its
+// own refresh. Once the refresh resolves, all queued requests retry against
+// the freshly minted access cookie.
+let inflightRefresh: Promise<boolean> | null = null;
+
+async function performRefresh(): Promise<boolean> {
+  try {
+    const response = await fetch(`${API_BASE_URL}/v1/auth/refresh`, {
+      method: "POST",
+      credentials: "include",
+    });
+    return response.ok;
+  } catch {
+    // Network error during refresh — treat as failed refresh, the caller
+    // will surface the original 401 to the UI.
+    return false;
+  }
+}
+
+function refreshAccessToken(): Promise<boolean> {
+  if (!inflightRefresh) {
+    inflightRefresh = performRefresh().finally(() => {
+      inflightRefresh = null;
+    });
+  }
+  return inflightRefresh;
+}
+
+// rawFetch is the underlying fetch+ApiError wrapper. The `request` function
+// wraps it with one auto-retry on 401 (after a refresh) so the UI never
+// observes the brief gap between an expiring access cookie and its
+// replacement.
+async function rawFetch<T>(path: string, init?: RequestInit): Promise<T> {
   const headers = new Headers(init?.headers);
   if (init?.body && !headers.has("Content-Type")) {
     headers.set("Content-Type", "application/json");
@@ -87,6 +122,46 @@ async function request<T>(path: string, init?: RequestInit): Promise<T> {
   }
 
   return (await response.json()) as T;
+}
+
+async function request<T>(path: string, init?: RequestInit): Promise<T> {
+  // Don't auto-refresh the auth endpoints themselves — their 401 IS the
+  // signal we'd otherwise try to recover from, and refreshing inside a
+  // refresh call would loop.
+  const isAuthCall = path.startsWith("/v1/auth/") || path === "/v1/login" || path === "/v1/register";
+
+  try {
+    return await rawFetch<T>(path, init);
+  } catch (err) {
+    // We only auto-refresh on `invalid_session` — the backend uses that code
+    // for "had a session, server says it's no good" (expired access cookie,
+    // typically). When the backend says `auth_required` it means there was
+    // no cookie at all, so the user is anonymous and refreshing makes no
+    // sense; that case should fall through to the UI and show the login form.
+    if (
+      !isAuthCall &&
+      err instanceof ApiError &&
+      err.status === 401 &&
+      err.code === "invalid_session"
+    ) {
+      const refreshed = await refreshAccessToken();
+      if (refreshed) {
+        return rawFetch<T>(path, init);
+      }
+    }
+    throw err;
+  }
+}
+
+// logoutUser hits the server endpoint that revokes both cookies. The fetch is
+// best-effort: even if the server can't be reached, the SPA should still
+// drop the user from local state.
+export async function logoutUser(): Promise<void> {
+  try {
+    await rawFetch<void>("/v1/auth/logout", { method: "POST" });
+  } catch {
+    // ignore
+  }
 }
 
 async function safeJSON(response: Response): Promise<unknown | null> {
@@ -357,4 +432,79 @@ export async function endSeason(
       body: JSON.stringify({ action, ...(goalTitle ? { goal_title: goalTitle } : {}) }),
     },
   );
+}
+
+// ── Goal detail ──────────────────────────────────────────────────────────────
+// Single-goal lookup powering the goal-detail-screen. Backend `GetGoal`
+// scopes by viewer (owner OR buddy) and returns ErrGoalNotFound otherwise.
+export async function getGoal(goalID: number): Promise<{ goal: GoalView }> {
+  return request<{ goal: GoalView }>(`/v1/goals/${goalID}`);
+}
+
+// ── Milestones ───────────────────────────────────────────────────────────────
+// Goal-scoped milestone CRUD. The backend exposes:
+//   POST   /v1/goals/{goalID}/milestones        — create
+//   GET    /v1/goals/{goalID}/milestones        — list
+//   POST   /v1/milestones/{id}/complete         — buddy marks complete
+//   POST   /v1/milestones/{id}/reopen           — owner reopens
+//   DELETE /v1/milestones/{id}                  — owner deletes
+export async function listMilestones(goalID: number): Promise<{ milestones: Milestone[] | null }> {
+  return request<{ milestones: Milestone[] | null }>(`/v1/goals/${goalID}/milestones`);
+}
+
+export async function createMilestone(
+  goalID: number,
+  title: string,
+  description: string,
+): Promise<{ milestone: Milestone }> {
+  return request<{ milestone: Milestone }>(`/v1/goals/${goalID}/milestones`, {
+    method: "POST",
+    body: JSON.stringify({ title, description }),
+  });
+}
+
+export async function completeMilestone(milestoneID: number): Promise<{ milestone: Milestone }> {
+  return request<{ milestone: Milestone }>(`/v1/milestones/${milestoneID}/complete`, {
+    method: "POST",
+  });
+}
+
+export async function reopenMilestone(milestoneID: number): Promise<{ milestone: Milestone }> {
+  return request<{ milestone: Milestone }>(`/v1/milestones/${milestoneID}/reopen`, {
+    method: "POST",
+  });
+}
+
+export async function deleteMilestone(milestoneID: number): Promise<void> {
+  await request<void>(`/v1/milestones/${milestoneID}`, { method: "DELETE" });
+}
+
+// ── Stakes ───────────────────────────────────────────────────────────────────
+//   POST   /v1/goals/{goalID}/stakes      — owner declares a stake
+//   GET    /v1/goals/{goalID}/stakes      — list
+//   DELETE /v1/stakes/{id}                — owner cancels active stake
+//   POST   /v1/stakes/{id}/forfeit        — buddy declares forfeit (with reason)
+export async function listStakes(goalID: number): Promise<{ stakes: StakeView[] | null }> {
+  return request<{ stakes: StakeView[] | null }>(`/v1/goals/${goalID}/stakes`);
+}
+
+export async function createStake(
+  goalID: number,
+  description: string,
+): Promise<{ stake: StakeView }> {
+  return request<{ stake: StakeView }>(`/v1/goals/${goalID}/stakes`, {
+    method: "POST",
+    body: JSON.stringify({ description }),
+  });
+}
+
+export async function cancelStake(stakeID: number): Promise<void> {
+  await request<void>(`/v1/stakes/${stakeID}`, { method: "DELETE" });
+}
+
+export async function forfeitStake(stakeID: number, reason: string): Promise<{ stake: StakeView }> {
+  return request<{ stake: StakeView }>(`/v1/stakes/${stakeID}/forfeit`, {
+    method: "POST",
+    body: JSON.stringify({ reason }),
+  });
 }

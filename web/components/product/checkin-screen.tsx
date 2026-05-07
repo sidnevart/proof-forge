@@ -181,7 +181,7 @@ export function CheckInScreen({ goalID }: { goalID: number }) {
         <StatePanel
           tone="loading"
           title="Загружаем черновик"
-          description="Проверяем, есть ли активное подтверждение по этой цели."
+          description="Проверяем, есть ли активное подтверждение в этом круге."
         />
       </main>
     );
@@ -232,10 +232,10 @@ export function CheckInScreen({ goalID }: { goalID: number }) {
     return (
       <main className={styles.page}>
         <CheckInHeader status="pending" label="Можно начинать" />
-        <SectionShell eyebrow="Новое подтверждение" title="Подготовьте материалы по цели">
+        <SectionShell eyebrow="Новое подтверждение" title="Подготовьте материалы для круга">
           <div className={styles.startBlock}>
             <p>
-              Подтверждение должно показать, что по цели действительно произошло движение.
+              Подтверждение должно показать, что в круге действительно произошло движение.
               После отправки партнёр проверит материалы и примет решение.
             </p>
             <Button onClick={handleStartCheckIn} disabled={isStarting}>

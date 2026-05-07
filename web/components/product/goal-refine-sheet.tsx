@@ -29,7 +29,7 @@ export function GoalRefineSheet({ draftText, onAccept, onClose }: GoalRefineShee
         if (err instanceof ApiError && err.status === 429) {
           setState({ kind: "error", message: "Лимит запросов исчерпан. Попробуй завтра." });
         } else {
-          setState({ kind: "error", message: "Не удалось уточнить цель. Попробуй ещё раз." });
+          setState({ kind: "error", message: "Не удалось уточнить круг. Попробуй ещё раз." });
         }
       }
     });
@@ -47,9 +47,9 @@ export function GoalRefineSheet({ draftText, onAccept, onClose }: GoalRefineShee
   return (
     <>
       <div className={styles.backdrop} onClick={onClose} aria-hidden />
-      <div className={styles.sheet} role="dialog" aria-label="Уточнить цель">
+      <div className={styles.sheet} role="dialog" aria-label="Уточнить круг">
         <div className={styles.sheetHeader}>
-          <span className={styles.sheetTitle}>⚡ УТОЧНИ ЦЕЛЬ</span>
+          <span className={styles.sheetTitle}>⚡ УТОЧНИ КРУГ</span>
           <button className={styles.closeBtn} onClick={onClose} aria-label="Закрыть">×</button>
         </div>
 

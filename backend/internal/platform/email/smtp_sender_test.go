@@ -19,7 +19,7 @@ func TestBuildBuddyInviteMessage_UsesMultipartRussianCopy(t *testing.T) {
 
 	message := string(msg)
 
-	if !strings.Contains(message, "Subject: Вас пригласили присоединиться к цели") {
+	if !strings.Contains(message, "Subject: Вас пригласили в круг") {
 		t.Fatalf("expected russian subject, got %q", message)
 	}
 	if !strings.Contains(message, "Content-Type: multipart/alternative;") {
@@ -31,7 +31,7 @@ func TestBuildBuddyInviteMessage_UsesMultipartRussianCopy(t *testing.T) {
 	if !strings.Contains(message, "text/html; charset=UTF-8") {
 		t.Fatalf("expected html part, got %q", message)
 	}
-	if !strings.Contains(message, "Артём приглашает вас присоединиться к цели «Запустить новый лендинг»") {
+	if !strings.Contains(message, "Артём приглашает вас в круг «Запустить новый лендинг»") {
 		t.Fatalf("expected russian invite copy, got %q", message)
 	}
 	if !strings.Contains(message, "https://example.com/invites/abc") {

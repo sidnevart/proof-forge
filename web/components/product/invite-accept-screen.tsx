@@ -124,7 +124,7 @@ export function InviteAcceptScreen({ token }: Props) {
         await finishAcceptance(setLoginError);
       } catch (error) {
         if (error instanceof ApiError && error.status === 404) {
-          setLoginError("Не удалось найти приглашённый аккаунт. Попросите владельца цели отправить приглашение заново.");
+          setLoginError("Не удалось найти приглашённый аккаунт. Попросите автора круга отправить приглашение заново.");
           return;
         }
         setLoginError(error instanceof Error ? error.message : "Не удалось войти.");
@@ -139,7 +139,7 @@ export function InviteAcceptScreen({ token }: Props) {
         <StatePanel
           tone="loading"
           title="Загружаем приглашение"
-          description="Проверяем ссылку и собираем контекст по цели."
+          description="Проверяем ссылку и собираем контекст по кругу."
         />
       </main>
     );
@@ -165,7 +165,7 @@ export function InviteAcceptScreen({ token }: Props) {
         <StatePanel
           tone="error"
           title="Срок приглашения истёк"
-          description="Ссылка больше не действует. Попросите владельца цели отправить новое приглашение."
+          description="Ссылка больше не действует. Попросите автора круга отправить новое приглашение."
         />
       </main>
     );
@@ -178,7 +178,7 @@ export function InviteAcceptScreen({ token }: Props) {
         <StatePanel
           tone="success"
           title="Приглашение уже принято"
-          description="Вы уже подключены к этой цели. Вернитесь в центр управления, чтобы увидеть активный цикл."
+          description="Вы уже подключены к этому кругу. Вернитесь в центр управления, чтобы увидеть активный цикл."
           meta={
             <Button variant="secondary" onClick={() => router.push("/dashboard")}>
               Открыть центр управления
@@ -196,7 +196,7 @@ export function InviteAcceptScreen({ token }: Props) {
         <StatePanel
           tone="success"
           title="Приглашение принято"
-          description="Вы подключены к цели. Переходим в центр управления..."
+          description="Вы подключены к кругу. Переходим в центр управления..."
         />
       </main>
     );
@@ -229,7 +229,7 @@ export function InviteAcceptScreen({ token }: Props) {
           <InviteCard invite={invite} />
           <SectionShell eyebrow="Подтверждение личности" title="Войти и принять приглашение">
             <p className={styles.authHint}>
-              Приглашение уже привязано к адресу <strong>{invite.invitee_email}</strong>. Подтвердите этот адрес, и система сразу подключит вас к цели.
+              Приглашение уже привязано к адресу <strong>{invite.invitee_email}</strong>. Подтвердите этот адрес, и система сразу подключит вас к кругу.
             </p>
             <form className={styles.form} onSubmit={handleLoginAndAccept}>
               <label className={styles.field}>
@@ -257,15 +257,15 @@ export function InviteAcceptScreen({ token }: Props) {
       <InviteHeader status="pending" label="Ожидает принятия" />
       <div className={styles.grid}>
         <InviteCard invite={invite} />
-        <SectionShell eyebrow="Ваше решение" title="Принять приглашение к цели">
+        <SectionShell eyebrow="Ваше решение" title="Принять приглашение в круг">
           <div className={styles.acceptBlock}>
             <p>
-              <strong>{invite.owner_name}</strong> приглашает вас участвовать в цели как
+              <strong>{invite.owner_name}</strong> приглашает вас в круг как
               внешний проверяющий. Вы будете видеть подтверждения движения и принимать
               решение по прогрессу.
             </p>
             <ul className={styles.ruleList}>
-              <li>Вы подтверждаете, что движение по цели действительно произошло.</li>
+              <li>Вы подтверждаете, что движение в круге действительно произошло.</li>
               <li>Если подтверждения недостаточно, вы можете вернуть его на доработку.</li>
               <li>Если движение не подтверждается, вы можете отклонить результат.</li>
             </ul>
@@ -283,8 +283,8 @@ function InviteHeader({ status, label }: { status: string; label: string }) {
   return (
     <header className={styles.header}>
       <div>
-        <span className="eyebrow">Приглашение к цели</span>
-        <h1>Присоединиться к цели</h1>
+        <span className="eyebrow">Приглашение в круг</span>
+        <h1>Присоединиться к кругу</h1>
       </div>
       <StatusPill status={status as Parameters<typeof StatusPill>[0]["status"]} label={label} />
     </header>
@@ -296,7 +296,7 @@ function InviteCard({ invite }: { invite: InvitePreview }) {
     invite.status === "pending" ? "Карточка приглашения" : "Приглашение принято";
 
   return (
-    <SectionShell eyebrow="Детали цели" title={invite.goal_title}>
+    <SectionShell eyebrow="Детали круга" title={invite.goal_title}>
       <dl className={styles.inviteMeta}>
         <div>
           <dt>От кого</dt>

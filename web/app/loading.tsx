@@ -6,7 +6,7 @@ export default function Loading() {
       <StatePanel
         tone="loading"
         title="Подготавливаем интерфейс"
-        description="Собираем рабочие блоки и актуальное состояние по целям."
+        description="Собираем рабочие блоки и актуальное состояние по кругам."
       />
     </div>
   );

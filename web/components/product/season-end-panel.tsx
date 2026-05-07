@@ -42,7 +42,7 @@ export function SeasonEndPanel({ circleId, seasonId, onEnd }: SeasonEndPanelProp
           disabled={loading}
           type="button"
         >
-          ПРОДОЛЖИТЬ ЦЕЛЬ (ЕЩЁ 7 ДНЕЙ)
+          ПРОДОЛЖИТЬ КРУГ (ЕЩЁ 7 ДНЕЙ)
         </button>
         <button
           className={styles.newGoalBtn}
@@ -50,7 +50,7 @@ export function SeasonEndPanel({ circleId, seasonId, onEnd }: SeasonEndPanelProp
           disabled={loading}
           type="button"
         >
-          НАЧАТЬ НОВУЮ ЦЕЛЬ
+          НАЧАТЬ НОВЫЙ КРУГ
         </button>
       </div>
     </div>

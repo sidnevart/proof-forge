@@ -39,8 +39,8 @@ func (s repositoryStub) CreateGoalWithInvite(ctx context.Context, params CreateG
 	return s.createGoal(ctx, params)
 }
 
-func (s repositoryStub) ListGoalsByOwner(ctx context.Context, ownerID int64) ([]GoalView, error) {
-	return s.listGoals(ctx, ownerID)
+func (s repositoryStub) ListGoalsForUser(ctx context.Context, userID int64) ([]GoalView, error) {
+	return s.listGoals(ctx, userID)
 }
 
 func (s repositoryStub) FindInviteByToken(ctx context.Context, tokenHash string) (InviteRecord, error) {

@@ -4,7 +4,7 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useEffect, useState } from "react";
 
-import { getDashboard } from "@/lib/api";
+import { ApiError, getDashboard } from "@/lib/api";
 import { InvitationInbox } from "./invitation-inbox";
 import styles from "./product-nav.module.css";
 
@@ -21,13 +21,21 @@ export function ProductNav() {
   useEffect(() => {
     getDashboard()
       .then((d) => setUser(d.user))
-      .catch(() => setUser(null))
+      .catch((err) => {
+        // Only a real 401 means the session is gone — wipe the user.
+        // Network errors, 5xx, timeouts must NOT log the user out: that's the
+        // root cause behind «меня выкинуло» reports — a transient failure here
+        // showed «ВОЙТИ» to an already-authenticated person.
+        if (err instanceof ApiError && err.status === 401) {
+          setUser(null);
+        }
+      })
       .finally(() => setAuthReady(true));
   }, []);
 
   const links = [
     { href: "/dashboard", label: "ДАШБОРД" },
-    { href: "/goals/new", label: "ЦЕЛЬ" },
+    { href: "/goals/new", label: "КРУГ" },
     { href: "/feed", label: "ЛЕНТА" },
   ];
 

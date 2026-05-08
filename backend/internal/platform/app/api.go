@@ -18,6 +18,7 @@ import (
 	"github.com/sidnevart/proof-forge/backend/internal/buddy"
 	"github.com/sidnevart/proof-forge/backend/internal/checkins"
 	"github.com/sidnevart/proof-forge/backend/internal/circles"
+	"github.com/sidnevart/proof-forge/backend/internal/companion"
 	"github.com/sidnevart/proof-forge/backend/internal/community"
 	"github.com/sidnevart/proof-forge/backend/internal/contracts"
 	"github.com/sidnevart/proof-forge/backend/internal/dailylog"
@@ -197,6 +198,17 @@ func registerAPIRoutes(router *chi.Mux, log *slog.Logger, pool *pgxpool.Pool, cf
 	)
 	persHandler := personalization.NewHandler(persService, pool, platformlogger.WithComponent(log, "personalization"))
 
+	companionRepo := companion.NewPostgresRepository(pool)
+	companionService := companion.NewService(
+		cfg.AI.Enabled,
+		personalization.NewPostgresCircuitBreakerStore(pool),
+		personalization.NewPostgresBudgetStore(pool),
+		companionRepo,
+		llmProvider,
+		companion.WithRecorder(analyticsRecorder),
+	)
+	companionHandler := companion.NewHandler(companionService, pool, platformlogger.WithComponent(log, "companion"))
+
 	var objStorage checkins.Storage
 	if cfg.Storage.Enabled {
 		objStorage = checkins.NewS3Storage(checkins.S3Config{
@@ -296,6 +308,7 @@ func registerAPIRoutes(router *chi.Mux, log *slog.Logger, pool *pgxpool.Pool, cf
 			dailylogHandler.RegisterRoutes(r)
 			teamproofHandler.RegisterRoutes(r)
 			persHandler.RegisterRoutes(r)
+			companionHandler.RegisterRoutes(r)
 			goalsHandler.RegisterRoutes(r)
 			checkinsHandler.RegisterRoutes(r)
 			recapsHandler.RegisterRoutes(r)

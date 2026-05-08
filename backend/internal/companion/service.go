@@ -137,6 +137,11 @@ func (s *Service) Run(ctx context.Context, feature Feature, mode personalization
 	return personalization.Result{Text: res.Text, Provider: personalization.ProviderKimi}, ev, nil
 }
 
+// SaveProofDraft stores an AI-assembled proof draft.
+func (s *Service) SaveProofDraft(ctx context.Context, draft *ProofDraft) error {
+	return s.repo.SaveProofDraft(ctx, draft)
+}
+
 // SaveInAppNotification stores an AI insight for the user.
 func (s *Service) SaveInAppNotification(ctx context.Context, userID int64, feature Feature, title, body string, actions []NotificationAction) error {
 	n := &Notification{

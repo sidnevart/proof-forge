@@ -596,7 +596,28 @@ func (w *Worker) sendProofDraft(ctx context.Context, userID int64) error {
 		res.Provider = personalization.ProviderTemplate
 	}
 
-	// Save as in-app draft for user to accept/reject.
+	// Collect note IDs for the draft.
+	var noteIDs []int64
+	for _, n := range pdc.Notes {
+		noteIDs = append(noteIDs, n.NoteID)
+	}
+
+	// Save proof draft for accept/reject flow.
+	draft := &ProofDraft{
+		ID:         fmt.Sprintf("draft-%d-%d", userID, w.clock().Unix()),
+		UserID:     userID,
+		TeamID:     pdc.TeamID,
+		GoalID:     &pdc.GoalID,
+		NoteIDs:    noteIDs,
+		Rationale:  res.Text,
+		Confidence: "medium",
+		CreatedAt:  w.clock(),
+	}
+	if err := w.service.SaveProofDraft(ctx, draft); err != nil {
+		w.log.Warn("proof draft: save draft", "user", userID, "err", err)
+	}
+
+	// Save as in-app notification for user to accept/reject.
 	_ = w.service.SaveInAppNotification(ctx, userID, FeatureProofDraft,
 		"Черновик пруфа", res.Text, []NotificationAction{
 			{Label: "Использовать", Action: "accept_draft", URL: "/dashboard"},

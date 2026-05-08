@@ -1,0 +1,113 @@
+.root {
+  background: var(--bg-surface);
+  border: 1px solid var(--border);
+  padding: 20px;
+}
+
+.heading {
+  font-family: var(--font-display);
+  font-size: 14px;
+  font-weight: 700;
+  color: var(--ink-mono);
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  margin: 0 0 16px;
+}
+
+.empty {
+  color: var(--ink-mono);
+  font-size: 13px;
+  margin: 0;
+}
+
+.weekBlock {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex-wrap: wrap;
+  margin-bottom: 14px;
+}
+
+.weekMain {
+  display: flex;
+  align-items: baseline;
+  gap: 6px;
+}
+
+.bigNum {
+  font-family: var(--font-mono);
+  font-size: 36px;
+  font-weight: 700;
+  color: var(--ink-primary);
+  line-height: 1;
+}
+
+.weekLabel {
+  font-size: 13px;
+  color: var(--ink-mono);
+}
+
+.trendBadge {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 12px;
+  font-weight: 700;
+  border: 1.5px solid;
+  padding: 4px 8px;
+}
+
+.sparkWrap {
+  display: flex;
+  align-items: flex-end;
+  gap: 3px;
+  height: 40px;
+  margin-bottom: 16px;
+}
+
+.sparkBar {
+  flex: 1;
+  height: 100%;
+  background: var(--bg-elevated);
+  display: flex;
+  align-items: flex-end;
+}
+
+.sparkFill {
+  width: 100%;
+  background: var(--win);
+  min-height: 2px;
+  transition: height 300ms ease;
+}
+
+.stats {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  padding-top: 12px;
+  border-top: 1px solid var(--border);
+}
+
+.statRow {
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+}
+
+.statLabel {
+  font-size: 12px;
+  color: var(--ink-mono);
+  flex: 1;
+}
+
+.statValue {
+  font-family: var(--font-mono);
+  font-size: 16px;
+  font-weight: 700;
+  color: var(--ink-primary);
+}
+
+.statSub {
+  font-size: 11px;
+  color: var(--ink-mono);
+}

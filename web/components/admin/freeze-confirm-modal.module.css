@@ -1,0 +1,83 @@
+.overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.6);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 100;
+  padding: 16px;
+}
+
+.modal {
+  background: var(--bg-base);
+  border: 2px solid var(--border);
+  padding: 24px;
+  max-width: 420px;
+  width: 100%;
+}
+
+.title {
+  font-family: var(--font-display);
+  font-size: 18px;
+  font-weight: 700;
+  color: var(--ink-primary);
+  margin: 0 0 12px;
+}
+
+.desc {
+  font-size: 13px;
+  color: var(--ink-mono);
+  line-height: 1.5;
+  margin-bottom: 16px;
+}
+
+.input {
+  width: 100%;
+  box-sizing: border-box;
+  background: var(--bg-elevated);
+  border: 2px solid var(--border);
+  color: var(--ink-primary);
+  font-size: 13px;
+  padding: 10px 12px;
+  outline: none;
+  margin-bottom: 20px;
+  transition: border-color 140ms ease;
+}
+
+.input:focus { border-color: var(--ink-primary); }
+
+.actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 10px;
+}
+
+.cancelBtn {
+  background: none;
+  border: 2px solid var(--border);
+  color: var(--ink-primary);
+  padding: 10px 20px;
+  font-size: 12px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: border-color 140ms ease;
+}
+
+.cancelBtn:hover { border-color: var(--ink-primary); }
+
+.dangerBtn {
+  background: var(--danger, #e53e3e);
+  border: none;
+  color: #fff;
+  padding: 10px 20px;
+  font-size: 12px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: opacity 140ms ease;
+}
+
+.dangerBtn:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}

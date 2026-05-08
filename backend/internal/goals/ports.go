@@ -40,22 +40,27 @@ type GoalRefineRequestLogParams struct {
 // brand-new circle (with a 7-day season and an owner membership) atomically in
 // the same transaction as the goal/pact/invite.
 type CreateGoalParams struct {
-	OwnerID         int64
-	OwnerEmail      string
-	Title           string
-	Description     string
-	BuddyName       string
-	BuddyEmail      string
-	ProofExamples   string
-	Category        string
-	CircleID        *int64
-	AutoCircle      *AutoCircleParams
-	GoalStatus      GoalStatus
-	PactStatus      PactStatus
-	InviteStatus    InviteStatus
-	ProgressHealth  ProgressHealth
-	InviteTokenHash string
-	InviteExpiresAt time.Time
+	OwnerID               int64
+	OwnerEmail            string
+	Title                 string
+	Description           string
+	BuddyName             string
+	BuddyEmail            string
+	ProofExamples         string
+	Category              string
+	CircleID              *int64
+	AutoCircle            *AutoCircleParams
+	GoalStatus            GoalStatus
+	PactStatus            PactStatus
+	InviteStatus          InviteStatus
+	ProgressHealth        ProgressHealth
+	InviteTokenHash       string
+	InviteExpiresAt       time.Time
+	MovementMode          MovementMode
+	RhythmCadence         *RhythmCadence
+	ChallengeDurationDays *int
+	ChallengeStartsAt     *time.Time
+	ChallengeEndsAt       *time.Time
 }
 
 // AutoCircleParams supplies the fields needed to create a fresh circle alongside

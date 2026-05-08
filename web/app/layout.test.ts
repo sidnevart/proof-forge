@@ -4,9 +4,9 @@ import { metadata } from "./layout";
 
 describe("app layout metadata", () => {
   it("uses russian product title and description", () => {
-    expect(metadata.title).toBe("ProofForge — круг друзей, где не сдать = заморозка");
+    expect(metadata.title).toBe("ProofForge — среда где движение становится нормой");
     expect(metadata.description).toBe(
-      "Соревнуйся с друзьями за дисциплину. Сдавай пруф каждый день. Пропустил — все видят.",
+      "Сильная среда. Здоровая конкуренция. Не планируешь — делаешь. Проверено кругом людей рядом.",
     );
   });
 });

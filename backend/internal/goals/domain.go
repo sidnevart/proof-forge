@@ -13,6 +13,8 @@ type GoalStatus string
 type PactStatus string
 type InviteStatus string
 type ProgressHealth string
+type MovementMode string
+type RhythmCadence string
 
 const (
 	GoalStatusPendingBuddyAcceptance GoalStatus = "pending_buddy_acceptance"
@@ -25,6 +27,17 @@ const (
 	InviteStatusAccepted InviteStatus = "accepted"
 
 	ProgressHealthUnknown ProgressHealth = "unknown"
+
+	MovementModeSingleProof    MovementMode = "single_proof"
+	MovementModeRegularRhythm  MovementMode = "regular_rhythm"
+	MovementModeChallenge      MovementMode = "challenge"
+	MovementModeWorkInitiative MovementMode = "work_initiative"
+	MovementModeFreeGoal       MovementMode = "free_goal"
+
+	RhythmCadenceDaily    RhythmCadence = "daily"
+	RhythmCadenceWeekly   RhythmCadence = "weekly"
+	RhythmCadenceBiweekly RhythmCadence = "biweekly"
+	RhythmCadenceCustom   RhythmCadence = "custom"
 )
 
 var (
@@ -59,13 +72,17 @@ type InviteRecord struct {
 }
 
 type CreateInput struct {
-	Title         string `json:"title"`
-	Description   string `json:"description"`
-	BuddyName     string `json:"buddy_name"`
-	BuddyEmail    string `json:"buddy_email"`
-	ProofExamples string `json:"proof_examples"`
-	Category      string `json:"category"`
-	CircleID      int64  `json:"circle_id,omitempty"`
+	Title                 string         `json:"title"`
+	Description           string         `json:"description"`
+	BuddyName             string         `json:"buddy_name"`
+	BuddyEmail            string         `json:"buddy_email"`
+	ProofExamples         string         `json:"proof_examples"`
+	Category              string         `json:"category"`
+	CircleID              int64          `json:"circle_id,omitempty"`
+	MovementMode          MovementMode   `json:"movement_mode,omitempty"`
+	RhythmCadence         *RhythmCadence `json:"rhythm_cadence,omitempty"`
+	ChallengeDurationDays *int           `json:"challenge_duration_days,omitempty"`
+	ChallengeStartsAt     *time.Time     `json:"challenge_starts_at,omitempty"`
 }
 
 type RefineInput struct {
@@ -97,8 +114,29 @@ type Goal struct {
 	Status                GoalStatus     `json:"status"`
 	CurrentProgressHealth ProgressHealth `json:"current_progress_health"`
 	CurrentStreakCount    int            `json:"current_streak_count"`
+	MovementMode          MovementMode   `json:"movement_mode"`
+	RhythmCadence         *RhythmCadence `json:"rhythm_cadence,omitempty"`
+	ChallengeDurationDays *int           `json:"challenge_duration_days,omitempty"`
+	ChallengeStartsAt     *time.Time     `json:"challenge_starts_at,omitempty"`
+	ChallengeEndsAt       *time.Time     `json:"challenge_ends_at,omitempty"`
+	InitiativeID          *int64         `json:"initiative_id,omitempty"`
 	CreatedAt             time.Time      `json:"created_at"`
 	UpdatedAt             time.Time      `json:"updated_at"`
+}
+
+// IsChallengeActive reports whether a challenge goal is currently in progress.
+func (g *Goal) IsChallengeActive() bool {
+	if g.MovementMode != MovementModeChallenge {
+		return false
+	}
+	now := time.Now()
+	return g.ChallengeStartsAt != nil && g.ChallengeEndsAt != nil &&
+		now.After(*g.ChallengeStartsAt) && now.Before(*g.ChallengeEndsAt)
+}
+
+// RequiresCadence reports whether this movement mode needs a rhythm_cadence value.
+func (m MovementMode) RequiresCadence() bool {
+	return m == MovementModeRegularRhythm
 }
 
 type Buddy struct {
@@ -161,14 +199,27 @@ type CircleSummary struct {
 }
 
 func (in CreateInput) Normalize() CreateInput {
+	mode := in.MovementMode
+	if mode == "" {
+		mode = MovementModeRegularRhythm
+	}
+	cadence := in.RhythmCadence
+	if cadence == nil && mode == MovementModeRegularRhythm {
+		weekly := RhythmCadenceWeekly
+		cadence = &weekly
+	}
 	return CreateInput{
-		Title:         strings.TrimSpace(in.Title),
-		Description:   strings.TrimSpace(in.Description),
-		BuddyName:     strings.TrimSpace(in.BuddyName),
-		BuddyEmail:    strings.ToLower(strings.TrimSpace(in.BuddyEmail)),
-		ProofExamples: strings.TrimSpace(in.ProofExamples),
-		Category:      strings.TrimSpace(in.Category),
-		CircleID:      in.CircleID,
+		Title:                 strings.TrimSpace(in.Title),
+		Description:           strings.TrimSpace(in.Description),
+		BuddyName:             strings.TrimSpace(in.BuddyName),
+		BuddyEmail:            strings.ToLower(strings.TrimSpace(in.BuddyEmail)),
+		ProofExamples:         strings.TrimSpace(in.ProofExamples),
+		Category:              strings.TrimSpace(in.Category),
+		CircleID:              in.CircleID,
+		MovementMode:          mode,
+		RhythmCadence:         cadence,
+		ChallengeDurationDays: in.ChallengeDurationDays,
+		ChallengeStartsAt:     in.ChallengeStartsAt,
 	}
 }
 
@@ -204,6 +255,10 @@ func (in CreateInput) Validate(owner users.User) error {
 		return errors.Join(ErrInvalidGoalInput, errors.New("valid buddy_email is required"))
 	case normalized.BuddyEmail == strings.ToLower(strings.TrimSpace(owner.Email)):
 		return errors.Join(ErrInvalidGoalInput, errors.New("buddy_email must belong to another person"))
+	case normalized.MovementMode.RequiresCadence() && normalized.RhythmCadence == nil:
+		return errors.Join(ErrInvalidGoalInput, errors.New("rhythm_cadence_required"))
+	case normalized.MovementMode == MovementModeChallenge && normalized.ChallengeDurationDays == nil:
+		return errors.Join(ErrInvalidGoalInput, errors.New("challenge_duration_required"))
 	default:
 		return nil
 	}

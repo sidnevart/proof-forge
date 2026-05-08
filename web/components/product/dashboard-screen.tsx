@@ -5,9 +5,11 @@ import { type FormEvent, useCallback, useEffect, useState, useTransition } from 
 import { useRouter } from "next/navigation";
 
 import { GoalCircleCard } from "@/components/product/goal-circle-card";
-import { ApiError, getDashboard, loginUser, registerUser } from "@/lib/api";
+import { NowCard } from "@/components/product/now-card";
+import { PersonalProgressBar } from "@/components/product/personal-progress-bar";
+import { ApiError, getDashboard, getNowCard, getPersonalLeaderboard, loginUser, registerUser } from "@/lib/api";
 import { pluralizeRu } from "@/lib/plural";
-import type { DashboardResponse, GoalView } from "@/lib/types";
+import type { DashboardResponse, GoalView, NowCardData, PersonalLeaderboard } from "@/lib/types";
 
 import styles from "./dashboard-screen.module.css";
 
@@ -25,6 +27,8 @@ export function DashboardScreen() {
   const [screenState, setScreenState] = useState<ScreenState>({ kind: "loading" });
   const [registerError, setRegisterError] = useState<string | null>(null);
   const [loginError, setLoginError] = useState<string | null>(null);
+  const [nowCard, setNowCard] = useState<NowCardData | null>(null);
+  const [personalStats, setPersonalStats] = useState<PersonalLeaderboard | null>(null);
   const [isRegistering, startRegisterTransition] = useTransition();
   const [isLoggingIn, startLoginTransition] = useTransition();
 
@@ -37,6 +41,9 @@ export function DashboardScreen() {
       } else {
         setScreenState({ kind: "has_goals", dashboard, goals });
       }
+      // Load smart card and stats in background, errors are non-fatal.
+      void getNowCard().then(setNowCard).catch(() => null);
+      void getPersonalLeaderboard().then(setPersonalStats).catch(() => null);
     } catch (error) {
       if (error instanceof ApiError && error.status === 401) {
         setScreenState({ kind: "unauthenticated" });
@@ -221,6 +228,8 @@ export function DashboardScreen() {
 
   return (
     <main className={styles.page}>
+      {nowCard && <NowCard data={nowCard} />}
+      {personalStats && <PersonalProgressBar data={personalStats} />}
       <div className={styles.goalStack}>
         {goals.map((g) => (
           <GoalCircleCard

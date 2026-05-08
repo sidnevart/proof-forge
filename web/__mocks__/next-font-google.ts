@@ -4,5 +4,6 @@ function mockFont(_opts?: Record<string, unknown>) {
 }
 
 export const Bebas_Neue = mockFont;
+export const Oswald = mockFont;
 export const Inter = mockFont;
 export const JetBrains_Mono = mockFont;

@@ -7,6 +7,5 @@
 - design tokens через CSS variables
 - core UI components
 - landing page
-- demo dashboard shell
 - mobile layout
 - loading / error / empty / success state patterns

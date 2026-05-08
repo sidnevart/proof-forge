@@ -19,7 +19,7 @@ func NewPostgresRepository(pool *pgxpool.Pool) *PostgresRepository {
 
 func (r *PostgresRepository) FindByEmail(ctx context.Context, email string) (User, error) {
 	const query = `
-		SELECT id, email, display_name, created_at, updated_at
+		SELECT id, email, display_name, is_platform_admin, created_at, updated_at
 		FROM users
 		WHERE email = $1
 	`
@@ -29,6 +29,7 @@ func (r *PostgresRepository) FindByEmail(ctx context.Context, email string) (Use
 		&user.ID,
 		&user.Email,
 		&user.DisplayName,
+		&user.IsPlatformAdmin,
 		&user.CreatedAt,
 		&user.UpdatedAt,
 	)
@@ -44,7 +45,7 @@ func (r *PostgresRepository) FindByEmail(ctx context.Context, email string) (Use
 
 func (r *PostgresRepository) FindByID(ctx context.Context, id int64) (User, error) {
 	const query = `
-		SELECT id, email, display_name, created_at, updated_at
+		SELECT id, email, display_name, is_platform_admin, created_at, updated_at
 		FROM users
 		WHERE id = $1
 	`
@@ -54,6 +55,7 @@ func (r *PostgresRepository) FindByID(ctx context.Context, id int64) (User, erro
 		&user.ID,
 		&user.Email,
 		&user.DisplayName,
+		&user.IsPlatformAdmin,
 		&user.CreatedAt,
 		&user.UpdatedAt,
 	)
@@ -71,7 +73,7 @@ func (r *PostgresRepository) Create(ctx context.Context, input RegisterInput) (U
 	const query = `
 		INSERT INTO users (email, display_name)
 		VALUES ($1, $2)
-		RETURNING id, email, display_name, created_at, updated_at
+		RETURNING id, email, display_name, is_platform_admin, created_at, updated_at
 	`
 
 	var user User
@@ -79,6 +81,7 @@ func (r *PostgresRepository) Create(ctx context.Context, input RegisterInput) (U
 		&user.ID,
 		&user.Email,
 		&user.DisplayName,
+		&user.IsPlatformAdmin,
 		&user.CreatedAt,
 		&user.UpdatedAt,
 	)
@@ -104,7 +107,7 @@ func (r *PostgresRepository) CreateSession(ctx context.Context, session Session)
 
 func (r *PostgresRepository) FindUserBySessionTokenHash(ctx context.Context, tokenHash string) (User, error) {
 	const query = `
-		SELECT u.id, u.email, u.display_name, u.created_at, u.updated_at
+		SELECT u.id, u.email, u.display_name, u.is_platform_admin, u.created_at, u.updated_at
 		FROM user_sessions s
 		JOIN users u ON u.id = s.user_id
 		WHERE s.token_hash = $1
@@ -116,6 +119,7 @@ func (r *PostgresRepository) FindUserBySessionTokenHash(ctx context.Context, tok
 		&user.ID,
 		&user.Email,
 		&user.DisplayName,
+		&user.IsPlatformAdmin,
 		&user.CreatedAt,
 		&user.UpdatedAt,
 	)
@@ -127,6 +131,14 @@ func (r *PostgresRepository) FindUserBySessionTokenHash(ctx context.Context, tok
 	}
 
 	return user, nil
+}
+
+func (r *PostgresRepository) SetPlatformAdmin(ctx context.Context, userID int64, isAdmin bool) error {
+	_, err := r.pool.Exec(ctx,
+		`UPDATE users SET is_platform_admin = $2, updated_at = NOW() WHERE id = $1`,
+		userID, isAdmin,
+	)
+	return err
 }
 
 func (r *PostgresRepository) DeleteSessionByTokenHash(ctx context.Context, tokenHash string) error {

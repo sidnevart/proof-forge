@@ -5,11 +5,11 @@ ARG TARGET=api
 WORKDIR /src/backend
 
 COPY backend/go.mod backend/go.sum* ./
-RUN go mod download
+COPY backend/vendor ./vendor
 
 COPY backend/. .
 
-RUN CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build -o /out/${TARGET} ./cmd/${TARGET}
+RUN CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build -mod=vendor -o /out/${TARGET} ./cmd/${TARGET}
 
 FROM alpine:3.20
 

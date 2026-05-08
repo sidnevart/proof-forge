@@ -78,6 +78,7 @@ export function ProductNav() {
     { href: "/goals/new", label: "КРУГ" },
     { href: "/teams", label: "КОМАНДЫ" },
     { href: "/feed", label: "ЛЕНТА" },
+    { href: "/dossier", label: "ДОСЬЕ" },
   ];
 
   return (

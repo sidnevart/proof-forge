@@ -1,0 +1,103 @@
+.section {
+  background: var(--bg-surface);
+  border: 1px solid var(--border);
+  padding: clamp(16px, 3vw, 20px);
+  margin-bottom: 16px;
+}
+
+.eyebrow {
+  font-family: var(--font-mono);
+  font-size: 10px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.12em;
+  color: var(--ink-mono);
+  margin-bottom: 12px;
+}
+
+.thisWeek {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 16px;
+  flex-wrap: wrap;
+}
+
+.weekCount {
+  display: flex;
+  align-items: baseline;
+  gap: 4px;
+}
+
+.count {
+  font-family: var(--font-display);
+  font-size: clamp(32px, 5vw, 48px);
+  font-weight: 700;
+  color: var(--ink-primary);
+  line-height: 1;
+}
+
+.countLabel {
+  font-size: 14px;
+  color: var(--ink-mono);
+}
+
+.trend {
+  font-size: 12px;
+  flex-shrink: 0;
+}
+
+.sparkChart {
+  display: flex;
+  gap: 4px;
+  height: 48px;
+  align-items: flex-end;
+  margin-bottom: 12px;
+}
+
+.sparkBar {
+  flex: 1;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-end;
+  align-items: center;
+  gap: 4px;
+}
+
+.sparkFill {
+  width: 100%;
+  background: var(--win);
+  min-height: 0;
+  transition: height 300ms ease;
+}
+
+.sparkWeekLabel {
+  font-size: 9px;
+  color: var(--ink-mono);
+  font-family: var(--font-mono);
+  white-space: nowrap;
+}
+
+.streakRow {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 13px;
+  flex-wrap: wrap;
+}
+
+.streakLabel {
+  color: var(--ink-mono);
+}
+
+.streakValue {
+  color: var(--win);
+  font-weight: 700;
+}
+
+.streakRecord {
+  color: var(--ink-mono);
+  font-size: 12px;
+}

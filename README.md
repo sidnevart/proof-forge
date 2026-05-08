@@ -79,10 +79,6 @@ docker compose -f infra/docker/compose.dev.yml exec -T postgres \
 | API | http://localhost:8080 |
 | MinIO Console | http://localhost:59001 (логин: `proofforge` / `proofforge123`) |
 
-> **Демо-аккаунты** (после загрузки seed.sql):  
-> `alex@example.com`, `marina@example.com`, `kirill@example.com`  
-> Пароль не нужен — вводите email и нажимайте «Войти».
-
 ---
 
 ## Структура проекта

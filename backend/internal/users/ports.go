@@ -6,6 +6,7 @@ type UserRepository interface {
 	FindByEmail(context.Context, string) (User, error)
 	FindByID(context.Context, int64) (User, error)
 	Create(context.Context, RegisterInput) (User, error)
+	SetPlatformAdmin(ctx context.Context, userID int64, isAdmin bool) error
 }
 
 type SessionRepository interface {

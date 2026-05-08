@@ -44,25 +44,19 @@ describe("LandingPage", () => {
   it("renders brutal landing with hero and CTA", () => {
     render(<LandingPage />);
 
-    // New supportive hero copy (replaces «ТВОИ ДРУЗЬЯ УЖЕ РАБОТАЮТ. ТЫ ЕЩЁ НЕТ.»)
-    expect(screen.getByText(/ТЫ ДЕЛАЕШЬ/)).toBeInTheDocument();
-    expect(screen.getByText("КАК ЭТО РАБОТАЕТ")).toBeInTheDocument();
-    // Countdown label changed: «ДО ЗАМОРОЗКИ» → «ДО КОНЦА ДНЯ»
+    expect(screen.getAllByText(/СО СЛЕДУЮЩЕГО/).length).toBeGreaterThan(0);
+    expect(screen.getByText("КАК НАМЕРЕНИЕ СТАНОВИТСЯ ДВИЖЕНИЕМ.")).toBeInTheDocument();
     expect(screen.getByText("ДО КОНЦА ДНЯ")).toBeInTheDocument();
-    // New "Ты не один" support section above "Как это работает"
-    expect(screen.getByText("ТЫ НЕ ОДИН.")).toBeInTheDocument();
-    // New "Для команд" dual-path section
-    expect(screen.getByText("НЕ ТОЛЬКО ДЛЯ ДРУЗЕЙ.")).toBeInTheDocument();
+    expect(screen.getByText("ДЛЯ КАЖДОЙ РОЛИ — СВОЁ.")).toBeInTheDocument();
     expect(
       screen.getByRole("link", { name: /НАЧНИ С СЕБЯ/ })
     ).toBeInTheDocument();
     expect(
-      screen.getByRole("link", { name: /УЗНАТЬ ПРО КОМАНДЫ/ })
+      screen.getByRole("link", { name: /СОЗДАТЬ WORKSPACE/ })
     ).toBeInTheDocument();
-    // Hero CTA "СОБРАТЬ КРУГ" + final CTA "СОЗДАТЬ КРУГ" are the two primary
-    // links to /dashboard.
-    expect(screen.getByRole("link", { name: "СОБРАТЬ КРУГ" })).toBeInTheDocument();
-    expect(screen.getByRole("link", { name: /СОЗДАТЬ КРУГ/ })).toBeInTheDocument();
+
+    expect(screen.getByRole("link", { name: "СОБРАТЬ СВОЙ КРУГ" })).toHaveAttribute("href", "/workspaces/new");
+    expect(screen.getByRole("link", { name: /ЗАФИКСИРОВАТЬ ПЕРВЫЙ ШАГ/ })).toHaveAttribute("href", "/dashboard");
   });
 
   it("updates --cursor-x / --cursor-y on hero mousemove", () => {
@@ -144,8 +138,7 @@ describe("LandingPage", () => {
 
   it("renders FAQ accordion with first item expanded", () => {
     render(<LandingPage />);
-    // First FAQ question reworded: «ЧТО ЕСЛИ Я ВЫПАЛ?» → «ЧТО ЕСЛИ Я ПРОПУСТИЛ ДЕНЬ?»
-    const firstBtn = screen.getByRole("button", { name: /ЧТО ЕСЛИ Я ПРОПУСТИЛ ДЕНЬ/ });
+    const firstBtn = screen.getByRole("button", { name: /ЧТО ТАКОЕ PROOF CONTRACT/ });
     expect(firstBtn).toHaveAttribute("aria-expanded", "true");
 
     // Other FAQ buttons are collapsed

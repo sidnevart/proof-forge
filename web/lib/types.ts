@@ -414,3 +414,152 @@ export type LeadBriefing = {
   text: string;
   provider: string;
 };
+
+export type NowUrgency = "danger" | "fire" | "warn" | "win" | "neutral";
+
+export type NowCardData = {
+  type: string;
+  title: string;
+  subtitle: string;
+  urgency: NowUrgency;
+  action: { label: string; url: string } | null;
+};
+
+export type WeekTrend = "better" | "same" | "worse" | "first_week";
+
+export type WeeklyHistoryEntry = {
+  week: string;
+  proofs_count: number;
+};
+
+export type UserStats = {
+  proof_streak: number;
+  proofs_this_week: number;
+  proofs_last_week: number;
+  week_vs_last_week: number;
+  week_trend: WeekTrend;
+  active_weeks: number;
+  personal_record_week: number;
+  season_completion_pct: number;
+  active_goals_count: number;
+  pending_contracts_count: number;
+};
+
+export type WeekCount = {
+  week: string;
+  count: number;
+};
+
+export type PersonalLeaderboard = {
+  current_week: {
+    proofs_count: number;
+    vs_last_week: string;
+    trend: WeekTrend;
+  };
+  current_season: {
+    proofs_count: number;
+    vs_last_season: string;
+    trend: string;
+  };
+  streak: {
+    current_streak: number;
+    longest_streak: number;
+    weeks_active: number;
+  };
+  weekly_history: WeekCount[];
+};
+
+export type MovementMode = "single_proof" | "regular_rhythm" | "challenge" | "work_initiative" | "free_goal";
+export type RhythmCadence = "daily" | "weekly" | "biweekly" | "custom";
+export type ContractStatus = "active" | "fulfilled" | "broken" | "cancelled";
+
+export type ProofContract = {
+  id: number;
+  goal_id: number;
+  user_id: number;
+  buddy_user_id?: number;
+  what_to_prove: string;
+  how_to_prove: string;
+  due_at: string;
+  status: ContractStatus;
+  urgency: string;
+  fulfilled_at?: string;
+  broken_at?: string;
+  cancelled_at?: string;
+};
+
+export type CreateContractInput = {
+  what_to_prove: string;
+  how_to_prove: string;
+  due_at: string;
+  buddy_user_id?: number;
+};
+
+export type WorkspaceType = "organization" | "community";
+
+export type Workspace = {
+  id: number;
+  owner_user_id: number;
+  name: string;
+  slug: string;
+  type: WorkspaceType;
+  is_active: boolean;
+  frozen_at?: string;
+  created_at: string;
+};
+
+export type CreateWorkspaceInput = {
+  name: string;
+  slug: string;
+  type: WorkspaceType;
+};
+
+// ── Space Initiatives ────────────────────────────────────────────────────────
+
+export type InitiativeStatus = "active" | "archived";
+export type InitiativeSpaceType = "teamspace" | "community";
+
+export type Initiative = {
+  id: number;
+  space_type: InitiativeSpaceType;
+  teamspace_id?: number | null;
+  community_space_id?: number | null;
+  creator_id: number;
+  title: string;
+  description: string;
+  proof_criteria: string;
+  status: InitiativeStatus;
+  participant_count: number;
+  active_today: number;
+  pending_proof_count: number;
+  created_at: string;
+};
+
+export type JoinInitiativeResult = {
+  goal_id: number;
+  created: boolean;
+};
+
+export type PendingProof = {
+  checkin_id: number;
+  author_id: number;
+  author_name: string;
+  content: string;
+  submitted_at: string;
+};
+
+export type ParticipantProgress = {
+  user_id: number;
+  display_name: string;
+  proof_count: number;
+};
+
+export type InitiativeDetail = Initiative & {
+  participants: ParticipantProgress[];
+};
+
+export type CreateInitiativeInput = {
+  title: string;
+  description?: string;
+  proof_criteria: string;
+};

@@ -11,6 +11,7 @@ import (
 	"github.com/go-chi/chi/v5"
 	"github.com/jackc/pgx/v5/pgxpool"
 
+	"github.com/sidnevart/proof-forge/backend/internal/analytics"
 	"github.com/sidnevart/proof-forge/backend/internal/checkins"
 	"github.com/sidnevart/proof-forge/backend/internal/circles"
 	"github.com/sidnevart/proof-forge/backend/internal/goals"
@@ -255,6 +256,7 @@ func buildNotifRouter(
 			goals.WithNotifEmitter(notifRepo),
 			goals.WithCircleLister(circlesService),
 		),
+		analytics.NoopRecorder{},
 	)
 
 	circlesHandler := circles.NewHandler(circlesService)

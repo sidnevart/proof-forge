@@ -11,13 +11,20 @@ import (
 	"github.com/go-chi/chi/v5"
 	"github.com/jackc/pgx/v5/pgxpool"
 
+	"github.com/sidnevart/proof-forge/backend/internal/admin"
 	"github.com/sidnevart/proof-forge/backend/internal/ai"
 	"github.com/sidnevart/proof-forge/backend/internal/analytics"
+	"github.com/sidnevart/proof-forge/backend/internal/authz"
+	"github.com/sidnevart/proof-forge/backend/internal/buddy"
 	"github.com/sidnevart/proof-forge/backend/internal/checkins"
 	"github.com/sidnevart/proof-forge/backend/internal/circles"
+	"github.com/sidnevart/proof-forge/backend/internal/community"
+	"github.com/sidnevart/proof-forge/backend/internal/contracts"
 	"github.com/sidnevart/proof-forge/backend/internal/dailylog"
 	"github.com/sidnevart/proof-forge/backend/internal/goals"
+	"github.com/sidnevart/proof-forge/backend/internal/initiatives"
 	"github.com/sidnevart/proof-forge/backend/internal/inspiration"
+	"github.com/sidnevart/proof-forge/backend/internal/leaderboards"
 	"github.com/sidnevart/proof-forge/backend/internal/notifications"
 	"github.com/sidnevart/proof-forge/backend/internal/personalization"
 	platformconfig "github.com/sidnevart/proof-forge/backend/internal/platform/config"
@@ -27,6 +34,7 @@ import (
 	"github.com/sidnevart/proof-forge/backend/internal/platform/postgres"
 	"github.com/sidnevart/proof-forge/backend/internal/platform/readiness"
 	"github.com/sidnevart/proof-forge/backend/internal/recaps"
+	"github.com/sidnevart/proof-forge/backend/internal/stats"
 	"github.com/sidnevart/proof-forge/backend/internal/teamproof"
 	"github.com/sidnevart/proof-forge/backend/internal/teams"
 	"github.com/sidnevart/proof-forge/backend/internal/telegram"
@@ -35,6 +43,7 @@ import (
 	"github.com/sidnevart/proof-forge/backend/internal/telegram/commands"
 	tgdailylog "github.com/sidnevart/proof-forge/backend/internal/telegram/dailylog"
 	"github.com/sidnevart/proof-forge/backend/internal/users"
+	"github.com/sidnevart/proof-forge/backend/internal/workspaces"
 )
 
 func RunAPI(ctx context.Context, cfg platformconfig.Config) error {
@@ -126,6 +135,9 @@ func registerAPIRoutes(router *chi.Mux, log *slog.Logger, pool *pgxpool.Pool, cf
 	}
 	notifRepo := notifications.NewPostgresRepository(pool)
 
+	analyticsRecorder := analytics.NewPostgresRecorder(pool)
+	analyticsHandler := analytics.NewHandler(analyticsRecorder)
+
 	circlesService := circles.NewService(circles.NewPostgresRepository(pool))
 	goalsHandler := goals.NewHandler(
 		platformlogger.WithComponent(log, "goals"),
@@ -139,14 +151,32 @@ func registerAPIRoutes(router *chi.Mux, log *slog.Logger, pool *pgxpool.Pool, cf
 			goals.WithNotifEmitter(notifRepo),
 			goals.WithCircleLister(circlesService),
 		),
+		analyticsRecorder,
 	)
 	circlesHandler := circles.NewHandler(circlesService)
 
 	teamsService := teams.NewService(teams.NewPostgresRepository(pool))
 	teamsHandler := teams.NewHandler(teamsService)
 
-	analyticsRecorder := analytics.NewPostgresRecorder(pool)
-	analyticsHandler := analytics.NewHandler(analyticsRecorder)
+	workspacesHandler := workspaces.NewHandler(workspaces.NewService(workspaces.NewPostgresRepository(pool)))
+	communityHandler := community.NewHandler(community.NewService(community.NewPostgresRepository(pool)))
+	contractsHandler := contracts.NewHandler(
+		contracts.NewService(contracts.NewPostgresRepository(pool)),
+		contracts.WithTracker(analyticsRecorder),
+	)
+	authorizer := authz.New(pool)
+	adminHandler := authz.NewAdminHandler(pool)
+	statsHandler := stats.NewHandler(stats.NewService(pool))
+	buddyHandler := buddy.NewHandler(buddy.NewService(pool))
+	teamspaceAnalyticsHandler := analytics.NewTeamspaceHandler(pool, authorizer)
+	communityAnalyticsHandler := analytics.NewCommunityHandler(pool, authorizer)
+	adminStatsHandler := admin.NewHandler(pool)
+	leaderboardsHandler := leaderboards.NewHandler(pool, authorizer)
+
+	initiativesHandler := initiatives.NewHandler(initiatives.NewService(
+		initiatives.NewPostgresRepository(pool),
+		&spaceMemberAdapter{pool: pool},
+	))
 
 	dailylogService := dailylog.NewService(dailylog.NewPostgresRepository(pool), dailylog.WithRecorder(analyticsRecorder))
 	dailylogHandler := dailylog.NewHandler(dailylogService)
@@ -182,10 +212,24 @@ func registerAPIRoutes(router *chi.Mux, log *slog.Logger, pool *pgxpool.Pool, cf
 	}
 
 	checkinsSvc := checkins.NewService(checkins.NewPostgresRepository(pool), objStorage, notifRepo).
-		WithMembershipChecker(circlesService)
+		WithMembershipChecker(circlesService).
+		WithTracker(analyticsRecorder)
 	checkinsHandler := checkins.NewHandler(
 		platformlogger.WithComponent(log, "checkins"),
 		checkinsSvc,
+	)
+
+	var assistantProvider ai.AssistantProvider
+	if cfg.AI.Enabled {
+		assistantProvider = ai.NewOpenAIAssistantProvider(cfg.AI.BaseURL, cfg.AI.APIKey, cfg.AI.Model)
+	} else {
+		assistantProvider = ai.NewFakeAssistantProvider()
+	}
+	assistantHandler := ai.NewHandler(
+		assistantProvider,
+		ai.NewPostgresGoalReader(pool),
+		ai.NewPostgresProofReader(pool),
+		analyticsRecorder,
 	)
 
 	var aiProvider recaps.AIProvider
@@ -243,6 +287,13 @@ func registerAPIRoutes(router *chi.Mux, log *slog.Logger, pool *pgxpool.Pool, cf
 			usersHandler.RegisterProtectedRoutes(r)
 			circlesHandler.RegisterRoutes(r)
 			teamsHandler.RegisterRoutes(r)
+			workspacesHandler.RegisterRoutes(r)
+			communityHandler.RegisterRoutes(r)
+			contractsHandler.RegisterRoutes(r)
+			statsHandler.RegisterRoutes(r)
+			buddyHandler.RegisterRoutes(r)
+			teamspaceAnalyticsHandler.RegisterTeamspaceRoutes(r)
+			communityAnalyticsHandler.RegisterCommunityRoutes(r)
 			dailylogHandler.RegisterRoutes(r)
 			teamproofHandler.RegisterRoutes(r)
 			persHandler.RegisterRoutes(r)
@@ -251,6 +302,16 @@ func registerAPIRoutes(router *chi.Mux, log *slog.Logger, pool *pgxpool.Pool, cf
 			recapsHandler.RegisterRoutes(r)
 			inspHandler.RegisterRoutes(r)
 			analyticsHandler.RegisterRoutes(r)
+			leaderboardsHandler.RegisterRoutes(r)
+			initiativesHandler.RegisterRoutes(r)
+			assistantHandler.RegisterRoutes(r)
+
+			// Platform admin routes — requires platform_admin flag.
+			r.Route("/admin", func(r chi.Router) {
+				r.Use(authz.RequirePlatformAdmin(authorizer))
+				adminHandler.RegisterAdminRoutes(r)
+				adminStatsHandler.RegisterRoutes(r)
+			})
 
 			// Telegram link token endpoint.
 			if cfg.Telegram.Enabled {
@@ -260,6 +321,30 @@ func registerAPIRoutes(router *chi.Mux, log *slog.Logger, pool *pgxpool.Pool, cf
 			}
 		})
 	})
+}
+
+// spaceMemberAdapter implements initiatives.SpaceMemberChecker via direct SQL,
+// avoiding a circular import between teams/community and initiatives packages.
+type spaceMemberAdapter struct {
+	pool *pgxpool.Pool
+}
+
+func (a *spaceMemberAdapter) IsTeamspaceMember(ctx context.Context, spaceID, userID int64) (bool, error) {
+	var exists bool
+	err := a.pool.QueryRow(ctx,
+		`SELECT EXISTS(SELECT 1 FROM team_memberships WHERE team_id=$1 AND user_id=$2 AND status='active')`,
+		spaceID, userID,
+	).Scan(&exists)
+	return exists, err
+}
+
+func (a *spaceMemberAdapter) IsCommunityMember(ctx context.Context, spaceID, userID int64) (bool, error) {
+	var exists bool
+	err := a.pool.QueryRow(ctx,
+		`SELECT EXISTS(SELECT 1 FROM community_memberships WHERE community_space_id=$1 AND user_id=$2 AND status='active')`,
+		spaceID, userID,
+	).Scan(&exists)
+	return exists, err
 }
 
 func makeLinkTokenHandler(repo *telegram.Repository, botUsername string, log *slog.Logger) http.HandlerFunc {

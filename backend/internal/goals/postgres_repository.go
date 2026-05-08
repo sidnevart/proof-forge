@@ -86,7 +86,7 @@ func (r *PostgresRepository) ListGoalsForUser(ctx context.Context, userID int64)
 	const query = `
 		SELECT
 			g.id,
-			g.circle_id,
+			COALESCE(g.circle_id, 0) AS circle_id,
 			COALESCE(g.team_id, 0) AS team_id,
 			g.title,
 			g.description,
@@ -95,6 +95,12 @@ func (r *PostgresRepository) ListGoalsForUser(ctx context.Context, userID int64)
 			g.status,
 			g.current_progress_health,
 			g.current_streak_count,
+			g.movement_mode,
+			g.rhythm_cadence,
+			g.challenge_duration_days,
+			g.challenge_starts_at,
+			g.challenge_ends_at,
+			g.initiative_id,
 			g.created_at,
 			g.updated_at,
 			b.id,
@@ -108,9 +114,9 @@ func (r *PostgresRepository) ListGoalsForUser(ctx context.Context, userID int64)
 			i.expires_at,
 			CASE WHEN g.owner_user_id = $1 THEN 'owner' ELSE 'buddy' END AS viewer_role
 		FROM goals g
-		JOIN users b ON b.id = g.buddy_user_id
-		JOIN pacts p ON p.goal_id = g.id
-		JOIN invites i ON i.goal_id = g.id
+		LEFT JOIN users b ON b.id = g.buddy_user_id
+		LEFT JOIN pacts p ON p.goal_id = g.id
+		LEFT JOIN invites i ON i.goal_id = g.id
 		WHERE g.owner_user_id = $1 OR g.buddy_user_id = $1
 		ORDER BY g.created_at DESC
 	`
@@ -124,9 +130,21 @@ func (r *PostgresRepository) ListGoalsForUser(ctx context.Context, userID int64)
 	goals := make([]GoalView, 0)
 	for rows.Next() {
 		var item GoalView
-		var acceptedAt sql.NullTime
 		var proofExamples, category sql.NullString
+		var rhythmCadence sql.NullString
+		var challengeDurationDays sql.NullInt32
+		var challengeStartsAt, challengeEndsAt sql.NullTime
+		var initiativeID sql.NullInt64
 		var viewerRole string
+		// Buddy/pact/invite fields are NULL for initiative goals (no buddy model).
+		var buddyID sql.NullInt64
+		var buddyEmail, buddyDisplayName sql.NullString
+		var pactID sql.NullInt64
+		var pactStatus sql.NullString
+		var acceptedAt sql.NullTime
+		var inviteID sql.NullInt64
+		var inviteStatus sql.NullString
+		var inviteExpiresAt sql.NullTime
 		if err := rows.Scan(
 			&item.Goal.ID,
 			&item.Goal.CircleID,
@@ -138,26 +156,64 @@ func (r *PostgresRepository) ListGoalsForUser(ctx context.Context, userID int64)
 			&item.Goal.Status,
 			&item.Goal.CurrentProgressHealth,
 			&item.Goal.CurrentStreakCount,
+			&item.Goal.MovementMode,
+			&rhythmCadence,
+			&challengeDurationDays,
+			&challengeStartsAt,
+			&challengeEndsAt,
+			&initiativeID,
 			&item.Goal.CreatedAt,
 			&item.Goal.UpdatedAt,
-			&item.Buddy.ID,
-			&item.Buddy.Email,
-			&item.Buddy.DisplayName,
-			&item.Pact.ID,
-			&item.Pact.Status,
+			&buddyID,
+			&buddyEmail,
+			&buddyDisplayName,
+			&pactID,
+			&pactStatus,
 			&acceptedAt,
-			&item.Invite.ID,
-			&item.Invite.Status,
-			&item.Invite.ExpiresAt,
+			&inviteID,
+			&inviteStatus,
+			&inviteExpiresAt,
 			&viewerRole,
 		); err != nil {
 			return nil, fmt.Errorf("scan user goal: %w", err)
 		}
 		item.Goal.ProofExamples = proofExamples.String
 		item.Goal.Category = category.String
+		if rhythmCadence.Valid {
+			rc := RhythmCadence(rhythmCadence.String)
+			item.Goal.RhythmCadence = &rc
+		}
+		if challengeDurationDays.Valid {
+			n := int(challengeDurationDays.Int32)
+			item.Goal.ChallengeDurationDays = &n
+		}
+		if challengeStartsAt.Valid {
+			item.Goal.ChallengeStartsAt = &challengeStartsAt.Time
+		}
+		if challengeEndsAt.Valid {
+			item.Goal.ChallengeEndsAt = &challengeEndsAt.Time
+		}
+		if initiativeID.Valid {
+			id := initiativeID.Int64
+			item.Goal.InitiativeID = &id
+		}
+		if buddyID.Valid {
+			item.Buddy.ID = buddyID.Int64
+			item.Buddy.Email = buddyEmail.String
+			item.Buddy.DisplayName = buddyDisplayName.String
+		}
+		if pactID.Valid {
+			item.Pact.ID = pactID.Int64
+			item.Pact.Status = PactStatus(pactStatus.String)
+		}
 		if acceptedAt.Valid {
 			value := acceptedAt.Time
 			item.Pact.AcceptedAt = &value
+		}
+		if inviteID.Valid {
+			item.Invite.ID = inviteID.Int64
+			item.Invite.Status = InviteStatus(inviteStatus.String)
+			item.Invite.ExpiresAt = inviteExpiresAt.Time
 		}
 		item.ViewerRole = ViewerRole(viewerRole)
 		goals = append(goals, item)
@@ -452,14 +508,25 @@ func (r *PostgresRepository) insertGoal(ctx context.Context, tx pgx.Tx, params C
 			category,
 			status,
 			current_progress_health,
-			current_streak_count
+			current_streak_count,
+			movement_mode,
+			rhythm_cadence,
+			challenge_duration_days,
+			challenge_starts_at,
+			challenge_ends_at
 		)
-		VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, 0)
-		RETURNING id, circle_id, title, description, proof_examples, category, status, current_progress_health, current_streak_count, created_at, updated_at
+		VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, 0, $10, $11, $12, $13, $14)
+		RETURNING id, circle_id, title, description, proof_examples, category, status,
+		          current_progress_health, current_streak_count,
+		          movement_mode, rhythm_cadence, challenge_duration_days, challenge_starts_at, challenge_ends_at,
+		          created_at, updated_at
 	`
 
 	var goal Goal
 	var proofExamplesOut, categoryOut sql.NullString
+	var rhythmCadence sql.NullString
+	var challengeDurationDays sql.NullInt32
+	var challengeStartsAt, challengeEndsAt sql.NullTime
 	if err := tx.QueryRow(
 		ctx,
 		query,
@@ -472,6 +539,11 @@ func (r *PostgresRepository) insertGoal(ctx context.Context, tx pgx.Tx, params C
 		params.Category,
 		params.GoalStatus,
 		params.ProgressHealth,
+		params.MovementMode,
+		params.RhythmCadence,
+		params.ChallengeDurationDays,
+		params.ChallengeStartsAt,
+		params.ChallengeEndsAt,
 	).Scan(
 		&goal.ID,
 		&goal.CircleID,
@@ -482,6 +554,11 @@ func (r *PostgresRepository) insertGoal(ctx context.Context, tx pgx.Tx, params C
 		&goal.Status,
 		&goal.CurrentProgressHealth,
 		&goal.CurrentStreakCount,
+		&goal.MovementMode,
+		&rhythmCadence,
+		&challengeDurationDays,
+		&challengeStartsAt,
+		&challengeEndsAt,
 		&goal.CreatedAt,
 		&goal.UpdatedAt,
 	); err != nil {
@@ -489,6 +566,20 @@ func (r *PostgresRepository) insertGoal(ctx context.Context, tx pgx.Tx, params C
 	}
 	goal.ProofExamples = proofExamplesOut.String
 	goal.Category = categoryOut.String
+	if rhythmCadence.Valid {
+		rc := RhythmCadence(rhythmCadence.String)
+		goal.RhythmCadence = &rc
+	}
+	if challengeDurationDays.Valid {
+		n := int(challengeDurationDays.Int32)
+		goal.ChallengeDurationDays = &n
+	}
+	if challengeStartsAt.Valid {
+		goal.ChallengeStartsAt = &challengeStartsAt.Time
+	}
+	if challengeEndsAt.Valid {
+		goal.ChallengeEndsAt = &challengeEndsAt.Time
+	}
 
 	return goal, nil
 }

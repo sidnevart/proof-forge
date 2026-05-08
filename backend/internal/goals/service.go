@@ -114,20 +114,31 @@ func (s *Service) CreateGoal(ctx context.Context, owner users.User, input Create
 
 	input = input.Normalize()
 
+	var challengeEndsAt *time.Time
+	if input.MovementMode == MovementModeChallenge && input.ChallengeDurationDays != nil && input.ChallengeStartsAt != nil {
+		t := input.ChallengeStartsAt.AddDate(0, 0, *input.ChallengeDurationDays)
+		challengeEndsAt = &t
+	}
+
 	params := CreateGoalParams{
-		OwnerID:         owner.ID,
-		OwnerEmail:      owner.Email,
-		Title:           input.Title,
-		Description:     input.Description,
-		BuddyName:       input.BuddyName,
-		BuddyEmail:      input.BuddyEmail,
-		ProofExamples:   input.ProofExamples,
-		Category:        input.Category,
-		GoalStatus:      GoalStatusPendingBuddyAcceptance,
-		PactStatus:      PactStatusInvited,
-		InviteStatus:    InviteStatusPending,
-		ProgressHealth:  ProgressHealthUnknown,
-		InviteExpiresAt: s.clock().UTC().Add(s.inviteTTL),
+		OwnerID:               owner.ID,
+		OwnerEmail:            owner.Email,
+		Title:                 input.Title,
+		Description:           input.Description,
+		BuddyName:             input.BuddyName,
+		BuddyEmail:            input.BuddyEmail,
+		ProofExamples:         input.ProofExamples,
+		Category:              input.Category,
+		GoalStatus:            GoalStatusPendingBuddyAcceptance,
+		PactStatus:            PactStatusInvited,
+		InviteStatus:          InviteStatusPending,
+		ProgressHealth:        ProgressHealthUnknown,
+		InviteExpiresAt:       s.clock().UTC().Add(s.inviteTTL),
+		MovementMode:          input.MovementMode,
+		RhythmCadence:         input.RhythmCadence,
+		ChallengeDurationDays: input.ChallengeDurationDays,
+		ChallengeStartsAt:     input.ChallengeStartsAt,
+		ChallengeEndsAt:       challengeEndsAt,
 	}
 
 	if input.CircleID > 0 {

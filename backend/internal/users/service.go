@@ -109,6 +109,17 @@ func (s *Service) Login(ctx context.Context, input LoginInput) (RegistrationResu
 	return s.issueTokens(ctx, user)
 }
 
+// LoginAs creates a session for an existing user by ID without any credential
+// check. ONLY safe to expose in development environments — the caller is
+// responsible for gating this behind an env check.
+func (s *Service) LoginAs(ctx context.Context, userID int64) (RegistrationResult, error) {
+	user, err := s.users.FindByID(ctx, userID)
+	if err != nil {
+		return RegistrationResult{}, fmt.Errorf("find user: %w", err)
+	}
+	return s.issueTokens(ctx, user)
+}
+
 // issueTokens is the common tail of Login and Register. It mints an access
 // session row and (if the refresh repo is wired) a refresh-token row, and
 // returns the raw values ready for the handler to set as cookies.

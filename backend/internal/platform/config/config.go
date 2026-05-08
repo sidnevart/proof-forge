@@ -162,7 +162,7 @@ func Load() (Config, error) {
 			// Default refresh TTL: 30 days. After this the user is genuinely
 			// asked to log in again.
 			RefreshTTL:   mustDuration("REFRESH_TTL", 30*24*time.Hour),
-			CookieDomain: getEnv("COOKIE_DOMAIN", ""),
+			CookieDomain: normalizeCookieDomain(getEnv("COOKIE_DOMAIN", "")),
 		},
 		Worker: WorkerConfig{
 			RecapSweepInterval: mustDuration("WORKER_RECAP_SWEEP_INTERVAL", time.Minute),
@@ -268,6 +268,16 @@ func getEnv(key, fallback string) string {
 		return value
 	}
 	return fallback
+}
+
+func normalizeCookieDomain(value string) string {
+	domain := strings.ToLower(strings.TrimSpace(value))
+	switch domain {
+	case "", "localhost", "127.0.0.1", "::1", "[::1]":
+		return ""
+	default:
+		return domain
+	}
 }
 
 func mustInt(key string, fallback int) int {

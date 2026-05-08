@@ -125,24 +125,24 @@ export function LandingPage() {
       <section ref={heroRef} className={styles.hero}>
         <div className={styles.heroCopy}>
           <SplitTextHeading tag="h1" className={styles.heroH1}>
-            {"ТЫ ДЕЛАЕШЬ.\nКРУГ ВИДИТ.\nНИКТО НЕ ТЕРЯЕТСЯ."}
+            {"СО СЛЕДУЮЩЕГО\nПОНЕДЕЛЬНИКА\nУЖЕ БЫЛО."}
           </SplitTextHeading>
           <p className={styles.heroSub}>
-            8 человек. 28 дней. Один пруф в день.
-            Фотка, ссылка, строчка текста — годится всё.
-            Пропустил — заметят. Это и есть смысл.
+            Среда решает больше, чем сила воли.
+            Когда рядом люди которые двигаются — ты двигаешься тоже.
+            Не потому что должен. Потому что не хочется выпадать.
           </p>
           <Link
             ref={ctaRef}
-            href="/dashboard"
+            href="/workspaces/new"
             className={styles.heroCta}
             style={{
               transform: `translate(${ctaMagX}px, ${ctaMagY}px)`,
             }}
           >
-            СОБРАТЬ КРУГ
+            СОБРАТЬ СВОЙ КРУГ
           </Link>
-          <p className={styles.heroFine}>Бесплатно. Без приложения. Через Telegram.</p>
+          <p className={styles.heroFine}>Бесплатно. Для команд, сообществ и одиночек.</p>
           <LiveCounters />
         </div>
         <div className={styles.heroMock}>
@@ -150,28 +150,29 @@ export function LandingPage() {
         </div>
       </section>
 
-      {/* 2. Ты не один */}
+      {/* 2. Три опоры */}
       <section className={styles.supportSection} data-animate>
-        <div className={styles.sectionHeader}>ТЫ НЕ ОДИН.</div>
+        <div className={styles.sectionHeader}>КАК НАМЕРЕНИЕ СТАНОВИТСЯ ДВИЖЕНИЕМ.</div>
         <div className={styles.supportGrid}>
+          <TiltCard className={styles.supportCard}>
+            <span className={styles.supportTitle}>СИЛЬНАЯ СРЕДА</span>
+            <p className={styles.supportDesc}>
+              Люди рядом которые идут. Не аудитория — компания.
+              Видят твоё движение, ты видишь их. Без рейтинга стыда.
+            </p>
+          </TiltCard>
           <TiltCard className={styles.supportCard}>
             <span className={styles.supportTitle}>БАДДИ</span>
             <p className={styles.supportDesc}>
-              Видит пруф первым. Спрашивает, если непонятно.
-              Один человек, не комитет.
+              Видит что ты сделал первым. Отвечает — одобрить или уточнить.
+              Не контролёр — партнёр в одном ритме.
             </p>
           </TiltCard>
           <TiltCard className={styles.supportCard}>
-            <span className={styles.supportTitle}>БОТ</span>
+            <span className={styles.supportTitle}>AI-ДОСЬЕ</span>
             <p className={styles.supportDesc}>
-              Молчишь весь день — напомнит вечером.
-              Ровно один раз. Без капса.
-            </p>
-          </TiltCard>
-          <TiltCard className={styles.supportCard}>
-            <span className={styles.supportTitle}>КРУГ</span>
-            <p className={styles.supportDesc}>
-              До 7 человек. Не лидерборд. Просто рядом.
+              Итог периода: навыки, результаты, паттерны роста.
+              Готово для 1:1 и ИПР — без выдумки раз в квартал.
             </p>
           </TiltCard>
         </div>
@@ -179,27 +180,30 @@ export function LandingPage() {
 
       {/* 3. Как это работает */}
       <section className={styles.howSection} data-animate>
-        <div className={styles.sectionHeader}>КАК ЭТО РАБОТАЕТ</div>
+        <div className={styles.sectionHeader}>ТРИ ШАГА. ОДИН ДЕНЬ.</div>
         <div className={styles.stepsGrid}>
           <TiltCard className={styles.step}>
             <span className={styles.stepNum}>01</span>
-            <span className={styles.stepTitle}>СОБЕРИ КРУГ</span>
+            <span className={styles.stepTitle}>ВЫБЕРИ ДВИЖЕНИЕ</span>
             <p className={styles.stepDesc}>
-              Пригласи 2–7 человек. Без них платформа не работает. Видимость — это они.
+              Разовый результат, регулярный ритм или рабочая инициатива.
+              AI предложит 3 конкретных пути с чего начать прямо сейчас.
             </p>
           </TiltCard>
           <TiltCard className={styles.step}>
             <span className={styles.stepNum}>02</span>
-            <span className={styles.stepTitle}>СДАВАЙ ПРУФ</span>
+            <span className={styles.stepTitle}>ЗАФИКСИРУЙ РЕЗУЛЬТАТ</span>
             <p className={styles.stepDesc}>
-              Каждый день — одно подтверждение. Фото, текст, ссылка. Бадди проверяет.
+              Скриншот, ссылка, текст — конкретный артефакт.
+              AI проверяет до отправки. Бадди подтверждает. Застрял — оформи анти-пруф.
             </p>
           </TiltCard>
           <TiltCard className={styles.step}>
             <span className={styles.stepNum}>03</span>
-            <span className={styles.stepTitle}>БУДЬ В РИТМЕ</span>
+            <span className={styles.stepTitle}>НАРАЩИВАЙ ДИСЦИПЛИНУ</span>
             <p className={styles.stepDesc}>
-              Таблица, серии, события. Кто не сдал — заморозка. Кто вернулся — камбэк.
+              Серия недель, личный рекорд, только сравнение с собой.
+              Среда тянет вперёд — не ранжирует. Досье роста готово когда нужно.
             </p>
           </TiltCard>
         </div>
@@ -212,12 +216,12 @@ export function LandingPage() {
           <div className={styles.tiksiLabel}>ДО КОНЦА ДНЯ</div>
         </div>
         <div className={styles.tiksiRight}>
-          <h2 className={styles.tiksiTitle}>КРУГ ИДЁТ В ОДНОМ РИТМЕ.</h2>
+          <h2 className={styles.tiksiTitle}>СРЕДА ИДЁТ В ОДНОМ РИТМЕ.</h2>
           <ul className={styles.tiksiList}>
             <li><span className={styles.tiksiTime}>&lt;4ч</span> Бот пишет: «как там сегодня?». Можешь не отвечать.</li>
             <li><span className={styles.tiksiTime} style={{ color: "var(--danger)" }}>&lt;2ч</span> Таймер ярче. Бадди уже видит, что ты в работе.</li>
             <li><span className={styles.tiksiTime} style={{ color: "var(--danger)" }}>&lt;30мин</span> Бот пинганёт ещё раз. Без капса.</li>
-            <li><span className={styles.tiksiTime} style={{ color: "var(--danger)" }}>0:00</span> Заморозка. Пометка, не наказание. Завтра одного пруфа достаточно.</li>
+            <li><span className={styles.tiksiTime} style={{ color: "var(--danger)" }}>0:00</span> Заморозка. Пометка, не наказание. Завтра одного шага достаточно.</li>
           </ul>
         </div>
       </section>
@@ -225,7 +229,7 @@ export function LandingPage() {
       {/* 5. Telegram */}
       <section className={styles.telegramSection} data-animate>
         <div className={styles.telegramHeader}>
-          <div className={styles.sectionHeader}>БОТ В TELEGRAM ВЕДЁТ ТЕБЯ ОБРАТНО.</div>
+          <div className={styles.sectionHeader}>СРЕДА НЕ ДАЁТ ВЫПАСТЬ.</div>
         </div>
         <TelegramFeed messages={TELEGRAM_MESSAGES} />
       </section>
@@ -233,10 +237,10 @@ export function LandingPage() {
       {/* 6. Approval */}
       <section className={styles.approvalSection} data-animate>
         <div className={styles.approvalLeft}>
-          <h2 className={styles.approvalTitle}>БАДДИ — НЕ КОНТРОЛЁР.</h2>
+          <h2 className={styles.approvalTitle}>БАДДИ — ПАРТНЁР, НЕ СУДЬЯ.</h2>
           <p className={styles.approvalDesc}>
-            Смотрит пруф, тапает «✓» или пишет «не понял, перепиши».
-            Молчаливого реджекта не бывает — без комментария кнопка
+            Смотрит что ты сделал, тапает «✓» или пишет «не понял, перепиши».
+            Молчаливого отказа не бывает — без комментария кнопка
             не работает.
           </p>
         </div>
@@ -245,17 +249,19 @@ export function LandingPage() {
         </div>
       </section>
 
-      {/* 7. Для команд */}
+      {/* 7. Для кого */}
       <section className={styles.teamsSection} data-animate>
-        <div className={styles.sectionHeader}>НЕ ТОЛЬКО ДЛЯ ДРУЗЕЙ.</div>
+        <div className={styles.sectionHeader}>ДЛЯ КАЖДОЙ РОЛИ — СВОЁ.</div>
         <p className={styles.teamsLead}>
-          Тимлиды, сотрудники, ИПР. То же самое, только круг — твоя команда.
+          Одна механика, разные среды. Личная, командная, клубная.
         </p>
         <div className={styles.teamsGrid}>
           <TiltCard className={styles.teamsCard}>
             <span className={styles.teamsCardTitle}>ДЛЯ СЕБЯ</span>
             <p className={styles.teamsCardDesc}>
-              Личные цели. Друзья как круг. Бадди — кто-то один.
+              Один бадди. Свой ритм. Только сравнение
+              с собой вчерашним — никакого публичного ранжирования.
+              Среда подталкивает, не заставляет.
             </p>
             <Link href="/dashboard" className={styles.teamsCardCta}>
               НАЧНИ С СЕБЯ →
@@ -264,11 +270,22 @@ export function LandingPage() {
           <TiltCard className={styles.teamsCard}>
             <span className={styles.teamsCardTitle}>ДЛЯ КОМАНДЫ</span>
             <p className={styles.teamsCardDesc}>
-              Тимлид как бадди. Команда как круг. У каждого свой ИПР,
-              тимлид видит всё. Без квартальных ревью-агоний.
+              Тимлид видит энергию команды, не инструмент давления.
+              У каждого свой ИПР. Артефакты работы — готовая база
+              для ревью и 1:1.
             </p>
-            <Link href="#team-faq" className={styles.teamsCardCta}>
-              УЗНАТЬ ПРО КОМАНДЫ →
+            <Link href="/workspaces/new" className={styles.teamsCardCta}>
+              СОЗДАТЬ WORKSPACE →
+            </Link>
+          </TiltCard>
+          <TiltCard className={styles.teamsCard}>
+            <span className={styles.teamsCardTitle}>ДЛЯ СООБЩЕСТВА</span>
+            <p className={styles.teamsCardDesc}>
+              Telegram-клубы, внешние сообщества. Совместный challenge.
+              Лучшие результаты недели — витрина без унижения аутсайдеров.
+            </p>
+            <Link href="/workspaces/new" className={styles.teamsCardCta}>
+              ЗАПУСТИТЬ СООБЩЕСТВО →
             </Link>
           </TiltCard>
         </div>
@@ -295,13 +312,13 @@ export function LandingPage() {
 
       {/* 10. Final CTA */}
       <section className={styles.finalCta} data-animate>
-        <h2 className={styles.finalTitle}>СОБЕРИ КРУГ.<br />НАЧНИ СЕГОДНЯ.</h2>
+        <h2 className={styles.finalTitle}>СО СЛЕДУЮЩЕГО<br />ПОНЕДЕЛЬНИКА<br />УЖЕ БЫЛО.</h2>
         <Link href="/dashboard" className={styles.finalCtaBtn}>
-          СОЗДАТЬ КРУГ →
+          ЗАФИКСИРОВАТЬ ПЕРВЫЙ ШАГ →
         </Link>
         <p className={styles.finalFine}>
-          Бесплатно. Через Telegram. Можно начать одному —
-          и пригласить круг, когда будешь готов.
+          Бесплатно. Для одиночек, команд и сообществ.
+          Первый шаг — за 2 минуты.
         </p>
       </section>
 
@@ -329,7 +346,7 @@ function ApprovalCard() {
         .filter(Boolean)
         .join(" ")}
     >
-      <div className={styles.approvalCardHeader}>АРТЁМ СДАЛ В КРУГЕ «БЕЖАТЬ 5КМ»</div>
+      <div className={styles.approvalCardHeader}>АРТЁМ ЗАВЕРШИЛ В КРУГЕ «БЕЖАТЬ 5КМ»</div>
       <div className={styles.approvalCardBody}>Скриншот из Strava. 5.2 км. 28:14.</div>
       <div className={styles.approvalBtns}>
         <div
@@ -356,56 +373,64 @@ function ApprovalCard() {
 }
 
 const TELEGRAM_MESSAGES: TgMessage[] = [
-  { icon: "🟢", text: "АРТЁМ СДАЛ. ВТОРОЙ ДЕНЬ ПОДРЯД.", kind: "win" },
+  { icon: "🟢", text: "АРТЁМ В РИТМЕ. ВТОРОЙ ДЕНЬ ПОДРЯД.", kind: "win" },
   { icon: "💬", text: "МАША МОЛЧИТ ВТОРОЙ ДЕНЬ. БАДДИ НАПИСАЛ.", kind: "warn" },
   { icon: "⏱", text: "2 ЧАСА ДО ПОЛУНОЧИ. ОДНА СТРОЧКА.", kind: "warn" },
-  { icon: "⚡", text: "ДЕНИС НАПИСАЛ ПЕРВЫМ ЗА ДВЕ НЕДЕЛИ.", kind: "win" },
+  { icon: "⚡", text: "ДЕНИС ВЕРНУЛСЯ. ПЕРВЫЙ ШАГ ЗА ДВЕ НЕДЕЛИ.", kind: "win" },
   { icon: "📈", text: "У ИЛЬИ 14 ДНЕЙ ПОДРЯД.", kind: "win" },
 ];
 
 const GLOSSARY = [
   {
     word: "ПРУФ",
-    def: "Подтверждение прогресса. Фото, видео, ссылка, скриншот. Бадди смотрит и решает — зачтено или нет.",
+    def: "Конкретный артефакт сделанной работы: ссылка, скриншот, текст. Бадди смотрит и подтверждает.",
   },
   {
-    word: "СЕРИЯ",
-    def: "Сколько дней подряд сдавал. Прервалась — окей, начинаешь снова. Прошлый максимум видно отдельно.",
+    word: "PROOF CONTRACT",
+    def: "Конкретная договорённость с собой и бадди: что сделаешь, каким артефактом, к какой дате.",
   },
   {
-    word: "РАНГ",
-    def: "Место в круге по набранным очкам за неделю. Меняется при каждом одобрении и заморозке.",
+    word: "АНТИ-ПРУФ",
+    def: "Честная фиксация попытки которая не получилась. Это не провал — это данные для следующего шага.",
   },
   {
-    word: "ЗАМОРОЗКА",
-    def: "Значит «сегодня без пруфа». Все в круге видят. Сдашь завтра — снимется. Это просто такая пометка.",
+    word: "СИЛЬНАЯ СРЕДА",
+    def: "Люди рядом которые двигаются. Их присутствие создаёт естественное давление — без стыда и рейтинга.",
   },
   {
     word: "БАДДИ",
-    def: "Партнёр, которому ты отправляешь пруф. Он одобряет или отклоняет. Без его решения очки не засчитываются.",
+    def: "Партнёр который видит твои результаты первым. Не контролёр — поддержка. Без молчаливого отказа.",
+  },
+  {
+    word: "ДОСЬЕ РОСТА",
+    def: "AI-итог периода: навыки, результаты, паттерны, следующий фокус. Для 1:1 и ИПР.",
   },
 ];
 
 const FAQ = [
   {
-    q: "ЧТО ЕСЛИ Я ПРОПУСТИЛ ДЕНЬ?",
-    a: "Ничего. Будет пометка «вчера без пруфа» — её видит круг. Сдашь сегодня — снимется. Бадди обычно пишет первым: «заболел? занят? давай сегодня?».",
+    q: "ЧТО ТАКОЕ PROOF CONTRACT?",
+    a: "Конкретная договорённость: что именно сделаешь, каким артефактом это зафиксируешь, к какой дате. Создаётся за 2 минуты. AI предложит 3 варианта если не знаешь с чего начать.",
+  },
+  {
+    q: "ЧТО ЕСЛИ ЗАСТРЯЛ И НЕ ЗНАЕШЬ КАК ДВИГАТЬСЯ?",
+    a: "Оформи «анти-пруф» — честную фиксацию попытки. Это не провал, это данные. AI поможет сформулировать что пробовал, где блокер, каким будет следующий шаг.",
   },
   {
     q: "ЭТО БЕСПЛАТНО?",
     a: "Да. Полностью. На старте — без платных функций. Просто работает.",
   },
   {
-    q: "НУЖНО ПРИЛОЖЕНИЕ?",
-    a: "Нет. Всё через браузер + Telegram-бот для нотификаций и одобрений.",
-  },
-  {
-    q: "МОЙ КРУГ БУДЕТ ВИДЕН ВСЕМ?",
-    a: "Только участникам твоего круга. Публичная лента — opt-in, можно не включать.",
+    q: "МОИ ДАННЫЕ ВИДЯТ ВСЕ?",
+    a: "Нет. Каждый видит только то что ты разрешил. Тимлид видит агрегированную картину команды, не инструмент давления. Нет публичного ранжирования аутсайдеров.",
   },
   {
     q: "А ДЛЯ КОМАНДЫ ЭТО РАБОТАЕТ?",
-    a: "Да. Тимлид — это бадди, команда — это круг. Каждый ведёт свой ИПР, тимлид видит и реагирует. Когда подходит ревью — у вас уже есть вся история, не надо ничего вспоминать.",
+    a: "Да. Создай Workspace, добавь Teamspace — и тимлид видит энергию команды: кто движется, где блокеры, популярные направления. Артефакты работы собираются автоматически в базу для ревью и 1:1.",
     anchorId: "team-faq",
+  },
+  {
+    q: "КАК ЗАПУСТИТЬ СООБЩЕСТВО?",
+    a: "Создай Community Space — для Telegram-клубов и внешних сообществ. Совместный challenge, лучшие результаты недели как витрина, аналитика вовлечённости. Без публичного унижения участников.",
   },
 ];

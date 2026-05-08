@@ -1,3 +1,3 @@
 # Web Libraries
 
-Здесь лежат frontend helpers и demo data для bootstrap-этапа.
+Здесь лежат frontend helpers для bootstrap-этапа.

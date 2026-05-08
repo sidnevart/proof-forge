@@ -5,6 +5,17 @@ import type {
   CircleDetail,
   CircleFeedItem,
   CircleInvitation,
+  CreateContractInput,
+  CreateInitiativeInput,
+  CreateWorkspaceInput,
+  Initiative,
+  InitiativeDetail,
+  InitiativeSpaceType,
+  JoinInitiativeResult,
+  NowCardData,
+  PendingProof,
+  PersonalLeaderboard,
+  UserStats,
   DailyLogEntry,
   DailyLogStreak,
   DashboardResponse,
@@ -15,6 +26,7 @@ import type {
   LeadBriefing,
   Milestone,
   ProofComment,
+  ProofContract,
   PublicGoal,
   PublicProof,
   ReviewRecord,
@@ -25,6 +37,7 @@ import type {
   TeamRole,
   TelegramLinkToken,
   User,
+  Workspace,
   WeeklyAssembly,
   WeeklyRecap,
 } from "@/lib/types";
@@ -764,6 +777,90 @@ export async function getLeadBriefing(
     `/v1/teams/${teamId}/members/${userId}/briefing`,
   );
   return res.data;
+}
+
+// ── Stats ─────────────────────────────────────────────────────────────────────
+
+export async function getNowCard(): Promise<NowCardData> {
+  return request<NowCardData>("/v1/me/now");
+}
+
+export async function getUserStats(): Promise<UserStats> {
+  return request<UserStats>("/v1/me/stats");
+}
+
+export async function getPersonalLeaderboard(): Promise<PersonalLeaderboard> {
+  return request<PersonalLeaderboard>("/v1/me/leaderboard");
+}
+
+// ── Contracts ─────────────────────────────────────────────────────────────────
+
+export async function createContract(goalId: number, input: CreateContractInput): Promise<ProofContract> {
+  return request<ProofContract>(`/v1/goals/${goalId}/contracts`, {
+    method: "POST",
+    body: JSON.stringify(input),
+  });
+}
+
+// ── Workspaces ────────────────────────────────────────────────────────────────
+
+export async function createWorkspace(input: CreateWorkspaceInput): Promise<Workspace> {
+  return request<Workspace>("/v1/workspaces", {
+    method: "POST",
+    body: JSON.stringify(input),
+  });
+}
+
+export async function listWorkspaces(): Promise<Workspace[]> {
+  return request<Workspace[]>("/v1/workspaces");
+}
+
+export async function checkWorkspaceSlug(slug: string): Promise<boolean> {
+  const res = await request<{ available: boolean }>(`/v1/workspaces/slug/${encodeURIComponent(slug)}/available`);
+  return res.available;
+}
+
+// ── Space Initiatives ─────────────────────────────────────────────────────────
+
+export async function listInitiatives(
+  spaceType: InitiativeSpaceType,
+  spaceId: number,
+): Promise<Initiative[]> {
+  return request<Initiative[]>(`/v1/spaces/${spaceType}/${spaceId}/initiatives`);
+}
+
+export async function createInitiative(
+  spaceType: InitiativeSpaceType,
+  spaceId: number,
+  input: CreateInitiativeInput,
+): Promise<Initiative> {
+  return request<Initiative>(`/v1/spaces/${spaceType}/${spaceId}/initiatives`, {
+    method: "POST",
+    body: JSON.stringify(input),
+  });
+}
+
+export async function getInitiative(id: number): Promise<InitiativeDetail> {
+  return request<InitiativeDetail>(`/v1/initiatives/${id}`);
+}
+
+export async function joinInitiative(id: number): Promise<JoinInitiativeResult> {
+  return request<JoinInitiativeResult>(`/v1/initiatives/${id}/join`, { method: "POST" });
+}
+
+export async function listPendingProofs(initiativeId: number): Promise<PendingProof[]> {
+  return request<PendingProof[]>(`/v1/initiatives/${initiativeId}/pending-proofs`);
+}
+
+export async function approveInitiativeProof(
+  initiativeId: number,
+  checkinId: number,
+  comment?: string,
+): Promise<void> {
+  await request<void>(`/v1/initiatives/${initiativeId}/proofs/${checkinId}/approve`, {
+    method: "POST",
+    body: JSON.stringify({ comment: comment ?? "" }),
+  });
 }
 
 // ── Analytics (Phase 4) ───────────────────────────────────────────────────────

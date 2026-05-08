@@ -3,7 +3,8 @@
   flex-direction: column;
   gap: 2px;
   max-width: 600px;
-  /* Fixed height so the container doesn't reflow when items enter/exit */
+  /* 4 items × 52px + 3 gaps × 2px — hard cap prevents reflow */
+  height: 214px;
   overflow: hidden;
 }
 

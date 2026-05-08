@@ -59,6 +59,9 @@ func (s repoStub) CountEvidence(ctx context.Context, id int64) (int, error) {
 	}
 	return 0, nil
 }
+func (s repoStub) CountSubmittedByUser(_ context.Context, _ int64) (int, error) {
+	return 0, nil
+}
 func (s repoStub) RecordReview(ctx context.Context, p RecordReviewParams) (ReviewRecord, error) {
 	if s.recordReview != nil {
 		return s.recordReview(ctx, p)

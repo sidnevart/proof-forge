@@ -26,6 +26,18 @@ const (
 	EventNotificationClicked     EventName = "notification_clicked"
 	EventPersonalizationInvoked  EventName = "personalization_invoked"
 	EventPersonalizationFallback EventName = "personalization_fallback"
+
+	// Pilot instrumentation events.
+	EventProofContractCreated EventName = "proof_contract_created"
+	EventFirstProofSubmitted  EventName = "first_proof_submitted"
+	EventWeeklyProofSubmitted EventName = "weekly_proof_submitted"
+	EventBuddyMatched         EventName = "buddy_matched"
+	EventDossierGenerated     EventName = "dossier_generated"
+	EventSeasonCompleted      EventName = "season_completed"
+	EventWorkspaceCreated     EventName = "workspace_created"
+	EventTeamspaceCreated     EventName = "teamspace_created"
+	EventAiSuggestionUsed     EventName = "ai_suggestion_used"
+	EventAntiProofSubmitted   EventName = "anti_proof_submitted"
 )
 
 // Source identifies who emitted the event.
@@ -53,8 +65,10 @@ type Event struct {
 
 // AllowedFrontendEvents is the whitelist for POST /v1/analytics/event.
 var AllowedFrontendEvents = map[EventName]bool{
-	EventTeamFeedOpened:     true,
+	EventTeamFeedOpened:      true,
 	EventNotificationClicked: true,
+	EventAiSuggestionUsed:    true,
+	EventAntiProofSubmitted:  true,
 }
 
 var (

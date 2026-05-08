@@ -66,8 +66,14 @@ func OpenIntegrationPool(t *testing.T) *pgxpool.Pool {
 
 	if _, err := pool.Exec(ctx, `
 		TRUNCATE TABLE
+			user_achievements,
+			proof_likes,
+			proof_contracts,
+			community_memberships,
+			community_spaces,
 			team_memberships,
 			teams,
+			workspaces,
 			goal_refine_requests,
 			goal_refine_cache,
 			circle_seasons,

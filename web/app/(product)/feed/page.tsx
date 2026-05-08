@@ -388,7 +388,7 @@ function SimilarFeed() {
 }
 
 function SimilarProofCard({ proof }: { proof: PublicProof }) {
-  // Optimistic local-only likes — no backend persistence needed for demo
+  // Optimistic local-only likes — persistence can be added when reactions graduate from prototype.
   const [likes, setLikes] = useState(() => Math.floor(Math.random() * 18) + 2);
   const [liked, setLiked] = useState(false);
 

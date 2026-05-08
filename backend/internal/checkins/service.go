@@ -7,6 +7,7 @@ import (
 	"strings"
 	"time"
 
+	"github.com/sidnevart/proof-forge/backend/internal/analytics"
 	"github.com/sidnevart/proof-forge/backend/internal/users"
 )
 
@@ -15,6 +16,7 @@ type Service struct {
 	storage    Storage
 	emitter    DomainEventEmitter
 	membership MembershipChecker
+	tracker    analytics.Tracker
 	clock      func() time.Time
 }
 
@@ -36,8 +38,15 @@ func NewService(repo Repository, storage Storage, emitter ...DomainEventEmitter)
 		storage:    storage,
 		emitter:    em,
 		membership: NoopMembershipChecker{},
+		tracker:    analytics.NoopRecorder{},
 		clock:      time.Now,
 	}
+}
+
+// WithTracker injects a pilot analytics tracker into the service.
+func (s *Service) WithTracker(t analytics.Tracker) *Service {
+	s.tracker = t
+	return s
 }
 
 // WithMembershipChecker injects a circle membership checker so the Review()
@@ -114,11 +123,30 @@ func (s *Service) Submit(ctx context.Context, actor users.User, checkInID int64)
 		ownerName = actor.Email
 	}
 	_ = s.emitter.Emit(ctx, "checkin.submitted", map[string]any{
-		"check_in_id":          checkInID,
-		"owner_user_id":        actor.ID,
-		"owner_display_name":   ownerName,
-		"goal_id":              view.CheckIn.GoalID,
+		"check_in_id":        checkInID,
+		"owner_user_id":      actor.ID,
+		"owner_display_name": ownerName,
+		"goal_id":            view.CheckIn.GoalID,
 	})
+
+	goalID := view.CheckIn.GoalID
+	s.tracker.TrackAsync(analytics.PilotEvent{
+		UserID: actor.ID,
+		GoalID: &goalID,
+		Name:   analytics.EventWeeklyProofSubmitted,
+		Props:  map[string]any{"goal_id": goalID},
+	})
+
+	// First-proof event fires exactly once per user lifecycle.
+	if count, err := s.repo.CountSubmittedByUser(ctx, actor.ID); err == nil && count == 1 {
+		s.tracker.TrackAsync(analytics.PilotEvent{
+			UserID: actor.ID,
+			GoalID: &goalID,
+			Name:   analytics.EventFirstProofSubmitted,
+			Props:  map[string]any{"goal_id": goalID},
+		})
+	}
+
 	return nil
 }
 

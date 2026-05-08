@@ -45,6 +45,36 @@ func TestLoadSuccess(t *testing.T) {
 	}
 }
 
+func TestLoadIgnoresLoopbackCookieDomain(t *testing.T) {
+	t.Setenv("WEB_ORIGIN", "http://localhost:3003")
+	t.Setenv("DATABASE_URL", "postgres://user:pass@localhost:5432/proofforge?sslmode=disable")
+	t.Setenv("COOKIE_DOMAIN", "localhost")
+
+	cfg, err := Load()
+	if err != nil {
+		t.Fatalf("Load() error = %v", err)
+	}
+
+	if cfg.Session.CookieDomain != "" {
+		t.Fatalf("expected localhost cookie domain to be ignored, got %q", cfg.Session.CookieDomain)
+	}
+}
+
+func TestLoadPreservesProductionCookieDomain(t *testing.T) {
+	t.Setenv("WEB_ORIGIN", "https://app.proofforge.dev")
+	t.Setenv("DATABASE_URL", "postgres://user:pass@localhost:5432/proofforge?sslmode=disable")
+	t.Setenv("COOKIE_DOMAIN", "ProofForge.Dev")
+
+	cfg, err := Load()
+	if err != nil {
+		t.Fatalf("Load() error = %v", err)
+	}
+
+	if cfg.Session.CookieDomain != "proofforge.dev" {
+		t.Fatalf("expected production cookie domain to be normalized, got %q", cfg.Session.CookieDomain)
+	}
+}
+
 func TestLoadMissingDatabaseURL(t *testing.T) {
 	testutil.ClearEnv(t, "DATABASE_URL")
 

@@ -18,6 +18,7 @@ import {
 } from "@/lib/api";
 import type { CheckIn, EvidenceItem } from "@/lib/types";
 
+import { AIProofCheck } from "./ai-proof-check";
 import styles from "./checkin-screen.module.css";
 
 type ScreenState =
@@ -279,6 +280,7 @@ export function CheckInScreen({ goalID }: { goalID: number }) {
               <Button type="submit" variant="secondary" disabled={isAddingText || !textContent.trim()}>
                 {isAddingText ? "Добавляем..." : "Добавить текст"}
               </Button>
+              <AIProofCheck getDraft={() => textContent} />
             </form>
           </SectionShell>
 

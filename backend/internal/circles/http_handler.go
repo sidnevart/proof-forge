@@ -3,6 +3,7 @@ package circles
 import (
 	"encoding/json"
 	"errors"
+	"log/slog"
 	"net/http"
 	"strconv"
 
@@ -229,6 +230,7 @@ func (h *Handler) handleListMyInvitations(w http.ResponseWriter, r *http.Request
 
 	items, err := h.service.ListMyInvitations(r.Context(), actor)
 	if err != nil {
+		slog.Error("could not load circle invitations", "user_id", actor.ID, "email", actor.Email, "err", err)
 		writeError(w, http.StatusInternalServerError, "internal_error", "Could not load invitations")
 		return
 	}

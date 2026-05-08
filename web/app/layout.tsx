@@ -1,12 +1,12 @@
 import type { Metadata } from "next";
 import type { ReactNode } from "react";
-import { Bebas_Neue, Inter, JetBrains_Mono } from "next/font/google";
+import { Oswald, Inter, JetBrains_Mono } from "next/font/google";
 
 import "./globals.css";
 
-const displayFont = Bebas_Neue({
-  weight: "400",
-  subsets: ["latin"],
+const displayFont = Oswald({
+  weight: "700",
+  subsets: ["latin", "cyrillic"],
   variable: "--display",
   display: "swap",
 });
@@ -26,9 +26,9 @@ const monoFont = JetBrains_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "ProofForge — круг друзей, где не сдать = заморозка",
+  title: "ProofForge — среда где движение становится нормой",
   description:
-    "Соревнуйся с друзьями за дисциплину. Сдавай пруф каждый день. Пропустил — все видят.",
+    "Сильная среда. Здоровая конкуренция. Не планируешь — делаешь. Проверено кругом людей рядом.",
 };
 
 export default function RootLayout({ children }: { children: ReactNode }) {

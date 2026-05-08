@@ -54,7 +54,7 @@ func (r *PostgresRepository) GetCheckIn(ctx context.Context, checkInID int64) (C
 			c.id, c.goal_id, c.owner_user_id, c.status,
 			c.submitted_at, c.approved_at, c.rejected_at, c.changes_requested_at,
 			c.created_at, c.updated_at,
-			g.buddy_user_id,
+			COALESCE(g.buddy_user_id, 0),
 			COALESCE(g.proof_examples, ''),
 			e.id, e.kind, e.text_content, e.external_url,
 			e.storage_key, e.mime_type, e.file_size_bytes, e.created_at
@@ -222,6 +222,17 @@ func (r *PostgresRepository) CountEvidence(ctx context.Context, checkInID int64)
 	var count int
 	if err := r.pool.QueryRow(ctx, `SELECT COUNT(*) FROM evidence_items WHERE check_in_id = $1`, checkInID).Scan(&count); err != nil {
 		return 0, fmt.Errorf("count evidence: %w", err)
+	}
+	return count, nil
+}
+
+func (r *PostgresRepository) CountSubmittedByUser(ctx context.Context, userID int64) (int, error) {
+	var count int
+	if err := r.pool.QueryRow(ctx,
+		`SELECT COUNT(*) FROM check_ins WHERE owner_user_id = $1 AND status IN ('submitted','approved')`,
+		userID,
+	).Scan(&count); err != nil {
+		return 0, fmt.Errorf("count submitted by user: %w", err)
 	}
 	return count, nil
 }

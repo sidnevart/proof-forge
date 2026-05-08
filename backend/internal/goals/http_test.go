@@ -11,11 +11,12 @@ import (
 
 	"github.com/go-chi/chi/v5"
 
+	"github.com/sidnevart/proof-forge/backend/internal/analytics"
 	"github.com/sidnevart/proof-forge/backend/internal/users"
 )
 
 func newTestRouter(service *Service) *chi.Mux {
-	handler := NewHandler(nil, service)
+	handler := NewHandler(nil, service, analytics.NoopRecorder{})
 	router := chi.NewRouter()
 	handler.RegisterPublicRoutes(router)
 	handler.RegisterRoutes(router)

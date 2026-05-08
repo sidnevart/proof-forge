@@ -1,0 +1,101 @@
+.root {
+  background: var(--bg-surface);
+  border: 1px solid var(--border);
+  padding: 20px;
+}
+
+.heading {
+  font-family: var(--font-display);
+  font-size: 14px;
+  font-weight: 700;
+  color: var(--ink-mono);
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  margin: 0 0 4px;
+}
+
+.hint {
+  font-size: 12px;
+  color: var(--ink-mono);
+  margin: 0 0 16px;
+  line-height: 1.4;
+}
+
+.empty {
+  font-size: 13px;
+  color: var(--ink-mono);
+  margin: 0;
+}
+
+.list {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.rank {
+  font-family: var(--font-mono);
+  font-size: 11px;
+  font-weight: 700;
+  color: var(--ink-mono);
+  width: 20px;
+  flex-shrink: 0;
+  text-align: right;
+}
+
+.info {
+  flex: 1;
+  min-width: 0;
+}
+
+.name {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--ink-primary);
+  display: block;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.meta {
+  display: flex;
+  gap: 6px;
+  font-size: 11px;
+  color: var(--ink-mono);
+  margin-top: 2px;
+}
+
+.consistencyWrap {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  flex-shrink: 0;
+}
+
+.consistencyBar {
+  width: 52px;
+  height: 5px;
+  background: var(--bg-elevated);
+}
+
+.consistencyFill {
+  height: 100%;
+  background: var(--win);
+  transition: width 300ms ease;
+}
+
+.consistencyNum {
+  font-family: var(--font-mono);
+  font-size: 11px;
+  font-weight: 700;
+  color: var(--win);
+  width: 32px;
+  text-align: right;
+}

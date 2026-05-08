@@ -52,25 +52,29 @@ export function TelegramFeed({ messages }: TelegramFeedProps) {
       msgIdx++;
       const seq = seqRef.current++;
 
-      setItems((prev) => {
-        // Mark the last (oldest) item as "exit"
-        const updated = prev.map((item, i) =>
+      // Step 1: animate out the oldest item
+      setItems((prev) =>
+        prev.map((item, i) =>
           i === prev.length - 1 ? { ...item, state: "exit" as const } : item
-        );
-        // Prepend new item in "enter" state
-        return [{ msg: nextMsg, seq, state: "enter" as const }, ...updated];
-      });
+        )
+      );
 
-      // After exit animation completes (200ms), remove the exiting item
-      // and transition the entering item to "visible"
+      // Step 2: after exit animation — remove it AND add new item atomically
+      // This keeps the list at exactly 4 items, preventing any layout reflow
       setTimeout(() => {
-        setItems((prev) =>
-          prev
-            .filter((item) => item.state !== "exit")
-            .map((item) =>
+        setItems((prev) => {
+          const withoutExit = prev.filter((item) => item.state !== "exit");
+          return [{ msg: nextMsg, seq, state: "enter" as const }, ...withoutExit];
+        });
+
+        // Step 3: snap entering item to visible
+        setTimeout(() => {
+          setItems((prev) =>
+            prev.map((item) =>
               item.seq === seq ? { ...item, state: "visible" as const } : item
             )
-        );
+          );
+        }, 210);
       }, 210);
     }, CYCLE);
 

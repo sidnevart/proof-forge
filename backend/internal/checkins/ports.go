@@ -44,6 +44,9 @@ type Repository interface {
 	// CountEvidence returns the current evidence item count for a check-in.
 	CountEvidence(ctx context.Context, checkInID int64) (int, error)
 
+	// CountSubmittedByUser returns the total number of submitted+approved check-ins for a user.
+	CountSubmittedByUser(ctx context.Context, userID int64) (int, error)
+
 	// RecordReview atomically inserts a review record, transitions the check-in
 	// status, and updates goal progress (streak + health) when approved or rejected.
 	RecordReview(ctx context.Context, params RecordReviewParams) (ReviewRecord, error)

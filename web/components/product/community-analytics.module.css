@@ -1,0 +1,108 @@
+.screen {
+  max-width: 900px;
+  margin: 0 auto;
+  padding: 0 16px 40px;
+}
+
+.eyebrow {
+  font-family: var(--font-mono);
+  font-size: 10px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.12em;
+  color: var(--ink-mono);
+  margin: 24px 0 12px;
+}
+
+.hint {
+  font-size: 13px;
+  color: var(--ink-mono);
+  padding: 16px 0;
+}
+
+.statGrid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+}
+
+@media (min-width: 641px) {
+  .statGrid { grid-template-columns: repeat(4, 1fr); }
+}
+
+.circleTable {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.circleRow {
+  display: grid;
+  grid-template-columns: 1fr 60px 1fr 40px;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 0;
+  border-bottom: 1px solid var(--border);
+}
+
+.circleName {
+  font-size: 13px;
+  color: var(--ink-primary);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.circleMembers {
+  font-size: 11px;
+  color: var(--ink-mono);
+  font-family: var(--font-mono);
+}
+
+.circleBarWrap {
+  height: 6px;
+  background: var(--bg-elevated);
+}
+
+.circleBar {
+  height: 100%;
+  background: var(--win);
+  transition: width 400ms ease;
+}
+
+.circlePct {
+  font-size: 12px;
+  color: var(--ink-mono);
+  text-align: right;
+  font-family: var(--font-mono);
+}
+
+.proofsList {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.proofCard {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 12px 14px;
+  background: var(--bg-surface);
+  border: 1px solid var(--border);
+  text-decoration: none;
+  transition: border-color 140ms ease;
+}
+
+.proofCard:hover { border-color: var(--win); }
+
+.proofTitle {
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--ink-primary);
+}
+
+.proofAuthor {
+  font-size: 12px;
+  color: var(--ink-mono);
+}

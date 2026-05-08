@@ -24,6 +24,8 @@ func (s userRepoStub) Create(ctx context.Context, input RegisterInput) (User, er
 	return s.create(ctx, input)
 }
 
+func (s userRepoStub) SetPlatformAdmin(context.Context, int64, bool) error { return nil }
+
 type sessionRepoStub struct {
 	createSession func(context.Context, Session) error
 	findUser      func(context.Context, string) (User, error)
@@ -243,6 +245,7 @@ func (s userByIDStub) FindByID(_ context.Context, id int64) (User, error) {
 	return User{}, ErrNotFound
 }
 func (s userByIDStub) Create(context.Context, RegisterInput) (User, error) { return User{}, nil }
+func (s userByIDStub) SetPlatformAdmin(context.Context, int64, bool) error  { return nil }
 
 func TestServiceRegister(t *testing.T) {
 	service := NewService(

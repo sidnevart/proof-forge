@@ -10,6 +10,7 @@ import { SectionShell } from "@/components/core/section-shell";
 import { StatePanel } from "@/components/core/state-panel";
 import { StatusPill } from "@/components/core/status-pill";
 import { GoalRefineSheet } from "@/components/product/goal-refine-sheet";
+import { AIProofSuggestions } from "@/components/product/ai-proof-suggestions";
 import { ApiError, createGoal, getDashboard, loginUser, registerUser } from "@/lib/api";
 import type { GoalRefineVariant } from "@/lib/types";
 
@@ -263,6 +264,7 @@ export function GoalSetupScreen() {
             >
               ⚡ УТОЧНИТЬ КРУГ
             </button>
+            <AIProofSuggestions goalText={() => titleRef.current?.value?.trim() ?? ""} />
             {acceptedVariant && (
               <div className={styles.proofExamplesHint}>
                 <span className={styles.proofHintLabel}>ЧТО СЧИТАЕТСЯ ПРУФОМ:</span>

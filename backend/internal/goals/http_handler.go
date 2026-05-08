@@ -9,18 +9,21 @@ import (
 
 	"github.com/go-chi/chi/v5"
 
+	"github.com/sidnevart/proof-forge/backend/internal/analytics"
 	"github.com/sidnevart/proof-forge/backend/internal/users"
 )
 
 type Handler struct {
 	log     *slog.Logger
 	service *Service
+	tracker analytics.Tracker
 }
 
-func NewHandler(log *slog.Logger, service *Service) *Handler {
+func NewHandler(log *slog.Logger, service *Service, tracker analytics.Tracker) *Handler {
 	return &Handler{
 		log:     log,
 		service: service,
+		tracker: tracker,
 	}
 }
 
@@ -248,6 +251,11 @@ func (h *Handler) handleAcceptInvite(w http.ResponseWriter, r *http.Request) {
 		}
 		return
 	}
+
+	h.tracker.TrackAsync(analytics.PilotEvent{
+		UserID: actor.ID,
+		Name:   analytics.EventBuddyMatched,
+	})
 
 	writeJSON(w, http.StatusOK, map[string]any{"accepted": true})
 }

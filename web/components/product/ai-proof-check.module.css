@@ -1,0 +1,138 @@
+.root {
+  margin-top: 8px;
+}
+
+.checkBtn {
+  background: none;
+  border: 1px solid var(--border);
+  color: var(--ink-mono);
+  font-size: 11px;
+  font-weight: 700;
+  padding: 7px 14px;
+  cursor: pointer;
+  transition: border-color 140ms ease, color 140ms ease;
+}
+
+.checkBtn:hover:not(:disabled) {
+  border-color: var(--ink-primary);
+  color: var(--ink-primary);
+}
+
+.checkBtn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.panel {
+  background: var(--bg-elevated);
+  border: 1px solid var(--border);
+  padding: 14px;
+  margin-top: 8px;
+}
+
+.panelHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 12px;
+}
+
+.panelTitle {
+  font-size: 11px;
+  font-weight: 700;
+  color: var(--ink-mono);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.closeBtn {
+  background: none;
+  border: none;
+  color: var(--ink-mono);
+  font-size: 16px;
+  cursor: pointer;
+  padding: 0;
+  line-height: 1;
+}
+
+.error {
+  font-size: 12px;
+  color: var(--danger, #e53e3e);
+  margin: 0 0 8px;
+}
+
+.scoreWrap {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 12px;
+}
+
+.scoreBar {
+  flex: 1;
+  height: 6px;
+  background: var(--bg-surface);
+}
+
+.scoreFill {
+  height: 100%;
+  transition: width 300ms ease;
+}
+
+.scoreNum {
+  font-family: var(--font-mono);
+  font-size: 12px;
+  font-weight: 700;
+  min-width: 44px;
+  text-align: right;
+}
+
+.checks {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  margin-bottom: 12px;
+}
+
+.checkRow {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.checkOk {
+  color: var(--win);
+  font-weight: 700;
+  font-size: 13px;
+  width: 16px;
+}
+
+.checkNo {
+  color: var(--ink-mono);
+  font-size: 13px;
+  width: 16px;
+}
+
+.checkLabelOk {
+  font-size: 12px;
+  color: var(--ink-primary);
+}
+
+.checkLabelNo {
+  font-size: 12px;
+  color: var(--ink-mono);
+}
+
+.feedback {
+  font-size: 12px;
+  color: var(--warn, #f6c90e);
+  margin: 0 0 6px;
+  font-style: italic;
+}
+
+.suggestion {
+  font-size: 12px;
+  color: var(--ink-mono);
+  margin: 0;
+  line-height: 1.5;
+}

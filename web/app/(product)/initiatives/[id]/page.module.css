@@ -1,0 +1,11 @@
+.root {
+  padding: 24px 16px;
+  max-width: 760px;
+  margin: 0 auto;
+}
+
+.error {
+  color: var(--error, #dc2626);
+  font-size: 14px;
+  padding: 24px;
+}

@@ -1,0 +1,141 @@
+.header {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 24px;
+}
+
+.title {
+  font-family: var(--font-display);
+  font-size: 22px;
+  font-weight: 700;
+  color: var(--ink-primary);
+  margin: 0;
+}
+
+.count {
+  font-family: var(--font-mono);
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--ink-mono);
+  background: var(--bg-elevated);
+  padding: 2px 8px;
+}
+
+.empty {
+  color: var(--ink-mono);
+  font-size: 14px;
+}
+
+.tableWrap {
+  overflow-x: auto;
+}
+
+.table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 13px;
+  color: var(--ink-primary);
+}
+
+.table th {
+  text-align: left;
+  font-size: 11px;
+  font-weight: 700;
+  color: var(--ink-mono);
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  padding: 0 12px 10px 0;
+  white-space: nowrap;
+  border-bottom: 2px solid var(--border);
+}
+
+.table td {
+  padding: 12px 12px 12px 0;
+  border-bottom: 1px solid var(--border);
+  vertical-align: middle;
+}
+
+.frozen td {
+  opacity: 0.55;
+}
+
+.nameCell {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.wsName {
+  font-weight: 600;
+}
+
+.wsSlug {
+  font-family: var(--font-mono);
+  font-size: 11px;
+  color: var(--ink-mono);
+}
+
+.num {
+  font-family: var(--font-mono);
+  font-weight: 700;
+}
+
+.riskBadge {
+  font-size: 12px;
+  font-weight: 700;
+}
+
+.frozenTag {
+  font-size: 11px;
+  font-weight: 700;
+  color: var(--ink-mono);
+  background: var(--bg-elevated);
+  padding: 2px 6px;
+}
+
+.actions {
+  text-align: right;
+}
+
+.freezeBtn {
+  background: none;
+  border: 2px solid var(--danger, #e53e3e);
+  color: var(--danger, #e53e3e);
+  padding: 6px 14px;
+  font-size: 11px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: background 140ms ease, color 140ms ease;
+}
+
+.freezeBtn:hover {
+  background: var(--danger, #e53e3e);
+  color: #fff;
+}
+
+.freezeBtn:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+.unfreezeBtn {
+  background: none;
+  border: 2px solid var(--win);
+  color: var(--win);
+  padding: 6px 14px;
+  font-size: 11px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: background 140ms ease, color 140ms ease;
+}
+
+.unfreezeBtn:hover {
+  background: var(--win);
+  color: var(--bg-base);
+}
+
+.unfreezeBtn:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}

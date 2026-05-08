@@ -1,0 +1,178 @@
+.wizard {
+  max-width: 560px;
+  margin: 0 auto;
+  padding: 0 16px 40px;
+}
+
+.progressBar {
+  height: 2px;
+  background: var(--border);
+  position: relative;
+  margin-bottom: 0;
+}
+
+.progressFill {
+  height: 100%;
+  background: var(--win);
+  transition: width 200ms ease;
+}
+
+.stepHeader {
+  padding: 24px 0 20px;
+}
+
+.stepCounter {
+  font-family: var(--font-mono);
+  font-size: 10px;
+  color: var(--ink-mono);
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  margin: 0 0 8px;
+}
+
+.stepTitle {
+  font-family: var(--font-display);
+  font-size: clamp(20px, 4vw, 28px);
+  font-weight: 700;
+  color: var(--ink-primary);
+  margin: 0;
+  line-height: 1.2;
+}
+
+.optionGrid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+  margin-bottom: 24px;
+}
+
+@media (max-width: 400px) {
+  .optionGrid {
+    grid-template-columns: 1fr;
+  }
+}
+
+.optionCard {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  background: none;
+  border: 2px solid var(--border);
+  padding: 16px;
+  cursor: pointer;
+  transition: border-color 140ms ease;
+  min-height: 72px;
+  text-align: left;
+}
+
+.optionCard:hover {
+  border-color: var(--border-strong, var(--ink-mono));
+}
+
+.optionCard.selected {
+  border-color: var(--win);
+}
+
+.optionCard.recommended {
+  border-color: var(--win);
+}
+
+.recommendedBadge {
+  font-size: 9px;
+  font-family: var(--font-mono);
+  color: var(--win);
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  margin-bottom: 4px;
+}
+
+.optionTitle {
+  font-size: 14px;
+  font-weight: 700;
+  color: var(--ink-primary);
+  margin-bottom: 4px;
+}
+
+.optionDesc {
+  font-size: 12px;
+  color: var(--ink-mono);
+  line-height: 1.4;
+}
+
+.skipBtn {
+  background: none;
+  border: none;
+  color: var(--ink-mono);
+  font-size: 13px;
+  cursor: pointer;
+  padding: 12px 0;
+  text-decoration: underline;
+  text-underline-offset: 3px;
+  display: block;
+}
+
+.skipBtn:hover {
+  color: var(--ink-primary);
+}
+
+.nameInput {
+  width: 100%;
+  background: var(--bg-elevated);
+  border: 2px solid var(--border);
+  color: var(--ink-primary);
+  font-size: 16px;
+  font-family: var(--font-body);
+  padding: 14px;
+  outline: none;
+  box-sizing: border-box;
+  margin-bottom: 24px;
+  transition: border-color 140ms ease;
+}
+
+.nameInput:focus {
+  border-color: var(--ink-primary);
+}
+
+.launchActions {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.primaryLaunchBtn {
+  background: var(--win);
+  color: #000;
+  border: none;
+  padding: 16px;
+  font-family: var(--font-body);
+  font-weight: 700;
+  font-size: 12px;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  cursor: pointer;
+  min-height: 52px;
+  width: 100%;
+  transition: opacity 140ms ease;
+}
+
+.primaryLaunchBtn:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+.secondaryLaunchBtn {
+  background: none;
+  border: 2px solid var(--border);
+  color: var(--ink-primary);
+  padding: 14px;
+  font-family: var(--font-body);
+  font-size: 13px;
+  cursor: pointer;
+  width: 100%;
+  text-align: left;
+  transition: border-color 140ms ease;
+}
+
+.secondaryLaunchBtn:hover {
+  border-color: var(--ink-primary);
+}

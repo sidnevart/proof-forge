@@ -1,0 +1,36 @@
+.card {
+  background: var(--bg-surface);
+  border: 1px solid var(--border);
+  border-top: 3px solid transparent;
+  padding: 16px;
+  flex: 1;
+  min-width: 0;
+}
+
+.card.win { border-top-color: var(--win); }
+.card.warn { border-top-color: var(--warn, #f6c90e); }
+.card.danger { border-top-color: var(--danger, #e53e3e); }
+
+.value {
+  font-family: var(--font-display);
+  font-size: clamp(24px, 4vw, 36px);
+  font-weight: 700;
+  color: var(--ink-primary);
+  margin-bottom: 4px;
+  line-height: 1;
+}
+
+.label {
+  font-family: var(--font-mono);
+  font-size: 10px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  color: var(--ink-mono);
+}
+
+.sublabel {
+  font-size: 12px;
+  color: var(--ink-mono);
+  margin-top: 4px;
+}

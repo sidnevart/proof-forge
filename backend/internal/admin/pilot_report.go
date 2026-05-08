@@ -29,7 +29,6 @@ type PilotReportMetrics struct {
 	CompletionRatePct float64 `json:"completion_rate_pct"`
 
 	AIContractsCreated int `json:"ai_contracts_created"`
-	DossiersGenerated  int `json:"dossiers_generated"`
 	BuddyMatchesUsed   int `json:"buddy_matches_used"`
 }
 
@@ -136,11 +135,6 @@ func getPilotReport(ctx context.Context, pool *pgxpool.Pool, workspaceID int64, 
 
 	_ = pool.QueryRow(c, `
 		SELECT COUNT(*) FROM analytics_events
-		WHERE workspace_id = $1 AND event_name = 'dossier_generated' AND ts BETWEEN $2 AND $3
-	`, workspaceID, from, to).Scan(&m.DossiersGenerated)
-
-	_ = pool.QueryRow(c, `
-		SELECT COUNT(*) FROM analytics_events
 		WHERE workspace_id = $1 AND event_name = 'buddy_matched' AND ts BETWEEN $2 AND $3
 	`, workspaceID, from, to).Scan(&m.BuddyMatchesUsed)
 
@@ -219,7 +213,6 @@ func writePilotCSV(w http.ResponseWriter, r *PilotReportMetrics) {
 	_ = wr.Write([]string{"Завершили цели", fmt.Sprintf("%d", r.GoalsCompleted)})
 	_ = wr.Write([]string{"Completion rate %", fmt.Sprintf("%.1f", r.CompletionRatePct)})
 	_ = wr.Write([]string{"AI suggestions использовано", fmt.Sprintf("%d", r.AIContractsCreated)})
-	_ = wr.Write([]string{"Дошье сгенерировано", fmt.Sprintf("%d", r.DossiersGenerated)})
 	_ = wr.Write([]string{"Buddy matches использовано", fmt.Sprintf("%d", r.BuddyMatchesUsed)})
 	_ = wr.Write([]string{"", ""})
 	_ = wr.Write([]string{"Неделя", "Активных пользователей", "Пруфов"})

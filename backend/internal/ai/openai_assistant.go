@@ -137,29 +137,3 @@ func (p *OpenAIAssistantProvider) AntiProof(ctx context.Context, goalText, stuck
 	return result, nil
 }
 
-func (p *OpenAIAssistantProvider) GrowthDossier(ctx context.Context, inputs []DossierInput) (GrowthDossierResult, error) {
-	system := `Ты генерируешь досье роста — структурированный итог периода для встречи 1:1 или ИПР.
-Напиши конкретно, без воды. Выдели навыки, достижения и следующий фокус.
-Отвечай ТОЛЬКО валидным JSON: {"period_label":"...","total_proofs":0,"active_weeks":0,"top_skills":["..."],"goals":[{"goal_title":"...","proofs_count":0,"highlights":["..."],"skills":["..."],"conclusion":"..."}],"overall_summary":"...","next_focus":"..."}`
-
-	var sb strings.Builder
-	for _, g := range inputs {
-		sb.WriteString(fmt.Sprintf("Цель: %s\n", g.GoalTitle))
-		sb.WriteString(fmt.Sprintf("Период: %s — %s\n", g.StartDate, g.EndDate))
-		for i, pt := range g.ProofsTexts {
-			sb.WriteString(fmt.Sprintf("Пруф %d: %s\n", i+1, pt))
-		}
-		sb.WriteString("\n")
-	}
-
-	raw, err := p.chat(ctx, system, sb.String(), 1200)
-	if err != nil {
-		return GrowthDossierResult{}, err
-	}
-
-	var result GrowthDossierResult
-	if err := json.Unmarshal([]byte(raw), &result); err != nil {
-		return GrowthDossierResult{}, fmt.Errorf("dossier parse: %w", err)
-	}
-	return result, nil
-}

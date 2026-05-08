@@ -228,7 +228,6 @@ func registerAPIRoutes(router *chi.Mux, log *slog.Logger, pool *pgxpool.Pool, cf
 	assistantHandler := ai.NewHandler(
 		assistantProvider,
 		ai.NewPostgresGoalReader(pool),
-		ai.NewPostgresProofReader(pool),
 		analyticsRecorder,
 	)
 

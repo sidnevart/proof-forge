@@ -57,24 +57,3 @@ func (f *FakeAssistantProvider) AntiProof(_ context.Context, _, stuckDescription
 	}, nil
 }
 
-func (f *FakeAssistantProvider) GrowthDossier(_ context.Context, inputs []DossierInput) (GrowthDossierResult, error) {
-	goals := make([]DossierEntry, 0, len(inputs))
-	for _, inp := range inputs {
-		goals = append(goals, DossierEntry{
-			GoalTitle:   inp.GoalTitle,
-			ProofsCount: len(inp.ProofsTexts),
-			Highlights:  []string{"Регулярное движение по цели", "Конкретные артефакты"},
-			Skills:      []string{"Самоорганизация", "Рефлексия"},
-			Conclusion:  "Цель активно прорабатывается",
-		})
-	}
-	return GrowthDossierResult{
-		PeriodLabel:    "Итоговый период",
-		TotalProofs:    len(inputs) * 3,
-		ActiveWeeks:    4,
-		TopSkills:      []string{"Планирование", "Самодисциплина", "Рефлексия"},
-		Goals:          goals,
-		OverallSummary: "Активный период с конкретными результатами и регулярными пруфами",
-		NextFocus:      "Углубиться в следующий уровень по приоритетной цели",
-	}, nil
-}

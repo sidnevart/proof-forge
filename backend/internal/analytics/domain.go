@@ -32,7 +32,6 @@ const (
 	EventFirstProofSubmitted  EventName = "first_proof_submitted"
 	EventWeeklyProofSubmitted EventName = "weekly_proof_submitted"
 	EventBuddyMatched         EventName = "buddy_matched"
-	EventDossierGenerated     EventName = "dossier_generated"
 	EventSeasonCompleted      EventName = "season_completed"
 	EventWorkspaceCreated     EventName = "workspace_created"
 	EventTeamspaceCreated     EventName = "teamspace_created"

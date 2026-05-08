@@ -12,10 +12,9 @@ import (
 
 // Handler exposes all AI assistant endpoints.
 type Handler struct {
-	provider  AssistantProvider
-	goalRepo  GoalReader
-	proofRepo ProofReader
-	tracker   analytics.Tracker
+	provider AssistantProvider
+	goalRepo GoalReader
+	tracker  analytics.Tracker
 }
 
 // GoalReader is the minimal interface needed by the AI handler to fetch goal context.
@@ -24,13 +23,8 @@ type GoalReader interface {
 	GetRecentActivityText(ctx context.Context, userID int64) (string, error)
 }
 
-// ProofReader fetches proof texts for dossier generation.
-type ProofReader interface {
-	GetProofTextsForDossier(ctx context.Context, userID int64, startDate, endDate string) ([]DossierInput, error)
-}
-
-func NewHandler(provider AssistantProvider, goalRepo GoalReader, proofRepo ProofReader, tracker analytics.Tracker) *Handler {
-	return &Handler{provider: provider, goalRepo: goalRepo, proofRepo: proofRepo, tracker: tracker}
+func NewHandler(provider AssistantProvider, goalRepo GoalReader, tracker analytics.Tracker) *Handler {
+	return &Handler{provider: provider, goalRepo: goalRepo, tracker: tracker}
 }
 
 func (h *Handler) RegisterRoutes(r chi.Router) {
@@ -38,7 +32,6 @@ func (h *Handler) RegisterRoutes(r chi.Router) {
 	r.Post("/ai/next-step", h.handleNextStep)
 	r.Post("/ai/proof-check", h.handleProofCheck)
 	r.Post("/ai/anti-proof", h.handleAntiProof)
-	r.Post("/ai/growth-dossier", h.handleGrowthDossier)
 }
 
 // POST /v1/ai/goal-to-proofs
@@ -134,49 +127,6 @@ func (h *Handler) handleAntiProof(w http.ResponseWriter, r *http.Request) {
 		writeErrJSON(w, http.StatusInternalServerError, "ai_error", "Could not generate anti-proof")
 		return
 	}
-	writeJSON(w, http.StatusOK, result)
-}
-
-// POST /v1/ai/growth-dossier
-func (h *Handler) handleGrowthDossier(w http.ResponseWriter, r *http.Request) {
-	actor, ok := users.CurrentUser(r.Context())
-	if !ok {
-		writeErrJSON(w, http.StatusUnauthorized, "auth_required", "Authentication required")
-		return
-	}
-
-	var in struct {
-		StartDate string `json:"start_date"`
-		EndDate   string `json:"end_date"`
-	}
-	if err := json.NewDecoder(r.Body).Decode(&in); err != nil || in.StartDate == "" || in.EndDate == "" {
-		writeErrJSON(w, http.StatusBadRequest, "invalid_input", "start_date and end_date required")
-		return
-	}
-
-	inputs, err := h.proofRepo.GetProofTextsForDossier(r.Context(), actor.ID, in.StartDate, in.EndDate)
-	if err != nil {
-		writeErrJSON(w, http.StatusInternalServerError, "db_error", "Could not fetch proof data")
-		return
-	}
-
-	if len(inputs) == 0 {
-		writeErrJSON(w, http.StatusUnprocessableEntity, "no_data", "No proofs found for the given period")
-		return
-	}
-
-	result, err := h.provider.GrowthDossier(r.Context(), inputs)
-	if err != nil {
-		writeErrJSON(w, http.StatusInternalServerError, "ai_error", "Could not generate dossier")
-		return
-	}
-
-	h.tracker.TrackAsync(analytics.PilotEvent{
-		UserID: actor.ID,
-		Name:   analytics.EventDossierGenerated,
-		Props:  map[string]any{"start_date": in.StartDate, "end_date": in.EndDate},
-	})
-
 	writeJSON(w, http.StatusOK, result)
 }
 

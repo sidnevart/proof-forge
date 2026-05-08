@@ -40,6 +40,36 @@ func ValidateWeeklyRecap(text string) error {
 	return nil
 }
 
+// ValidateProofDraft enforces proof draft rules.
+func ValidateProofDraft(text string) error {
+	words := countWords(text)
+	if words < 20 || words > 80 {
+		return fmt.Errorf("proof draft: expected 20-80 words, got %d", words)
+	}
+	lower := strings.ToLower(text)
+	for _, bad := range []string{"слабый", "плохой", "хороший", "отлично", "молодец"} {
+		if strings.Contains(lower, bad) {
+			return fmt.Errorf("proof draft: contains forbidden evaluation %q", bad)
+		}
+	}
+	return nil
+}
+
+// ValidateBuddyStalled enforces buddy stalled alert rules.
+func ValidateBuddyStalled(text string) error {
+	words := countWords(text)
+	if words < 15 || words > 40 {
+		return fmt.Errorf("buddy stalled: expected 15-40 words, got %d", words)
+	}
+	lower := strings.ToLower(text)
+	for _, bad := range []string{"слабый", "плохой", "лень", "тормозит"} {
+		if strings.Contains(lower, bad) {
+			return fmt.Errorf("buddy stalled: contains forbidden word %q", bad)
+		}
+	}
+	return nil
+}
+
 // ValidateLeadBrief enforces lead brief rules.
 func ValidateLeadBrief(text string) error {
 	words := countWords(text)

@@ -228,3 +228,87 @@ func StreakReminderTemplate(sc *StreakContext) string {
 	return fmt.Sprintf("%s, у тебя осталось %d часов, чтобы сохранить серию «%s» (%d дней). Сделай пруф сегодня.",
 		sc.DisplayName, sc.HoursLeft, sc.GoalTitle, sc.CurrentStreak)
 }
+
+// --- Proof Draft ---
+
+// ProofDraftSystemPrompt is the system prompt for proof draft assembly.
+const ProofDraftSystemPrompt = `Ты помогаешь пользователю собрать пруф из его ежедневных заметок.
+
+Задача: на основе заметок daily log составить черновик пруфа — краткое описание того, что было сделано по цели.
+
+Правила:
+- Длина: 20–80 слов
+- Конкретика: ссылайся на факты из заметок
+- Тон: нейтральный, деловой
+- Не добавляй выдуманных деталей — только то, что есть в заметках
+- Если заметок мало или они не по теме цели — честно скажи, что данных недостаточно
+- Формат: plain text, русский язык`
+
+// BuildProofDraftPrompt creates the user prompt for proof draft.
+func BuildProofDraftPrompt(pdc *ProofDraftContext) string {
+	var sb strings.Builder
+	sb.WriteString(fmt.Sprintf("Пользователь: %s\n", pdc.DisplayName))
+	sb.WriteString(fmt.Sprintf("Команда: %s\n", pdc.TeamName))
+	sb.WriteString(fmt.Sprintf("Цель: %s\n", pdc.GoalTitle))
+
+	sb.WriteString("\nЗаметки из daily log (последние 7 дней):\n")
+	for _, n := range pdc.Notes {
+		dateStr := n.LogDate.Format("2006-01-02")
+		artifactMark := ""
+		if n.HasArtifact {
+			artifactMark = " [есть артефакт]"
+		}
+		sb.WriteString(fmt.Sprintf("- %s: %s%s\n", dateStr, n.TextContent, artifactMark))
+	}
+
+	sb.WriteString("\nСоставь черновик пруфа по этой цели.")
+	return sb.String()
+}
+
+// ProofDraftTemplate is the fallback template for proof draft.
+func ProofDraftTemplate(pdc *ProofDraftContext) string {
+	if len(pdc.Notes) == 0 {
+		return fmt.Sprintf("По цели «%s» не найдено заметок за последние 7 дней. Добавь заметки в daily log — и я соберу пруф.", pdc.GoalTitle)
+	}
+
+	var sb strings.Builder
+	sb.WriteString(fmt.Sprintf("Черновик пруфа по цели «%s»:\n\n", pdc.GoalTitle))
+	for _, n := range pdc.Notes {
+		dateStr := n.LogDate.Format("02.01")
+		sb.WriteString(fmt.Sprintf("• %s: %s\n", dateStr, n.TextContent))
+	}
+	sb.WriteString("\nПроверь и отправь как пруф, если всё верно.")
+	return sb.String()
+}
+
+// --- Buddy Stalled ---
+
+// BuddyStalledSystemPrompt is the system prompt for buddy stalled alert.
+const BuddyStalledSystemPrompt = `Ты напоминаешь пользователю, что его buddy ждёт ответа на пруф.
+
+Задача: написать короткое, уважительное напоминание, что нужно дать фидбек.
+
+Правила:
+- Длина: 15–40 слов
+- Тон: дружелюбный, без давления
+- Не упоминать приватные данные других людей
+- Не использовать оценки «слабый/плохой/хороший»
+- Формат: plain text, русский язык`
+
+// BuildBuddyStalledPrompt creates the user prompt for buddy stalled alert.
+func BuildBuddyStalledPrompt(bsc *BuddyStalledContext) string {
+	var sb strings.Builder
+	sb.WriteString(fmt.Sprintf("Buddy: %s\n", bsc.BuddyName))
+	sb.WriteString(fmt.Sprintf("Пользователь с пруфом: %s\n", bsc.DisplayName))
+	sb.WriteString(fmt.Sprintf("Цель: %s\n", bsc.GoalTitle))
+	sb.WriteString(fmt.Sprintf("Пруф отправлен: %s\n", bsc.SubmittedAt.Format("2006-01-02 15:04")))
+	sb.WriteString(fmt.Sprintf("Ожидание: %d часов\n", bsc.HoursStalled))
+	sb.WriteString("\nНапиши напоминание buddy, что пора дать фидбек.")
+	return sb.String()
+}
+
+// BuddyStalledTemplate is the fallback template for buddy stalled alert.
+func BuddyStalledTemplate(bsc *BuddyStalledContext) string {
+	return fmt.Sprintf("Привет, %s! %s отправил пруф по цели «%s» %d часов назад. Дай фидбек, когда будет минутка — человек ждёт.",
+		bsc.BuddyName, bsc.DisplayName, bsc.GoalTitle, bsc.HoursStalled)
+}

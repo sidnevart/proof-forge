@@ -349,6 +349,38 @@ func (a *ContextAssembler) GetLeadBriefContext(ctx context.Context, leaderID, te
 	return lc, nil
 }
 
+// ProofDraftContext holds data for proof draft assembly.
+type ProofDraftContext struct {
+	UserID      int64
+	DisplayName string
+	TeamID      int64
+	TeamName    string
+	GoalID      int64
+	GoalTitle   string
+
+	Notes []DailyLogNote
+}
+
+// DailyLogNote is one unconsumed entry.
+type DailyLogNote struct {
+	NoteID      int64
+	LogDate     time.Time
+	TextContent string
+	HasArtifact bool
+}
+
+// BuddyStalledContext holds data for buddy stalled alert.
+type BuddyStalledContext struct {
+	UserID      int64
+	DisplayName string
+	BuddyID     int64
+	BuddyName   string
+	ProofID     int64
+	GoalTitle   string
+	SubmittedAt time.Time
+	HoursStalled int
+}
+
 // GetStreakContext gathers data for streak reminder.
 func (a *ContextAssembler) GetStreakContext(ctx context.Context, userID int64) (*StreakContext, error) {
 	sc := &StreakContext{UserID: userID}
@@ -392,4 +424,110 @@ func (a *ContextAssembler) GetStreakContext(ctx context.Context, userID int64) (
 	sc.HoursLeft = int(midnight.Sub(now).Hours())
 
 	return sc, nil
+}
+
+// GetProofDraftContext gathers unconsumed daily log entries for proof draft assembly.
+func (a *ContextAssembler) GetProofDraftContext(ctx context.Context, userID int64) (*ProofDraftContext, error) {
+	pdc := &ProofDraftContext{UserID: userID}
+
+	// 1. User basics and active team/goal
+	var teamID int64
+	var goalID int64
+	err := a.pool.QueryRow(ctx, `
+		SELECT u.display_name, t.id, t.name, g.id, g.title
+		FROM users u
+		CROSS JOIN LATERAL (
+			SELECT t.id, t.name
+			FROM teams t
+			JOIN team_memberships tm ON tm.team_id = t.id
+			WHERE tm.user_id = u.id AND tm.status = 'active'
+			ORDER BY t.created_at DESC
+			LIMIT 1
+		) t
+		CROSS JOIN LATERAL (
+			SELECT g.id, g.title
+			FROM goals g
+			WHERE g.owner_user_id = u.id AND g.status = 'active' AND g.archived_at IS NULL
+			ORDER BY g.current_streak_count DESC, g.updated_at DESC
+			LIMIT 1
+		) g
+		WHERE u.id = $1
+	`, userID).Scan(&pdc.DisplayName, &teamID, &pdc.TeamName, &goalID, &pdc.GoalTitle)
+	if err != nil {
+		return nil, fmt.Errorf("assembler user/team/goal: %w", err)
+	}
+	pdc.TeamID = teamID
+	pdc.GoalID = goalID
+
+	// 2. Unconsumed daily log entries for this user+team in last 7 days
+	rows, err := a.pool.Query(ctx, `
+		SELECT id, log_date, text_content, has_artifact
+		FROM daily_log_entries
+		WHERE user_id = $1 AND team_id = $2
+		  AND consumed_in_check_in_id IS NULL
+		  AND status = 'logged'
+		  AND log_date >= CURRENT_DATE - INTERVAL '7 days'
+		ORDER BY log_date DESC
+		LIMIT 10
+	`, userID, teamID)
+	if err != nil {
+		return nil, fmt.Errorf("assembler daily log: %w", err)
+	}
+	defer rows.Close()
+	for rows.Next() {
+		var n DailyLogNote
+		if err := rows.Scan(&n.NoteID, &n.LogDate, &n.TextContent, &n.HasArtifact); err != nil {
+			continue
+		}
+		pdc.Notes = append(pdc.Notes, n)
+	}
+
+	return pdc, nil
+}
+
+// GetBuddyStalledContext finds stalled proofs awaiting buddy approval.
+func (a *ContextAssembler) GetBuddyStalledContext(ctx context.Context, minHours int) ([]*BuddyStalledContext, error) {
+	rows, err := a.pool.Query(ctx, `
+		SELECT
+			ci.id,
+			ci.owner_user_id,
+			u.display_name,
+			ci.goal_id,
+			g.title,
+			ci.submitted_at,
+			g.buddy_user_id,
+			bu.display_name,
+			EXTRACT(EPOCH FROM (NOW() - ci.submitted_at)) / 3600
+		FROM check_ins ci
+		JOIN goals g ON g.id = ci.goal_id
+		JOIN users u ON u.id = ci.owner_user_id
+		JOIN users bu ON bu.id = g.buddy_user_id
+		WHERE ci.status = 'submitted'
+		  AND ci.submitted_at <= NOW() - INTERVAL '1 hour' * $1
+		  AND ci.approved_at IS NULL
+		  AND ci.rejected_at IS NULL
+		  AND ci.changes_requested_at IS NULL
+		ORDER BY ci.submitted_at ASC
+		LIMIT 50
+	`, minHours)
+	if err != nil {
+		return nil, fmt.Errorf("assembler stalled: %w", err)
+	}
+	defer rows.Close()
+
+	var results []*BuddyStalledContext
+	for rows.Next() {
+		var b BuddyStalledContext
+		var hours float64
+		if err := rows.Scan(
+			&b.ProofID, &b.UserID, &b.DisplayName,
+			&b.GoalTitle, &b.GoalTitle, &b.SubmittedAt,
+			&b.BuddyID, &b.BuddyName, &hours,
+		); err != nil {
+			continue
+		}
+		b.HoursStalled = int(hours)
+		results = append(results, &b)
+	}
+	return results, nil
 }

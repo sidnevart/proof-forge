@@ -77,6 +77,16 @@ func (w *Worker) tick(ctx context.Context) error {
 		w.log.Error("streak reminder tick", "err", err)
 	}
 
+	// 5. Proof draft: when user has ≥3 unconsumed daily log entries.
+	if err := w.fireProofDrafts(ctx, now); err != nil {
+		w.log.Error("proof draft tick", "err", err)
+	}
+
+	// 6. Buddy stalled: when proof is submitted but buddy hasn't responded in 72h.
+	if err := w.fireBuddyStalled(ctx, now); err != nil {
+		w.log.Error("buddy stalled tick", "err", err)
+	}
+
 	return nil
 }
 
@@ -493,5 +503,192 @@ func (w *Worker) sendStreakReminder(ctx context.Context, userID int64, chatID in
 	}
 
 	w.log.Info("streak reminder sent", "user", userID, "streak", sc.CurrentStreak)
+	return nil
+}
+
+// fireProofDrafts checks for users with ≥3 unconsumed daily log entries and creates draft suggestions.
+func (w *Worker) fireProofDrafts(ctx context.Context, now time.Time) error {
+	// Run every hour on the hour to avoid repeated polling.
+	if now.Minute() > 4 {
+		return nil
+	}
+
+	// Find users with active goals, teams, and ≥3 unconsumed daily log entries.
+	rows, err := w.pool.Query(ctx, `
+		SELECT u.id
+		FROM users u
+		WHERE EXISTS (
+			SELECT 1 FROM goals g
+			WHERE g.owner_user_id = u.id
+			  AND g.status = 'active'
+			  AND g.archived_at IS NULL
+		)
+		  AND EXISTS (
+			SELECT 1 FROM team_memberships tm
+			JOIN teams t ON t.id = tm.team_id
+			WHERE tm.user_id = u.id AND tm.status = 'active'
+		)
+		  AND (
+			SELECT COUNT(*) FROM daily_log_entries dle
+			WHERE dle.user_id = u.id
+			  AND dle.consumed_in_check_in_id IS NULL
+			  AND dle.status = 'logged'
+			  AND dle.log_date >= CURRENT_DATE - INTERVAL '7 days'
+		) >= 3
+		LIMIT 50
+	`)
+	if err != nil {
+		return fmt.Errorf("proof draft: query users: %w", err)
+	}
+	defer rows.Close()
+
+	for rows.Next() {
+		var userID int64
+		if err := rows.Scan(&userID); err != nil {
+			continue
+		}
+
+		triggerID := BuildTriggerID(FeatureProofDraft, userID, now.Format("2006-01-02"))
+		shouldFire, err := w.service.ShouldFire(ctx, userID, FeatureProofDraft, triggerID)
+		if err != nil {
+			w.log.Warn("proof draft: should fire check", "user", userID, "err", err)
+			continue
+		}
+		if !shouldFire {
+			continue
+		}
+
+		if err := w.sendProofDraft(ctx, userID); err != nil {
+			w.log.Warn("proof draft: send", "user", userID, "err", err)
+		}
+	}
+	return nil
+}
+
+// sendProofDraft generates and delivers a proof draft suggestion.
+func (w *Worker) sendProofDraft(ctx context.Context, userID int64) error {
+	triggerID := BuildTriggerID(FeatureProofDraft, userID, w.clock().Format("2006-01-02"))
+
+	pdc, err := w.assembler.GetProofDraftContext(ctx, userID)
+	if err != nil {
+		return fmt.Errorf("proof draft: assemble context: %w", err)
+	}
+
+	userPrompt := BuildProofDraftPrompt(pdc)
+
+	res, _, err := w.service.Run(ctx, FeatureProofDraft, personalization.ModeMetadataOnly, 5*time.Second,
+		func(ctx context.Context) (personalization.PromptResult, error) {
+			llm := w.service.LLM()
+			if llm == nil {
+				return personalization.PromptResult{}, fmt.Errorf("llm not configured")
+			}
+			return llm.Prompt(ctx, ProofDraftSystemPrompt, userPrompt, 300)
+		})
+	if err != nil {
+		w.log.Warn("proof draft: llm failed, using template", "user", userID, "err", err)
+		res.Text = ProofDraftTemplate(pdc)
+		res.Provider = personalization.ProviderTemplate
+	}
+
+	if err := ValidateProofDraft(res.Text); err != nil {
+		w.log.Warn("proof draft: validation failed, using template", "user", userID, "err", err)
+		res.Text = ProofDraftTemplate(pdc)
+		res.Provider = personalization.ProviderTemplate
+	}
+
+	// Save as in-app draft for user to accept/reject.
+	_ = w.service.SaveInAppNotification(ctx, userID, FeatureProofDraft,
+		"Черновик пруфа", res.Text, []NotificationAction{
+			{Label: "Использовать", Action: "accept_draft", URL: "/dashboard"},
+			{Label: "Отменить", Action: "dismiss_draft", URL: "/dashboard"},
+		})
+
+	if err := w.service.RecordFired(ctx, userID, FeatureProofDraft, triggerID); err != nil {
+		w.log.Warn("proof draft: record fired", "user", userID, "err", err)
+	}
+
+	w.log.Info("proof draft sent", "user", userID, "provider", res.Provider)
+	return nil
+}
+
+// fireBuddyStalled finds proofs stuck in "submitted" state for >72h and alerts the buddy.
+func (w *Worker) fireBuddyStalled(ctx context.Context, now time.Time) error {
+	// Run once per hour.
+	if now.Minute() > 4 {
+		return nil
+	}
+
+	stalledList, err := w.assembler.GetBuddyStalledContext(ctx, 72)
+	if err != nil {
+		return fmt.Errorf("buddy stalled: assemble context: %w", err)
+	}
+
+	for _, bsc := range stalledList {
+		triggerID := BuildTriggerID(FeatureBuddyStalled, bsc.BuddyID, fmt.Sprintf("%d-%s", bsc.ProofID, now.Format("2006-01-02")))
+		shouldFire, err := w.service.ShouldFire(ctx, bsc.BuddyID, FeatureBuddyStalled, triggerID)
+		if err != nil {
+			w.log.Warn("buddy stalled: should fire check", "buddy", bsc.BuddyID, "err", err)
+			continue
+		}
+		if !shouldFire {
+			continue
+		}
+
+		if err := w.sendBuddyStalled(ctx, bsc); err != nil {
+			w.log.Warn("buddy stalled: send", "buddy", bsc.BuddyID, "err", err)
+		}
+	}
+	return nil
+}
+
+// sendBuddyStalled generates and delivers a buddy stalled alert.
+func (w *Worker) sendBuddyStalled(ctx context.Context, bsc *BuddyStalledContext) error {
+	triggerID := BuildTriggerID(FeatureBuddyStalled, bsc.BuddyID, fmt.Sprintf("%d-%s", bsc.ProofID, w.clock().Format("2006-01-02")))
+
+	userPrompt := BuildBuddyStalledPrompt(bsc)
+
+	res, _, err := w.service.Run(ctx, FeatureBuddyStalled, personalization.ModeMetadataOnly, 3*time.Second,
+		func(ctx context.Context) (personalization.PromptResult, error) {
+			llm := w.service.LLM()
+			if llm == nil {
+				return personalization.PromptResult{}, fmt.Errorf("llm not configured")
+			}
+			return llm.Prompt(ctx, BuddyStalledSystemPrompt, userPrompt, 200)
+		})
+	if err != nil {
+		w.log.Warn("buddy stalled: llm failed, using template", "buddy", bsc.BuddyID, "err", err)
+		res.Text = BuddyStalledTemplate(bsc)
+		res.Provider = personalization.ProviderTemplate
+	}
+
+	if err := ValidateBuddyStalled(res.Text); err != nil {
+		w.log.Warn("buddy stalled: validation failed, using template", "buddy", bsc.BuddyID, "err", err)
+		res.Text = BuddyStalledTemplate(bsc)
+		res.Provider = personalization.ProviderTemplate
+	}
+
+	// Try to deliver via Telegram to buddy.
+	var chatID int64
+	_ = w.pool.QueryRow(ctx,
+		`SELECT telegram_chat_id FROM telegram_links WHERE user_id = $1 AND status = 'active'`, bsc.BuddyID,
+	).Scan(&chatID)
+
+	if w.bot != nil && chatID != 0 {
+		if err := w.bot.SendMessage(ctx, chatID, res.Text); err != nil {
+			w.log.Warn("buddy stalled: telegram send", "buddy", bsc.BuddyID, "err", err)
+		}
+	}
+
+	// Also save in-app notification for buddy.
+	_ = w.service.SaveInAppNotification(ctx, bsc.BuddyID, FeatureBuddyStalled,
+		"Пруф ждёт фидбека", res.Text, []NotificationAction{
+			{Label: "Посмотреть", Action: "open_dashboard", URL: "/dashboard"},
+		})
+
+	if err := w.service.RecordFired(ctx, bsc.BuddyID, FeatureBuddyStalled, triggerID); err != nil {
+		w.log.Warn("buddy stalled: record fired", "buddy", bsc.BuddyID, "err", err)
+	}
+
+	w.log.Info("buddy stalled sent", "buddy", bsc.BuddyID, "proof", bsc.ProofID)
 	return nil
 }

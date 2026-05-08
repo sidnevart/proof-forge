@@ -563,3 +563,54 @@ export type CreateInitiativeInput = {
   description?: string;
   proof_criteria: string;
 };
+
+// ── AI Companion ───────────────────────────────────────────────────────────────
+
+export type AICompanionFeature =
+  | "evening_ping"
+  | "weekly_recap"
+  | "lead_weekly_brief"
+  | "streak_reminder"
+  | "proof_draft"
+  | "buddy_stalled"
+  | "goal_risk"
+  | "streak_milestone"
+  | "leader_fair_play"
+  | "team_health";
+
+export type NotificationAction = {
+  label: string;
+  action: string;
+  url?: string;
+};
+
+export type AICompanionNotification = {
+  id: string;
+  feature: AICompanionFeature;
+  title: string;
+  body: string;
+  actions: NotificationAction[];
+  created_at: string;
+};
+
+export type AIProofDraft = {
+  id: string;
+  team_id: number;
+  goal_id?: number | null;
+  note_ids: number[];
+  rationale: string;
+  confidence: string;
+  created_at: string;
+};
+
+export type AICompanionAlert = {
+  type: string;
+  message: string;
+};
+
+export type TeamAIHealth = {
+  team_health_score: number;
+  fair_play_status: string;
+  pending_approvals: number;
+  alerts: AICompanionAlert[];
+};

@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { useEffect, useState } from "react";
+import { AITeamHealthHeader } from "./ai-team-health-header";
 import { StatCard } from "./analytics-stat-card";
 import styles from "./teamspace-analytics.module.css";
 
@@ -96,6 +97,8 @@ export function TeamspaceAnalytics({ teamspaceId }: Props) {
           ))}
         </select>
       </div>
+
+      <AITeamHealthHeader teamID={teamspaceId} />
 
       {loading && <p className={styles.hint}>Загрузка…</p>}
 

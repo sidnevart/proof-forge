@@ -40,6 +40,9 @@ import type {
   Workspace,
   WeeklyAssembly,
   WeeklyRecap,
+  AICompanionNotification,
+  AIProofDraft,
+  TeamAIHealth,
 } from "@/lib/types";
 
 // Production: empty string = same-origin requests through nginx.
@@ -861,6 +864,38 @@ export async function approveInitiativeProof(
     method: "POST",
     body: JSON.stringify({ comment: comment ?? "" }),
   });
+}
+
+// ── AI Companion ─────────────────────────────────────────────────────────────
+
+export async function getAINotifications(): Promise<{ notifications: AICompanionNotification[] }> {
+  return request<{ notifications: AICompanionNotification[] }>("/v1/me/ai/notifications");
+}
+
+export async function dismissAINotification(id: string): Promise<{ ok: boolean }> {
+  return request<{ ok: boolean }>(`/v1/me/ai/notifications/${encodeURIComponent(id)}/dismiss`, {
+    method: "POST",
+  });
+}
+
+export async function getAIProofDrafts(): Promise<{ drafts: AIProofDraft[] }> {
+  return request<{ drafts: AIProofDraft[] }>("/v1/me/ai/drafts");
+}
+
+export async function acceptAIProofDraft(id: string): Promise<{ draft: AIProofDraft }> {
+  return request<{ draft: AIProofDraft }>(`/v1/me/ai/drafts/${encodeURIComponent(id)}/accept`, {
+    method: "POST",
+  });
+}
+
+export async function rejectAIProofDraft(id: string): Promise<{ ok: boolean }> {
+  return request<{ ok: boolean }>(`/v1/me/ai/drafts/${encodeURIComponent(id)}/reject`, {
+    method: "POST",
+  });
+}
+
+export async function getTeamAIHealth(teamID: number): Promise<TeamAIHealth> {
+  return request<TeamAIHealth>(`/v1/teams/${teamID}/ai/health`);
 }
 
 // ── Analytics (Phase 4) ───────────────────────────────────────────────────────

@@ -18,6 +18,7 @@ import {
 } from "@/lib/api";
 import type { CheckIn, EvidenceItem } from "@/lib/types";
 
+import { AIDraftCard } from "./ai-draft-card";
 import { AIProofCheck } from "./ai-proof-check";
 import styles from "./checkin-screen.module.css";
 
@@ -327,6 +328,7 @@ export function CheckInScreen({ goalID }: { goalID: number }) {
         </div>
 
         <div className={styles.sidebar}>
+          <AIDraftCard goalID={goalID} />
           <SectionShell eyebrow="Собранные материалы" title={`Подтверждение (${evidence.length})`}>
             {evidence.length === 0 ? (
               <StatePanel

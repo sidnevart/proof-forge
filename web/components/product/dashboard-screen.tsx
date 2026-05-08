@@ -4,6 +4,7 @@ import Link from "next/link";
 import { type FormEvent, useCallback, useEffect, useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 
+import { AIBadge } from "@/components/product/ai-badge";
 import { GoalCircleCard } from "@/components/product/goal-circle-card";
 import { NowCard } from "@/components/product/now-card";
 import { PersonalProgressBar } from "@/components/product/personal-progress-bar";
@@ -228,6 +229,7 @@ export function DashboardScreen() {
 
   return (
     <main className={styles.page}>
+      <AIBadge />
       {nowCard && <NowCard data={nowCard} />}
       {personalStats && <PersonalProgressBar data={personalStats} />}
       <div className={styles.goalStack}>

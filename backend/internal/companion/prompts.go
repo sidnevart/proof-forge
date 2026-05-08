@@ -141,3 +141,90 @@ func SelectEveningPingTemplate(streak int) string {
 	}
 	return "Какой один шаг ты сделаешь сегодня по своей цели?"
 }
+
+// --- Lead Weekly Brief ---
+
+// LeadBriefSystemPrompt is the system prompt for lead weekly brief.
+const LeadBriefSystemPrompt = `Ты помогаешь руководителю команды. Задача: написать краткий бриф недели на основе агрегатных данных команды.
+
+Структура (30–80 слов):
+1. Общая сводка: пруфы, approve, reject
+2. Один риск или наблюдение
+3. Рекомендация
+
+Правила:
+- Только факты и агрегаты, без raw daily-log
+- Без оценок «слабый/сильный/плохой работник»
+- Без сравнений личностей
+- Если рисков нет — явно напиши «Без рисков»
+- Формат: plain text, русский язык`
+
+// BuildLeadBriefPrompt creates the user prompt for lead brief.
+func BuildLeadBriefPrompt(lc *LeadBriefContext) string {
+	var sb strings.Builder
+	sb.WriteString(fmt.Sprintf("Руководитель: %s\n", lc.DisplayName))
+	sb.WriteString(fmt.Sprintf("Команда: %s\n", lc.TeamName))
+	sb.WriteString(fmt.Sprintf("Период: %s — %s\n", lc.PeriodFrom.Format("2006-01-02"), lc.PeriodTo.Format("2006-01-02")))
+	sb.WriteString(fmt.Sprintf("Пруфов отправлено: %d\n", lc.TotalProofsSubmitted))
+	sb.WriteString(fmt.Sprintf("Одобрено: %d\n", lc.TotalProofsApproved))
+	sb.WriteString(fmt.Sprintf("Отклонено: %d\n", lc.TotalProofsRejected))
+	sb.WriteString(fmt.Sprintf("Среднее время approve: %s\n", lc.ApprovalLatencyAvg))
+
+	sb.WriteString("\nУчастники:\n")
+	for _, m := range lc.Members {
+		sb.WriteString(fmt.Sprintf("- %s: %d пруфов, streak %d, статус: %s\n", m.DisplayName, m.ProofCount, m.Streak, m.Status))
+	}
+
+	sb.WriteString("\nНапиши краткий бриф недели для руководителя.")
+	return sb.String()
+}
+
+// LeadBriefTemplate is the fallback template for lead weekly brief.
+func LeadBriefTemplate(lc *LeadBriefContext) string {
+	var sb strings.Builder
+	sb.WriteString(fmt.Sprintf("Бриф команды «%s» — %s\n\n", lc.TeamName, lc.PeriodTo.Format("02.01.2006")))
+
+	if lc.TotalProofsSubmitted == 0 {
+		sb.WriteString("На этой неделе в команде не было пруфов. Проведите stand-up или проверьте блокеры.\n")
+		return sb.String()
+	}
+
+	sb.WriteString(fmt.Sprintf("• Пруфов: %d (одобрено %d, отклонено %d)\n", lc.TotalProofsSubmitted, lc.TotalProofsApproved, lc.TotalProofsRejected))
+	sb.WriteString(fmt.Sprintf("• Среднее время approve: %s\n", lc.ApprovalLatencyAvg))
+
+	// Find risk members
+	var atRisk []string
+	var stalled []string
+	for _, m := range lc.Members {
+		if m.Status == "at_risk" {
+			atRisk = append(atRisk, m.DisplayName)
+		} else if m.Status == "stalled" {
+			stalled = append(stalled, m.DisplayName)
+		}
+	}
+
+	if len(stalled) > 0 {
+		sb.WriteString(fmt.Sprintf("• Без пруфов: %s\n", strings.Join(stalled, ", ")))
+	}
+	if len(atRisk) > 0 {
+		sb.WriteString(fmt.Sprintf("• Слабый streak: %s\n", strings.Join(atRisk, ", ")))
+	}
+	if len(stalled) == 0 && len(atRisk) == 0 {
+		sb.WriteString("• Без рисков\n")
+	}
+
+	sb.WriteString("\nРекомендация: проверьте очередь approve и дайте фидбек членам команды.\n")
+	return sb.String()
+}
+
+// --- Streak Reminder ---
+
+// StreakReminderTemplate is the fallback for streak reminder (no LLM needed).
+func StreakReminderTemplate(sc *StreakContext) string {
+	if sc.HoursLeft <= 0 {
+		return fmt.Sprintf("%s, серия «%s» (%d дней) сейчас под угрозой. Сделай пруф сегодня, чтобы сохранить streak.",
+			sc.DisplayName, sc.GoalTitle, sc.CurrentStreak)
+	}
+	return fmt.Sprintf("%s, у тебя осталось %d часов, чтобы сохранить серию «%s» (%d дней). Сделай пруф сегодня.",
+		sc.DisplayName, sc.HoursLeft, sc.GoalTitle, sc.CurrentStreak)
+}

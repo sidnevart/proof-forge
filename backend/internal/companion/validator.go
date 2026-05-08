@@ -40,6 +40,25 @@ func ValidateWeeklyRecap(text string) error {
 	return nil
 }
 
+// ValidateLeadBrief enforces lead brief rules.
+func ValidateLeadBrief(text string) error {
+	words := countWords(text)
+	if words < 30 || words > 80 {
+		return fmt.Errorf("lead brief: expected 30-80 words, got %d", words)
+	}
+	lower := strings.ToLower(text)
+	for _, bad := range []string{"слабый работник", "плохой работник", "сильный работник", "слабый", "плохой результат"} {
+		if strings.Contains(lower, bad) {
+			return fmt.Errorf("lead brief: contains forbidden evaluation %q", bad)
+		}
+	}
+	// Must contain at least one risk section or explicit "Без рисков".
+	if !strings.Contains(lower, "без рисков") && !strings.Contains(lower, "риск") {
+		return fmt.Errorf("lead brief: must contain risk section or explicit 'Без рисков'")
+	}
+	return nil
+}
+
 // countWords counts words in a string (simple split on whitespace/punctuation).
 func countWords(s string) int {
 	var count int

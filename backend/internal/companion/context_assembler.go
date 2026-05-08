@@ -130,6 +130,45 @@ func (a *ContextAssembler) GetUserContext(ctx context.Context, userID int64) (*U
 	return uc, nil
 }
 
+// LeadBriefContext holds aggregated team data for lead weekly brief.
+// Privacy: never includes raw daily-log content.
+type LeadBriefContext struct {
+	LeaderID    int64
+	DisplayName string
+	TeamID      int64
+	TeamName    string
+
+	PeriodFrom time.Time
+	PeriodTo   time.Time
+
+	// Aggregates (only metadata)
+	TotalProofsSubmitted int
+	TotalProofsApproved  int
+	TotalProofsRejected  int
+	ApprovalLatencyAvg   string // e.g. "12h"
+
+	Members []MemberBrief
+}
+
+// MemberBrief is a member summary without raw content.
+type MemberBrief struct {
+	UserID      int64
+	DisplayName string
+	ProofCount  int
+	Streak      int
+	Status      string // "active", "at_risk", "stalled"
+}
+
+// StreakContext holds data for streak risk reminder.
+type StreakContext struct {
+	UserID        int64
+	DisplayName   string
+	Timezone      string
+	CurrentStreak int
+	GoalTitle     string
+	HoursLeft     int // hours until midnight
+}
+
 // GetWeeklyContext gathers data for weekly recap.
 func (a *ContextAssembler) GetWeeklyContext(ctx context.Context, userID int64, from, to time.Time) (*WeeklyContext, error) {
 	wc := &WeeklyContext{
@@ -214,4 +253,143 @@ func (a *ContextAssembler) GetWeeklyContext(ctx context.Context, userID int64, f
 	}
 
 	return wc, nil
+}
+
+// GetLeadBriefContext gathers aggregate team data for a lead weekly brief.
+// Privacy: never queries raw daily-log content.
+func (a *ContextAssembler) GetLeadBriefContext(ctx context.Context, leaderID, teamID int64, from, to time.Time) (*LeadBriefContext, error) {
+	lc := &LeadBriefContext{
+		LeaderID: leaderID,
+		TeamID:   teamID,
+		PeriodFrom: from,
+		PeriodTo:   to,
+	}
+
+	// 1. Team name
+	err := a.pool.QueryRow(ctx,
+		`SELECT name FROM teams WHERE id = $1`, teamID,
+	).Scan(&lc.TeamName)
+	if err != nil {
+		return nil, fmt.Errorf("assembler team: %w", err)
+	}
+
+	// 2. Leader display name
+	err = a.pool.QueryRow(ctx,
+		`SELECT display_name FROM users WHERE id = $1`, leaderID,
+	).Scan(&lc.DisplayName)
+	if err != nil {
+		return nil, fmt.Errorf("assembler leader: %w", err)
+	}
+
+	// 3. Team aggregates (submitted/approved/rejected counts)
+	err = a.pool.QueryRow(ctx, `
+		SELECT
+			COUNT(*) FILTER (WHERE ci.status IN ('submitted', 'approved')) AS submitted,
+			COUNT(*) FILTER (WHERE ci.status = 'approved') AS approved,
+			COUNT(*) FILTER (WHERE ci.status = 'rejected') AS rejected
+		FROM check_ins ci
+		JOIN goals g ON g.id = ci.goal_id
+		JOIN team_memberships tm ON tm.user_id = g.owner_user_id
+		WHERE tm.team_id = $1
+		  AND ci.submitted_at >= $2 AND ci.submitted_at <= $3
+	`, teamID, from, to).Scan(&lc.TotalProofsSubmitted, &lc.TotalProofsApproved, &lc.TotalProofsRejected)
+	if err != nil {
+		return nil, fmt.Errorf("assembler team aggregates: %w", err)
+	}
+
+	// 4. Approval latency avg
+	var latencyHours float64
+	_ = a.pool.QueryRow(ctx, `
+		SELECT COALESCE(AVG(EXTRACT(EPOCH FROM (ci.approved_at - ci.submitted_at)) / 3600), 0)
+		FROM check_ins ci
+		JOIN goals g ON g.id = ci.goal_id
+		JOIN team_memberships tm ON tm.user_id = g.owner_user_id
+		WHERE tm.team_id = $1
+		  AND ci.status = 'approved'
+		  AND ci.approved_at IS NOT NULL
+		  AND ci.submitted_at >= $2 AND ci.submitted_at <= $3
+	`, teamID, from, to).Scan(&latencyHours)
+	lc.ApprovalLatencyAvg = fmt.Sprintf("%.0fh", latencyHours)
+
+	// 5. Member summaries (metadata only)
+	rows, err := a.pool.Query(ctx, `
+		SELECT
+			u.id,
+			u.display_name,
+			COUNT(ci.id) AS proof_count,
+			COALESCE(MAX(g.current_streak_count), 0) AS streak
+		FROM team_memberships tm
+		JOIN users u ON u.id = tm.user_id
+		LEFT JOIN goals g ON g.owner_user_id = u.id AND g.status = 'active'
+		LEFT JOIN check_ins ci ON ci.goal_id = g.id
+		  AND ci.submitted_at >= $2 AND ci.submitted_at <= $3
+		WHERE tm.team_id = $1
+		GROUP BY u.id, u.display_name
+		ORDER BY proof_count DESC
+	`, teamID, from, to)
+	if err != nil {
+		return nil, fmt.Errorf("assembler members: %w", err)
+	}
+	defer rows.Close()
+	for rows.Next() {
+		var m MemberBrief
+		if err := rows.Scan(&m.UserID, &m.DisplayName, &m.ProofCount, &m.Streak); err != nil {
+			continue
+		}
+		if m.ProofCount == 0 {
+			m.Status = "stalled"
+		} else if m.Streak < 3 {
+			m.Status = "at_risk"
+		} else {
+			m.Status = "active"
+		}
+		lc.Members = append(lc.Members, m)
+	}
+
+	return lc, nil
+}
+
+// GetStreakContext gathers data for streak reminder.
+func (a *ContextAssembler) GetStreakContext(ctx context.Context, userID int64) (*StreakContext, error) {
+	sc := &StreakContext{UserID: userID}
+
+	var tz string
+	err := a.pool.QueryRow(ctx, `
+		SELECT display_name, COALESCE(timezone, 'UTC')
+		FROM users WHERE id = $1
+	`, userID).Scan(&sc.DisplayName, &tz)
+	if err != nil {
+		return nil, fmt.Errorf("assembler user: %w", err)
+	}
+	sc.Timezone = tz
+
+	// Current streak (max across active goals)
+	err = a.pool.QueryRow(ctx, `
+		SELECT COALESCE(MAX(current_streak_count), 0) FROM goals
+		WHERE owner_user_id = $1 AND status = 'active' AND archived_at IS NULL
+	`, userID).Scan(&sc.CurrentStreak)
+	if err != nil {
+		return nil, fmt.Errorf("assembler streak: %w", err)
+	}
+
+	// Top active goal title
+	var goalTitle string
+	_ = a.pool.QueryRow(ctx, `
+		SELECT title FROM goals
+		WHERE owner_user_id = $1 AND status = 'active' AND archived_at IS NULL
+		ORDER BY current_streak_count DESC, updated_at DESC
+		LIMIT 1
+	`, userID).Scan(&goalTitle)
+	sc.GoalTitle = goalTitle
+
+	// Hours left until midnight in user's timezone
+	loc, _ := time.LoadLocation(tz)
+	if loc == nil {
+		loc = time.UTC
+	}
+	now := time.Now().In(loc)
+	midnight := time.Date(now.Year(), now.Month(), now.Day()+1, 0, 0, 0, 0, loc)
+	sc.HoursLeft = int(midnight.Sub(now).Hours())
+
+	return sc, nil
 }

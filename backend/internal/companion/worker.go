@@ -87,6 +87,21 @@ func (w *Worker) tick(ctx context.Context) error {
 		w.log.Error("buddy stalled tick", "err", err)
 	}
 
+	// 7. Goal risk: when active goal has no proof in 14 days.
+	if err := w.fireGoalRisks(ctx, now); err != nil {
+		w.log.Error("goal risk tick", "err", err)
+	}
+
+	// 8. Streak milestone: when goal hits 7, 30, or 100 streak.
+	if err := w.fireStreakMilestones(ctx, now); err != nil {
+		w.log.Error("streak milestone tick", "err", err)
+	}
+
+	// 9. Leader fair play: when approval latency is high.
+	if err := w.fireLeaderFairPlay(ctx, now); err != nil {
+		w.log.Error("leader fair play tick", "err", err)
+	}
+
 	return nil
 }
 
@@ -711,5 +726,274 @@ func (w *Worker) sendBuddyStalled(ctx context.Context, bsc *BuddyStalledContext)
 	}
 
 	w.log.Info("buddy stalled sent", "buddy", bsc.BuddyID, "proof", bsc.ProofID)
+	return nil
+}
+
+// fireGoalRisks finds goals with no approved proof in 14+ days and alerts users.
+func (w *Worker) fireGoalRisks(ctx context.Context, now time.Time) error {
+	// Run once per day at 10:00.
+	if now.Hour() != 10 || now.Minute() > 4 {
+		return nil
+	}
+
+	risks, err := w.assembler.GetGoalRiskContext(ctx)
+	if err != nil {
+		return fmt.Errorf("goal risk: assemble context: %w", err)
+	}
+
+	for _, grc := range risks {
+		triggerID := BuildTriggerID(FeatureGoalRisk, grc.UserID, fmt.Sprintf("%d-%s", grc.GoalID, now.Format("2006-01-02")))
+		shouldFire, err := w.service.ShouldFire(ctx, grc.UserID, FeatureGoalRisk, triggerID)
+		if err != nil {
+			w.log.Warn("goal risk: should fire check", "user", grc.UserID, "err", err)
+			continue
+		}
+		if !shouldFire {
+			continue
+		}
+
+		if err := w.sendGoalRisk(ctx, grc); err != nil {
+			w.log.Warn("goal risk: send", "user", grc.UserID, "err", err)
+		}
+	}
+	return nil
+}
+
+// sendGoalRisk generates and delivers a goal risk alert.
+func (w *Worker) sendGoalRisk(ctx context.Context, grc *GoalRiskContext) error {
+	triggerID := BuildTriggerID(FeatureGoalRisk, grc.UserID, fmt.Sprintf("%d-%s", grc.GoalID, w.clock().Format("2006-01-02")))
+
+	userPrompt := BuildGoalRiskPrompt(grc)
+
+	res, _, err := w.service.Run(ctx, FeatureGoalRisk, personalization.ModeMetadataOnly, 3*time.Second,
+		func(ctx context.Context) (personalization.PromptResult, error) {
+			llm := w.service.LLM()
+			if llm == nil {
+				return personalization.PromptResult{}, fmt.Errorf("llm not configured")
+			}
+			return llm.Prompt(ctx, GoalRiskSystemPrompt, userPrompt, 200)
+		})
+	if err != nil {
+		w.log.Warn("goal risk: llm failed, using template", "user", grc.UserID, "err", err)
+		res.Text = GoalRiskTemplate(grc)
+		res.Provider = personalization.ProviderTemplate
+	}
+
+	if err := ValidateGoalRisk(res.Text); err != nil {
+		w.log.Warn("goal risk: validation failed, using template", "user", grc.UserID, "err", err)
+		res.Text = GoalRiskTemplate(grc)
+		res.Provider = personalization.ProviderTemplate
+	}
+
+	// Try Telegram.
+	var chatID int64
+	_ = w.pool.QueryRow(ctx,
+		`SELECT telegram_chat_id FROM telegram_links WHERE user_id = $1 AND status = 'active'`, grc.UserID,
+	).Scan(&chatID)
+
+	if w.bot != nil && chatID != 0 {
+		if err := w.bot.SendMessage(ctx, chatID, res.Text); err != nil {
+			w.log.Warn("goal risk: telegram send", "user", grc.UserID, "err", err)
+		}
+	}
+
+	// In-app notification.
+	_ = w.service.SaveInAppNotification(ctx, grc.UserID, FeatureGoalRisk,
+		"Цель без пруфов", res.Text, []NotificationAction{
+			{Label: "Сделать пруф", Action: "open_dashboard", URL: "/dashboard"},
+			{Label: "Пересмотреть цель", Action: "edit_goal", URL: fmt.Sprintf("/goals/%d", grc.GoalID)},
+		})
+
+	if err := w.service.RecordFired(ctx, grc.UserID, FeatureGoalRisk, triggerID); err != nil {
+		w.log.Warn("goal risk: record fired", "user", grc.UserID, "err", err)
+	}
+
+	w.log.Info("goal risk sent", "user", grc.UserID, "goal", grc.GoalID)
+	return nil
+}
+
+// fireStreakMilestones finds goals that hit 7, 30, or 100 streak and celebrates.
+func (w *Worker) fireStreakMilestones(ctx context.Context, _ time.Time) error {
+	// Check every 5 minutes — milestones are rare and we want to catch them quickly.
+	milestones, err := w.assembler.GetStreakMilestoneContext(ctx)
+	if err != nil {
+		return fmt.Errorf("streak milestone: assemble context: %w", err)
+	}
+
+	for _, smc := range milestones {
+		triggerID := BuildTriggerID(FeatureStreakMilestone, smc.UserID, fmt.Sprintf("%d-%d", smc.GoalID, smc.Milestone))
+		shouldFire, err := w.service.ShouldFire(ctx, smc.UserID, FeatureStreakMilestone, triggerID)
+		if err != nil {
+			w.log.Warn("streak milestone: should fire check", "user", smc.UserID, "err", err)
+			continue
+		}
+		if !shouldFire {
+			continue
+		}
+
+		if err := w.sendStreakMilestone(ctx, smc); err != nil {
+			w.log.Warn("streak milestone: send", "user", smc.UserID, "err", err)
+		}
+	}
+	return nil
+}
+
+// sendStreakMilestone generates and delivers a streak milestone celebration.
+func (w *Worker) sendStreakMilestone(ctx context.Context, smc *StreakMilestoneContext) error {
+	triggerID := BuildTriggerID(FeatureStreakMilestone, smc.UserID, fmt.Sprintf("%d-%d", smc.GoalID, smc.Milestone))
+
+	userPrompt := BuildStreakMilestonePrompt(smc)
+
+	res, _, err := w.service.Run(ctx, FeatureStreakMilestone, personalization.ModeMetadataOnly, 3*time.Second,
+		func(ctx context.Context) (personalization.PromptResult, error) {
+			llm := w.service.LLM()
+			if llm == nil {
+				return personalization.PromptResult{}, fmt.Errorf("llm not configured")
+			}
+			return llm.Prompt(ctx, StreakMilestoneSystemPrompt, userPrompt, 200)
+		})
+	if err != nil {
+		w.log.Warn("streak milestone: llm failed, using template", "user", smc.UserID, "err", err)
+		res.Text = StreakMilestoneTemplate(smc)
+		res.Provider = personalization.ProviderTemplate
+	}
+
+	if err := ValidateStreakMilestone(res.Text); err != nil {
+		w.log.Warn("streak milestone: validation failed, using template", "user", smc.UserID, "err", err)
+		res.Text = StreakMilestoneTemplate(smc)
+		res.Provider = personalization.ProviderTemplate
+	}
+
+	// Try Telegram.
+	var chatID int64
+	_ = w.pool.QueryRow(ctx,
+		`SELECT telegram_chat_id FROM telegram_links WHERE user_id = $1 AND status = 'active'`, smc.UserID,
+	).Scan(&chatID)
+
+	if w.bot != nil && chatID != 0 {
+		if err := w.bot.SendMessage(ctx, chatID, res.Text); err != nil {
+			w.log.Warn("streak milestone: telegram send", "user", smc.UserID, "err", err)
+		}
+	}
+
+	// In-app + WebSocket push.
+	_ = w.service.SaveInAppNotification(ctx, smc.UserID, FeatureStreakMilestone,
+		"Milestone достигнут!", res.Text, []NotificationAction{
+			{Label: "Поделиться", Action: "share_milestone", URL: "/dashboard"},
+		})
+
+	if err := w.service.RecordFired(ctx, smc.UserID, FeatureStreakMilestone, triggerID); err != nil {
+		w.log.Warn("streak milestone: record fired", "user", smc.UserID, "err", err)
+	}
+
+	w.log.Info("streak milestone sent", "user", smc.UserID, "milestone", smc.Milestone)
+	return nil
+}
+
+// fireLeaderFairPlay checks team approval latency and nudges leads.
+func (w *Worker) fireLeaderFairPlay(ctx context.Context, now time.Time) error {
+	// Run Mon/Wed/Fri at 11:00.
+	if now.Hour() != 11 || now.Minute() > 4 {
+		return nil
+	}
+	if now.Weekday() != time.Monday && now.Weekday() != time.Wednesday && now.Weekday() != time.Friday {
+		return nil
+	}
+
+	// Find leads with stalled approvals.
+	rows, err := w.pool.Query(ctx, `
+		SELECT DISTINCT u.id, t.id, COALESCE(u.timezone, 'UTC'), tl.telegram_chat_id
+		FROM users u
+		JOIN team_memberships tm ON tm.user_id = u.id AND tm.role IN ('lead', 'trusted') AND tm.status = 'active'
+		JOIN teams t ON t.id = tm.team_id
+		JOIN telegram_links tl ON tl.user_id = u.id AND tl.status = 'active'
+		WHERE EXISTS (
+			SELECT 1 FROM check_ins ci
+			JOIN goals g ON g.id = ci.goal_id
+			JOIN team_memberships tm2 ON tm2.user_id = g.owner_user_id AND tm2.team_id = t.id
+			WHERE ci.status = 'submitted'
+			  AND ci.submitted_at <= NOW() - INTERVAL '48 hours'
+		)
+		LIMIT 50
+	`)
+	if err != nil {
+		return fmt.Errorf("leader fair play: query leads: %w", err)
+	}
+	defer rows.Close()
+
+	for rows.Next() {
+		var leaderID, teamID int64
+		var tz string
+		var chatID int64
+		if err := rows.Scan(&leaderID, &teamID, &tz, &chatID); err != nil {
+			continue
+		}
+
+		triggerID := BuildTriggerID(FeatureLeaderFairPlay, leaderID, now.Format("2006-01-02"))
+		shouldFire, err := w.service.ShouldFire(ctx, leaderID, FeatureLeaderFairPlay, triggerID)
+		if err != nil {
+			w.log.Warn("leader fair play: should fire check", "leader", leaderID, "err", err)
+			continue
+		}
+		if !shouldFire {
+			continue
+		}
+
+		if err := w.sendLeaderFairPlay(ctx, leaderID, teamID, chatID); err != nil {
+			w.log.Warn("leader fair play: send", "leader", leaderID, "err", err)
+		}
+	}
+	return nil
+}
+
+// sendLeaderFairPlay generates and delivers a fair play nudge to the leader.
+func (w *Worker) sendLeaderFairPlay(ctx context.Context, leaderID, teamID int64, chatID int64) error {
+	now := w.clock()
+	from := now.AddDate(0, 0, -7)
+	triggerID := BuildTriggerID(FeatureLeaderFairPlay, leaderID, now.Format("2006-01-02"))
+
+	fc, err := w.assembler.GetLeaderFairPlayContext(ctx, leaderID, teamID, from, now)
+	if err != nil {
+		return fmt.Errorf("leader fair play: assemble context: %w", err)
+	}
+
+	userPrompt := BuildLeaderFairPlayPrompt(fc)
+
+	res, _, err := w.service.Run(ctx, FeatureLeaderFairPlay, personalization.ModeMetadataOnly, 3*time.Second,
+		func(ctx context.Context) (personalization.PromptResult, error) {
+			llm := w.service.LLM()
+			if llm == nil {
+				return personalization.PromptResult{}, fmt.Errorf("llm not configured")
+			}
+			return llm.Prompt(ctx, LeaderFairPlaySystemPrompt, userPrompt, 200)
+		})
+	if err != nil {
+		w.log.Warn("leader fair play: llm failed, using template", "leader", leaderID, "err", err)
+		res.Text = LeaderFairPlayTemplate(fc)
+		res.Provider = personalization.ProviderTemplate
+	}
+
+	if err := ValidateLeaderFairPlay(res.Text); err != nil {
+		w.log.Warn("leader fair play: validation failed, using template", "leader", leaderID, "err", err)
+		res.Text = LeaderFairPlayTemplate(fc)
+		res.Provider = personalization.ProviderTemplate
+	}
+
+	if w.bot != nil && chatID != 0 {
+		if err := w.bot.SendMessage(ctx, chatID, res.Text); err != nil {
+			w.log.Warn("leader fair play: telegram send", "leader", leaderID, "err", err)
+		}
+	}
+
+	_ = w.service.SaveInAppNotification(ctx, leaderID, FeatureLeaderFairPlay,
+		"Fair play напоминание", res.Text, []NotificationAction{
+			{Label: "Проверить очередь", Action: "open_dashboard", URL: "/dashboard"},
+		})
+
+	if err := w.service.RecordFired(ctx, leaderID, FeatureLeaderFairPlay, triggerID); err != nil {
+		w.log.Warn("leader fair play: record fired", "leader", leaderID, "err", err)
+	}
+
+	w.log.Info("leader fair play sent", "leader", leaderID, "team", teamID)
 	return nil
 }

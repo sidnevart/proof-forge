@@ -70,6 +70,51 @@ func ValidateBuddyStalled(text string) error {
 	return nil
 }
 
+// ValidateGoalRisk enforces goal risk alert rules.
+func ValidateGoalRisk(text string) error {
+	words := countWords(text)
+	if words < 20 || words > 50 {
+		return fmt.Errorf("goal risk: expected 20-50 words, got %d", words)
+	}
+	lower := strings.ToLower(text)
+	for _, bad := range []string{"слабый", "плохой", "лень", "ты должен"} {
+		if strings.Contains(lower, bad) {
+			return fmt.Errorf("goal risk: contains forbidden word %q", bad)
+		}
+	}
+	return nil
+}
+
+// ValidateStreakMilestone enforces streak milestone rules.
+func ValidateStreakMilestone(text string) error {
+	words := countWords(text)
+	if words < 15 || words > 40 {
+		return fmt.Errorf("streak milestone: expected 15-40 words, got %d", words)
+	}
+	lower := strings.ToLower(text)
+	for _, bad := range []string{"слабый", "плохой", "лень", "тормозит"} {
+		if strings.Contains(lower, bad) {
+			return fmt.Errorf("streak milestone: contains forbidden word %q", bad)
+		}
+	}
+	return nil
+}
+
+// ValidateLeaderFairPlay enforces leader fair play nudge rules.
+func ValidateLeaderFairPlay(text string) error {
+	words := countWords(text)
+	if words < 20 || words > 50 {
+		return fmt.Errorf("leader fair play: expected 20-50 words, got %d", words)
+	}
+	lower := strings.ToLower(text)
+	for _, bad := range []string{"слабый работник", "плохой работник", "сильный работник", "слабый", "плохой результат"} {
+		if strings.Contains(lower, bad) {
+			return fmt.Errorf("leader fair play: contains forbidden evaluation %q", bad)
+		}
+	}
+	return nil
+}
+
 // ValidateLeadBrief enforces lead brief rules.
 func ValidateLeadBrief(text string) error {
 	words := countWords(text)

@@ -485,6 +485,43 @@ func (a *ContextAssembler) GetProofDraftContext(ctx context.Context, userID int6
 	return pdc, nil
 }
 
+// GoalRiskContext holds data for goal risk alert.
+type GoalRiskContext struct {
+	UserID           int64
+	DisplayName      string
+	GoalID           int64
+	GoalTitle        string
+	DaysWithoutProof int
+	CurrentStreak    int
+	BuddyName        string
+	TeamName         string
+}
+
+// StreakMilestoneContext holds data for streak milestone celebration.
+type StreakMilestoneContext struct {
+	UserID        int64
+	DisplayName   string
+	GoalID        int64
+	GoalTitle     string
+	Milestone     int // 7, 30, or 100
+	CurrentStreak int
+	TeamName      string
+}
+
+// LeaderFairPlayContext holds data for leader fair play nudge.
+type LeaderFairPlayContext struct {
+	LeaderID            int64
+	DisplayName         string
+	TeamID              int64
+	TeamName            string
+	PeriodFrom          time.Time
+	PeriodTo            time.Time
+	P95LatencyHours     float64
+	MaxLatencyHours     float64
+	PendingApprovals    int
+	StalledProofsCount  int
+}
+
 // GetBuddyStalledContext finds stalled proofs awaiting buddy approval.
 func (a *ContextAssembler) GetBuddyStalledContext(ctx context.Context, minHours int) ([]*BuddyStalledContext, error) {
 	rows, err := a.pool.Query(ctx, `
@@ -530,4 +567,145 @@ func (a *ContextAssembler) GetBuddyStalledContext(ctx context.Context, minHours 
 		results = append(results, &b)
 	}
 	return results, nil
+}
+
+// GetGoalRiskContext finds active goals with no approved proof in last 14 days.
+func (a *ContextAssembler) GetGoalRiskContext(ctx context.Context) ([]*GoalRiskContext, error) {
+	rows, err := a.pool.Query(ctx, `
+		SELECT
+			g.id,
+			g.title,
+			g.owner_user_id,
+			u.display_name,
+			COALESCE(g.current_streak_count, 0),
+			bu.display_name,
+			t.name,
+			CURRENT_DATE - COALESCE(MAX(ci.approved_at)::date, g.created_at::date)
+		FROM goals g
+		JOIN users u ON u.id = g.owner_user_id
+		LEFT JOIN users bu ON bu.id = g.buddy_user_id
+		LEFT JOIN teams t ON t.id = g.team_id
+		LEFT JOIN check_ins ci ON ci.goal_id = g.id AND ci.status = 'approved'
+		WHERE g.status = 'active'
+		  AND g.archived_at IS NULL
+		GROUP BY g.id, g.title, g.owner_user_id, u.display_name, g.current_streak_count, bu.display_name, t.name, g.created_at
+		HAVING CURRENT_DATE - COALESCE(MAX(ci.approved_at)::date, g.created_at::date) >= 14
+		LIMIT 50
+	`)
+	if err != nil {
+		return nil, fmt.Errorf("assembler goal risk: %w", err)
+	}
+	defer rows.Close()
+
+	var results []*GoalRiskContext
+	for rows.Next() {
+		var r GoalRiskContext
+		if err := rows.Scan(
+			&r.GoalID, &r.GoalTitle, &r.UserID, &r.DisplayName,
+			&r.CurrentStreak, &r.BuddyName, &r.TeamName, &r.DaysWithoutProof,
+		); err != nil {
+			continue
+		}
+		results = append(results, &r)
+	}
+	return results, nil
+}
+
+// GetStreakMilestoneContext finds active goals that hit 7, 30, or 100 streak today.
+func (a *ContextAssembler) GetStreakMilestoneContext(ctx context.Context) ([]*StreakMilestoneContext, error) {
+	rows, err := a.pool.Query(ctx, `
+		SELECT
+			g.owner_user_id,
+			u.display_name,
+			g.id,
+			g.title,
+			g.current_streak_count,
+			t.name
+		FROM goals g
+		JOIN users u ON u.id = g.owner_user_id
+		LEFT JOIN teams t ON t.id = g.team_id
+		WHERE g.status = 'active'
+		  AND g.archived_at IS NULL
+		  AND g.current_streak_count IN (7, 30, 100)
+		  AND NOT EXISTS (
+			SELECT 1 FROM ai_companion_fired acf
+			WHERE acf.trigger_id = 'streak_milestone:' || g.owner_user_id || ':' || g.id || ':' || g.current_streak_count
+		  )
+		LIMIT 50
+	`)
+	if err != nil {
+		return nil, fmt.Errorf("assembler streak milestone: %w", err)
+	}
+	defer rows.Close()
+
+	var results []*StreakMilestoneContext
+	for rows.Next() {
+		var m StreakMilestoneContext
+		if err := rows.Scan(
+			&m.UserID, &m.DisplayName, &m.GoalID, &m.GoalTitle,
+			&m.CurrentStreak, &m.TeamName,
+		); err != nil {
+			continue
+		}
+		m.Milestone = m.CurrentStreak
+		results = append(results, &m)
+	}
+	return results, nil
+}
+
+// GetLeaderFairPlayContext gathers approval latency data for leader fair play nudge.
+func (a *ContextAssembler) GetLeaderFairPlayContext(ctx context.Context, leaderID, teamID int64, from, to time.Time) (*LeaderFairPlayContext, error) {
+	fc := &LeaderFairPlayContext{
+		LeaderID: leaderID,
+		TeamID:   teamID,
+		PeriodFrom: from,
+		PeriodTo:   to,
+	}
+
+	// Leader display name + team name
+	err := a.pool.QueryRow(ctx, `
+		SELECT u.display_name, t.name
+		FROM users u, teams t
+		WHERE u.id = $1 AND t.id = $2
+	`, leaderID, teamID).Scan(&fc.DisplayName, &fc.TeamName)
+	if err != nil {
+		return nil, fmt.Errorf("assembler fair play leader: %w", err)
+	}
+
+	// P95 and max approval latency
+	_ = a.pool.QueryRow(ctx, `
+		SELECT
+			COALESCE(PERCENTILE_CONT(0.95) WITHIN GROUP (ORDER BY EXTRACT(EPOCH FROM (ci.approved_at - ci.submitted_at)) / 3600), 0),
+			COALESCE(MAX(EXTRACT(EPOCH FROM (ci.approved_at - ci.submitted_at)) / 3600), 0)
+		FROM check_ins ci
+		JOIN goals g ON g.id = ci.goal_id
+		JOIN team_memberships tm ON tm.user_id = g.owner_user_id
+		WHERE tm.team_id = $1
+		  AND ci.status = 'approved'
+		  AND ci.approved_at IS NOT NULL
+		  AND ci.submitted_at >= $2 AND ci.submitted_at <= $3
+	`, teamID, from, to).Scan(&fc.P95LatencyHours, &fc.MaxLatencyHours)
+
+	// Pending approvals count
+	_ = a.pool.QueryRow(ctx, `
+		SELECT COUNT(*)
+		FROM check_ins ci
+		JOIN goals g ON g.id = ci.goal_id
+		JOIN team_memberships tm ON tm.user_id = g.owner_user_id
+		WHERE tm.team_id = $1
+		  AND ci.status = 'submitted'
+	`, teamID).Scan(&fc.PendingApprovals)
+
+	// Stalled proofs (>48h)
+	_ = a.pool.QueryRow(ctx, `
+		SELECT COUNT(*)
+		FROM check_ins ci
+		JOIN goals g ON g.id = ci.goal_id
+		JOIN team_memberships tm ON tm.user_id = g.owner_user_id
+		WHERE tm.team_id = $1
+		  AND ci.status = 'submitted'
+		  AND ci.submitted_at <= NOW() - INTERVAL '48 hours'
+	`, teamID).Scan(&fc.StalledProofsCount)
+
+	return fc, nil
 }

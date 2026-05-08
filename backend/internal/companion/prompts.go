@@ -312,3 +312,105 @@ func BuddyStalledTemplate(bsc *BuddyStalledContext) string {
 	return fmt.Sprintf("Привет, %s! %s отправил пруф по цели «%s» %d часов назад. Дай фидбек, когда будет минутка — человек ждёт.",
 		bsc.BuddyName, bsc.DisplayName, bsc.GoalTitle, bsc.HoursStalled)
 }
+
+// --- Goal Risk ---
+
+// GoalRiskSystemPrompt is the system prompt for goal risk alert.
+const GoalRiskSystemPrompt = `Ты заботливый компаньон по продуктивности. Задача: мягко напомнить пользователю, что по одной из его целей давно не было пруфов.
+
+Правила:
+- Длина: 20–50 слов
+- Тон: поддерживающий, без стыда или давления
+- Предложи один конкретный шаг, который можно сделать сегодня
+- Не упоминать приватные данные других людей
+- Формат: plain text, русский язык`
+
+// BuildGoalRiskPrompt creates the user prompt for goal risk alert.
+func BuildGoalRiskPrompt(grc *GoalRiskContext) string {
+	var sb strings.Builder
+	sb.WriteString(fmt.Sprintf("Пользователь: %s\n", grc.DisplayName))
+	sb.WriteString(fmt.Sprintf("Цель: %s\n", grc.GoalTitle))
+	sb.WriteString(fmt.Sprintf("Дней без пруфов: %d\n", grc.DaysWithoutProof))
+	sb.WriteString(fmt.Sprintf("Текущий streak: %d\n", grc.CurrentStreak))
+	sb.WriteString(fmt.Sprintf("Buddy: %s\n", grc.BuddyName))
+	sb.WriteString(fmt.Sprintf("Команда: %s\n", grc.TeamName))
+	sb.WriteString("\nНапиши мягкое напоминание с предложением одного шага.")
+	return sb.String()
+}
+
+// GoalRiskTemplate is the fallback template for goal risk alert.
+func GoalRiskTemplate(grc *GoalRiskContext) string {
+	if grc.DaysWithoutProof >= 21 {
+		return fmt.Sprintf("%s, по цели «%s» уже %d дней без пруфов. Попробуй сделать один маленький шаг сегодня — даже 10 минут уже прогресс.", grc.DisplayName, grc.GoalTitle, grc.DaysWithoutProof)
+	}
+	return fmt.Sprintf("%s, по цели «%s» %d дней без пруфов. Сделай сегодня один конкретный шаг и зафиксируй его.", grc.DisplayName, grc.GoalTitle, grc.DaysWithoutProof)
+}
+
+// --- Streak Milestone ---
+
+// StreakMilestoneSystemPrompt is the system prompt for streak milestone celebration.
+const StreakMilestoneSystemPrompt = `Ты компаньон по росту. Задача: написать короткое поздравление с достижением streak-маркера.
+
+Правила:
+- Длина: 15–40 слов
+- Тон: тёплый, но без излишней эйфории («молодец», «отлично» — допустимо умеренно)
+- Подчеркни конкретику: какую цель и сколько дней
+- Не сравнивать с другими людьми
+- Формат: plain text, русский язык`
+
+// BuildStreakMilestonePrompt creates the user prompt for streak milestone.
+func BuildStreakMilestonePrompt(smc *StreakMilestoneContext) string {
+	var sb strings.Builder
+	sb.WriteString(fmt.Sprintf("Пользователь: %s\n", smc.DisplayName))
+	sb.WriteString(fmt.Sprintf("Цель: %s\n", smc.GoalTitle))
+	sb.WriteString(fmt.Sprintf("Достигнутый milestone: %d дней\n", smc.Milestone))
+	sb.WriteString(fmt.Sprintf("Текущий streak: %d\n", smc.CurrentStreak))
+	sb.WriteString(fmt.Sprintf("Команда: %s\n", smc.TeamName))
+	sb.WriteString("\nНапиши короткое поздравление.")
+	return sb.String()
+}
+
+// StreakMilestoneTemplate is the fallback template for streak milestone.
+func StreakMilestoneTemplate(smc *StreakMilestoneContext) string {
+	if smc.Milestone == 7 {
+		return fmt.Sprintf("%s, недельная серия по цели «%s» — отличная регулярность! Продолжай в том же духе.", smc.DisplayName, smc.GoalTitle)
+	}
+	if smc.Milestone == 30 {
+		return fmt.Sprintf("%s, 30 дней подряд по «%s» — это уже привычка. Отличная работа, продолжай.", smc.DisplayName, smc.GoalTitle)
+	}
+	return fmt.Sprintf("%s, невероятно — %d дней серии по «%s»! Это результат постоянства и дисциплины. Продолжай.", smc.DisplayName, smc.Milestone, smc.GoalTitle)
+}
+
+// --- Leader Fair Play ---
+
+// LeaderFairPlaySystemPrompt is the system prompt for leader fair play nudge.
+const LeaderFairPlaySystemPrompt = `Ты помогаешь руководителю следить за здоровьем команды. Задача: нейтрально сообщить факт о задержках в approve пруфов.
+
+Правила:
+- Длина: 20–50 слов
+- Тон: нейтральный, без оценок «слабый/плохой/сильный работник»
+- Только факты: latency, pending count
+- Не упоминать имена без необходимости
+- Формат: plain text, русский язык`
+
+// BuildLeaderFairPlayPrompt creates the user prompt for leader fair play nudge.
+func BuildLeaderFairPlayPrompt(lfpc *LeaderFairPlayContext) string {
+	var sb strings.Builder
+	sb.WriteString(fmt.Sprintf("Руководитель: %s\n", lfpc.DisplayName))
+	sb.WriteString(fmt.Sprintf("Команда: %s\n", lfpc.TeamName))
+	sb.WriteString(fmt.Sprintf("Период: %s — %s\n", lfpc.PeriodFrom.Format("2006-01-02"), lfpc.PeriodTo.Format("2006-01-02")))
+	sb.WriteString(fmt.Sprintf("P95 latency approve: %.1f часов\n", lfpc.P95LatencyHours))
+	sb.WriteString(fmt.Sprintf("Max latency: %.1f часов\n", lfpc.MaxLatencyHours))
+	sb.WriteString(fmt.Sprintf("Pending approvals: %d\n", lfpc.PendingApprovals))
+	sb.WriteString(fmt.Sprintf("Stalled proofs (>48h): %d\n", lfpc.StalledProofsCount))
+	sb.WriteString("\nНапиши нейтральный факт-напоминание руководителю.")
+	return sb.String()
+}
+
+// LeaderFairPlayTemplate is the fallback template for leader fair play nudge.
+func LeaderFairPlayTemplate(lfpc *LeaderFairPlayContext) string {
+	if lfpc.PendingApprovals == 0 {
+		return fmt.Sprintf("%s, в команде «%s» нет ожидающих approve. Процесс идёт гладко.", lfpc.DisplayName, lfpc.TeamName)
+	}
+	return fmt.Sprintf("%s, в команде «%s» %d пруфов ждут approve, P95 latency %.1f часов. Рекомендуем проверить очередь.", lfpc.DisplayName, lfpc.TeamName, lfpc.PendingApprovals, lfpc.P95LatencyHours)
+}

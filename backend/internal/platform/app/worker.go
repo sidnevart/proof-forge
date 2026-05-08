@@ -7,6 +7,7 @@ import (
 	"time"
 
 	"github.com/sidnevart/proof-forge/backend/internal/ai"
+	"github.com/sidnevart/proof-forge/backend/internal/companion"
 	"github.com/sidnevart/proof-forge/backend/internal/dailylog"
 	"github.com/sidnevart/proof-forge/backend/internal/inspiration"
 	"github.com/sidnevart/proof-forge/backend/internal/notifications"
@@ -82,7 +83,19 @@ func RunWorker(ctx context.Context, cfg platformconfig.Config) error {
 		go promptWorker.Run(ctx)
 		go rolloverWorker.Run(ctx)
 
-		log.Info("notification and daily-log workers started")
+		// Companion worker — proactive AI triggers.
+		companionRepo := companion.NewPostgresRepository(pool)
+		companionSvc := companion.NewService(
+			cfg.AI.Enabled,
+			personalization.NewPostgresCircuitBreakerStore(pool),
+			personalization.NewPostgresBudgetStore(pool),
+			companionRepo,
+			llmProvider,
+		)
+		companionWorker := companion.NewWorker(companionSvc, pool, sender, platformlogger.WithComponent(log, "companion"))
+		go companionWorker.Run(ctx)
+
+		log.Info("notification, daily-log and companion workers started")
 	}
 
 	log.Info("worker started", "recap_sweep_interval", cfg.Worker.RecapSweepInterval.String())

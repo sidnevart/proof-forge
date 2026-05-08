@@ -35,6 +35,11 @@ func WithRecorder(r analytics.Recorder) Option {
 	return func(s *Service) { s.recorder = r }
 }
 
+// LLM returns the configured LLM provider (may be nil).
+func (s *Service) LLM() *personalization.LLMProvider {
+	return s.llm
+}
+
 // NewService builds the companion service.
 func NewService(enabled bool, cbStore personalization.CircuitBreakerStore, budgetStore personalization.BudgetStore, repo Repository, llm *personalization.LLMProvider, opts ...Option) *Service {
 	s := &Service{

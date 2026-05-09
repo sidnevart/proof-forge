@@ -1,10 +1,22 @@
-# Спек 8.4 — AI: Growth Dossier Generator
+# ⛔ УСТАРЕВШИЙ — см. AI-компаньон
+
+> **Этот спек заменён.** Ручное досье (`/me/dossier`) удалено из продукта.
+> Вместо него реализован проактивный AI-компаньон:
+> - Спек: `docs/superpowers/specs/2026-05-09-ai-companion-design.md`
+> - План: `docs/superpowers/plans/2026-05-09-ai-companion-implementation.md`
+>
+> Сохранено только для истории.
+
+---
+
+# Спек 8.4 — AI: Growth Dossier Generator (устаревший)
 
 **DNA:** `docs/superpowers/specs/2026-05-08-product-dna-design.md`  
 **Группа:** 8 · AI-персонализация  
 **Зависимости:** Спек 3.1 (личные метрики), 4.4 (достижения)  
 **Сложность:** M  
-**Effort для Sonnet 4.6:** medium
+**Effort для Sonnet 4.6:** medium  
+**Статус:** ❌ удалён из продукта 2026-05-09
 
 ---
 

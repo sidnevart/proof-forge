@@ -11,15 +11,16 @@ import (
 
 // Service is the companion orchestrator.
 type Service struct {
-	enabled     bool
-	budgetLimit int64
-	cbStore     personalization.CircuitBreakerStore
-	budgetStore personalization.BudgetStore
-	repo        Repository
-	llm         *personalization.LLMProvider
-	template    *personalization.TemplateProvider
-	recorder    analytics.Recorder
-	clock       func() time.Time
+	enabled      bool
+	featureFlags map[Feature]bool // per-feature kill switches
+	budgetLimit  int64
+	cbStore      personalization.CircuitBreakerStore
+	budgetStore  personalization.BudgetStore
+	repo         Repository
+	llm          *personalization.LLMProvider
+	template     *personalization.TemplateProvider
+	recorder     analytics.Recorder
+	clock        func() time.Time
 }
 
 // Option customises the service.
@@ -35,6 +36,26 @@ func WithRecorder(r analytics.Recorder) Option {
 	return func(s *Service) { s.recorder = r }
 }
 
+// WithFeatureFlags sets per-feature kill switches.
+func WithFeatureFlags(flags map[Feature]bool) Option {
+	return func(s *Service) { s.featureFlags = flags }
+}
+
+// FeatureEnabled checks whether a specific feature is enabled.
+func (s *Service) FeatureEnabled(feature Feature) bool {
+	if !s.enabled {
+		return false
+	}
+	if s.featureFlags == nil {
+		return true // default: all features enabled when global flag is on
+	}
+	enabled, ok := s.featureFlags[feature]
+	if !ok {
+		return true // default: enabled if not explicitly set
+	}
+	return enabled
+}
+
 // LLM returns the configured LLM provider (may be nil).
 func (s *Service) LLM() *personalization.LLMProvider {
 	return s.llm
@@ -43,14 +64,15 @@ func (s *Service) LLM() *personalization.LLMProvider {
 // NewService builds the companion service.
 func NewService(enabled bool, cbStore personalization.CircuitBreakerStore, budgetStore personalization.BudgetStore, repo Repository, llm *personalization.LLMProvider, opts ...Option) *Service {
 	s := &Service{
-		enabled:     enabled,
-		budgetLimit: personalization.DefaultDailyBudgetTokens,
-		cbStore:     cbStore,
-		budgetStore: budgetStore,
-		repo:        repo,
-		llm:         llm,
-		recorder:    analytics.NoopRecorder{},
-		clock:       time.Now,
+		enabled:      enabled,
+		featureFlags: nil, // nil = all features enabled by default
+		budgetLimit:  personalization.DefaultDailyBudgetTokens,
+		cbStore:      cbStore,
+		budgetStore:  budgetStore,
+		repo:         repo,
+		llm:          llm,
+		recorder:     analytics.NoopRecorder{},
+		clock:        time.Now,
 	}
 	for _, opt := range opts {
 		opt(s)

@@ -58,48 +58,66 @@ func (w *Worker) tick(ctx context.Context) error {
 	now := w.clock()
 
 	// 1. Evening ping: Mon-Fri 19:00 local time.
-	if err := w.fireEveningPings(ctx, now); err != nil {
-		w.log.Error("evening ping tick", "err", err)
+	if w.service.FeatureEnabled(FeatureEveningPing) {
+		if err := w.fireEveningPings(ctx, now); err != nil {
+			w.log.Error("evening ping tick", "err", err)
+		}
 	}
 
 	// 2. Weekly recap: Fri 18:00 local time.
-	if err := w.fireWeeklyRecaps(ctx, now); err != nil {
-		w.log.Error("weekly recap tick", "err", err)
+	if w.service.FeatureEnabled(FeatureWeeklyRecap) {
+		if err := w.fireWeeklyRecaps(ctx, now); err != nil {
+			w.log.Error("weekly recap tick", "err", err)
+		}
 	}
 
 	// 3. Lead weekly brief: Mon 09:00 local time.
-	if err := w.fireLeadBriefs(ctx, now); err != nil {
-		w.log.Error("lead brief tick", "err", err)
+	if w.service.FeatureEnabled(FeatureLeadWeeklyBrief) {
+		if err := w.fireLeadBriefs(ctx, now); err != nil {
+			w.log.Error("lead brief tick", "err", err)
+		}
 	}
 
 	// 4. Streak reminder: 4h before midnight if streak at risk.
-	if err := w.fireStreakReminders(ctx, now); err != nil {
-		w.log.Error("streak reminder tick", "err", err)
+	if w.service.FeatureEnabled(FeatureStreakReminder) {
+		if err := w.fireStreakReminders(ctx, now); err != nil {
+			w.log.Error("streak reminder tick", "err", err)
+		}
 	}
 
 	// 5. Proof draft: when user has ≥3 unconsumed daily log entries.
-	if err := w.fireProofDrafts(ctx, now); err != nil {
-		w.log.Error("proof draft tick", "err", err)
+	if w.service.FeatureEnabled(FeatureProofDraft) {
+		if err := w.fireProofDrafts(ctx, now); err != nil {
+			w.log.Error("proof draft tick", "err", err)
+		}
 	}
 
 	// 6. Buddy stalled: when proof is submitted but buddy hasn't responded in 72h.
-	if err := w.fireBuddyStalled(ctx, now); err != nil {
-		w.log.Error("buddy stalled tick", "err", err)
+	if w.service.FeatureEnabled(FeatureBuddyStalled) {
+		if err := w.fireBuddyStalled(ctx, now); err != nil {
+			w.log.Error("buddy stalled tick", "err", err)
+		}
 	}
 
 	// 7. Goal risk: when active goal has no proof in 14 days.
-	if err := w.fireGoalRisks(ctx, now); err != nil {
-		w.log.Error("goal risk tick", "err", err)
+	if w.service.FeatureEnabled(FeatureGoalRisk) {
+		if err := w.fireGoalRisks(ctx, now); err != nil {
+			w.log.Error("goal risk tick", "err", err)
+		}
 	}
 
 	// 8. Streak milestone: when goal hits 7, 30, or 100 streak.
-	if err := w.fireStreakMilestones(ctx, now); err != nil {
-		w.log.Error("streak milestone tick", "err", err)
+	if w.service.FeatureEnabled(FeatureStreakMilestone) {
+		if err := w.fireStreakMilestones(ctx, now); err != nil {
+			w.log.Error("streak milestone tick", "err", err)
+		}
 	}
 
 	// 9. Leader fair play: when approval latency is high.
-	if err := w.fireLeaderFairPlay(ctx, now); err != nil {
-		w.log.Error("leader fair play tick", "err", err)
+	if w.service.FeatureEnabled(FeatureLeaderFairPlay) {
+		if err := w.fireLeaderFairPlay(ctx, now); err != nil {
+			w.log.Error("leader fair play tick", "err", err)
+		}
 	}
 
 	return nil

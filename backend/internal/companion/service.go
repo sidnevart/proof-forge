@@ -95,6 +95,14 @@ func (s *Service) Run(ctx context.Context, feature Feature, mode personalization
 		return personalization.Result{Text: text, Provider: personalization.ProviderTemplate}, ev, nil
 	}
 
+	// Record companion trigger attempt.
+	if s.recorder != nil {
+		_ = s.recorder.Record(ctx, analytics.EventCompanionTriggered, analytics.SourceSystem, nil, nil, nil, nil, map[string]any{
+			"feature": string(feature),
+			"mode":    string(mode),
+		})
+	}
+
 	// Attempt LLM with timeout.
 	llmCtx, cancel := context.WithTimeout(ctx, timeout)
 	defer cancel()
@@ -117,12 +125,12 @@ func (s *Service) Run(ctx context.Context, feature Feature, mode personalization
 
 	if s.recorder != nil {
 		_ = s.recorder.Record(ctx, analytics.EventPersonalizationInvoked, analytics.SourceSystem, nil, nil, nil, nil, map[string]any{
-			"feature":    string(feature),
-			"mode":       string(mode),
-			"provider":     string(ev.Provider),
-			"latency_ms":   ev.LatencyMs,
-			"tokens_in":    ev.TokensIn,
-			"tokens_out":   ev.TokensOut,
+			"feature":         string(feature),
+			"mode":            string(mode),
+			"provider":        string(ev.Provider),
+			"latency_ms":      ev.LatencyMs,
+			"tokens_in":       ev.TokensIn,
+			"tokens_out":      ev.TokensOut,
 			"fallback_reason": ev.FallbackReason,
 		})
 		if ev.FallbackReason != "" {
@@ -130,6 +138,20 @@ func (s *Service) Run(ctx context.Context, feature Feature, mode personalization
 				"feature":         string(feature),
 				"mode":            string(mode),
 				"fallback_reason": ev.FallbackReason,
+			})
+			_ = s.recorder.Record(ctx, analytics.EventCompanionFallback, analytics.SourceSystem, nil, nil, nil, nil, map[string]any{
+				"feature":         string(feature),
+				"mode":            string(mode),
+				"fallback_reason": ev.FallbackReason,
+			})
+		} else {
+			_ = s.recorder.Record(ctx, analytics.EventCompanionFired, analytics.SourceSystem, nil, nil, nil, nil, map[string]any{
+				"feature":    string(feature),
+				"mode":       string(mode),
+				"provider":   string(ev.Provider),
+				"latency_ms": ev.LatencyMs,
+				"tokens_in":  ev.TokensIn,
+				"tokens_out": ev.TokensOut,
 			})
 		}
 	}
@@ -162,7 +184,15 @@ func (s *Service) GetActiveNotifications(ctx context.Context, userID int64) ([]*
 
 // DismissNotification marks a notification as dismissed.
 func (s *Service) DismissNotification(ctx context.Context, userID int64, id string) error {
-	return s.repo.DismissNotification(ctx, userID, id)
+	if err := s.repo.DismissNotification(ctx, userID, id); err != nil {
+		return err
+	}
+	if s.recorder != nil {
+		_ = s.recorder.Record(ctx, analytics.EventCompanionDismissed, analytics.SourceWeb, &userID, nil, nil, nil, map[string]any{
+			"notification_id": id,
+		})
+	}
+	return nil
 }
 
 // GetProofDrafts returns active proof drafts for a user.
@@ -179,10 +209,25 @@ func (s *Service) AcceptProofDraft(ctx context.Context, userID int64, id string)
 	if err := s.repo.ConsumeProofDraft(ctx, userID, id); err != nil {
 		return nil, fmt.Errorf("accept draft: consume: %w", err)
 	}
+	if s.recorder != nil {
+		_ = s.recorder.Record(ctx, analytics.EventCompanionAccepted, analytics.SourceWeb, &userID, nil, draft.GoalID, nil, map[string]any{
+			"draft_id": id,
+			"feature":  string(FeatureProofDraft),
+		})
+	}
 	return draft, nil
 }
 
 // RejectProofDraft marks a draft as consumed without using it.
 func (s *Service) RejectProofDraft(ctx context.Context, userID int64, id string) error {
-	return s.repo.ConsumeProofDraft(ctx, userID, id)
+	if err := s.repo.ConsumeProofDraft(ctx, userID, id); err != nil {
+		return err
+	}
+	if s.recorder != nil {
+		_ = s.recorder.Record(ctx, analytics.EventCompanionRejected, analytics.SourceWeb, &userID, nil, nil, nil, map[string]any{
+			"draft_id": id,
+			"feature":  string(FeatureProofDraft),
+		})
+	}
+	return nil
 }

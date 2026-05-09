@@ -27,6 +27,14 @@ const (
 	EventPersonalizationInvoked  EventName = "personalization_invoked"
 	EventPersonalizationFallback EventName = "personalization_fallback"
 
+	// AI Companion events.
+	EventCompanionTriggered EventName = "companion_triggered"
+	EventCompanionFired     EventName = "companion_fired"
+	EventCompanionFallback  EventName = "companion_fallback"
+	EventCompanionDismissed EventName = "companion_dismissed"
+	EventCompanionAccepted  EventName = "companion_accepted"
+	EventCompanionRejected  EventName = "companion_rejected"
+
 	// Pilot instrumentation events.
 	EventProofContractCreated EventName = "proof_contract_created"
 	EventFirstProofSubmitted  EventName = "first_proof_submitted"
@@ -68,6 +76,9 @@ var AllowedFrontendEvents = map[EventName]bool{
 	EventNotificationClicked: true,
 	EventAiSuggestionUsed:    true,
 	EventAntiProofSubmitted:  true,
+	EventCompanionDismissed:  true,
+	EventCompanionAccepted:   true,
+	EventCompanionRejected:   true,
 }
 
 var (

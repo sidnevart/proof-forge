@@ -153,6 +153,46 @@
   width: 100%;
 }
 
+.messageBand {
+  position: relative;
+  isolation: isolate;
+  padding: 88px var(--landing-gutter);
+  border-bottom: 2px solid var(--border-strong);
+  overflow: hidden;
+}
+
+.messageBand::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  pointer-events: none;
+  background:
+    linear-gradient(
+      90deg,
+      color-mix(in srgb, var(--danger) 10%, transparent) 0%,
+      transparent 18%,
+      transparent 82%,
+      color-mix(in srgb, var(--danger) 10%, transparent) 100%
+    ),
+    radial-gradient(
+      ellipse 70% 100% at 50% 50%,
+      color-mix(in srgb, var(--bg-surface) 72%, transparent) 0%,
+      transparent 74%
+    );
+}
+
+.messageBandTitle {
+  position: relative;
+  z-index: 1;
+  margin: 0;
+  text-align: center;
+  font-family: var(--font-display);
+  font-size: 72px;
+  line-height: 0.98;
+  letter-spacing: 0.04em;
+}
+
 /* ── Section header ──────────────────────────── */
 .sectionHeader {
   font-family: var(--font-display);
@@ -992,6 +1032,10 @@
     font-size: 72px;
   }
 
+  .messageBandTitle {
+    font-size: 56px;
+  }
+
   .hero,
   .tiksiSection,
   .approvalSection {
@@ -1052,6 +1096,14 @@
 @media (max-width: 640px) {
   .heroH1 {
     font-size: 52px;
+  }
+
+  .messageBand {
+    padding-block: 64px;
+  }
+
+  .messageBandTitle {
+    font-size: 42px;
   }
 
   .tiksiCountdown,

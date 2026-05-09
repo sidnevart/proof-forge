@@ -19,6 +19,7 @@ export function LandingPage() {
   const heroRef = useRef<HTMLElement | null>(null);
   const tiksiRef = useRef<HTMLElement | null>(null);
   const ctaRef = useRef<HTMLAnchorElement | null>(null);
+  const [messageIndex, setMessageIndex] = useState(0);
 
   // Magnetic CTA — pulls the button toward the cursor in a 120px radius.
   const { x: ctaMagX, y: ctaMagY } = useMagneticHover(ctaRef);
@@ -117,6 +118,14 @@ export function LandingPage() {
     return () => obs.disconnect();
   }, []);
 
+  useEffect(() => {
+    const intervalId = window.setInterval(() => {
+      setMessageIndex((current) => (current + 1) % ROTATING_MESSAGES.length);
+    }, 5000);
+
+    return () => window.clearInterval(intervalId);
+  }, []);
+
   return (
     <>
     <ScrollProgress />
@@ -125,7 +134,7 @@ export function LandingPage() {
       <section ref={heroRef} className={styles.hero}>
         <div className={styles.heroCopy}>
           <SplitTextHeading tag="h1" className={styles.heroH1}>
-            {"СО СЛЕДУЮЩЕГО\nПОНЕДЕЛЬНИКА\nУЖЕ БЫЛО."}
+            {"ТЫ ДЕЛАЕШЬ.\nКРУГ ВИДИТ.\nНИКТО НЕ ТЕРЯЕТСЯ."}
           </SplitTextHeading>
           <p className={styles.heroSub}>
             Среда решает больше, чем сила воли.
@@ -148,6 +157,16 @@ export function LandingPage() {
         <div className={styles.heroMock}>
           <LiveCircleMock />
         </div>
+      </section>
+
+      <section className={styles.messageBand} data-animate>
+        <SplitTextHeading
+          key={ROTATING_MESSAGES[messageIndex]}
+          tag="h2"
+          className={styles.messageBandTitle}
+        >
+          {ROTATING_MESSAGES[messageIndex]}
+        </SplitTextHeading>
       </section>
 
       {/* 2. Три опоры */}
@@ -378,6 +397,14 @@ const TELEGRAM_MESSAGES: TgMessage[] = [
   { icon: "⏱", text: "2 ЧАСА ДО ПОЛУНОЧИ. ОДНА СТРОЧКА.", kind: "warn" },
   { icon: "⚡", text: "ДЕНИС ВЕРНУЛСЯ. ПЕРВЫЙ ШАГ ЗА ДВЕ НЕДЕЛИ.", kind: "win" },
   { icon: "📈", text: "У ИЛЬИ 14 ДНЕЙ ПОДРЯД.", kind: "win" },
+];
+
+const ROTATING_MESSAGES = [
+  "ЗАВТРА\nУЖЕ БЫЛО\nВЧЕРА.",
+  "ИДЕАЛЬНЫЙ\nМОМЕНТ\nНЕ ПРИДЁТ.",
+  "ПОТОМ\nНЕ ДВИГАЕТ\nДЕЛО.",
+  "СЕЙЧАС\nЛУЧШЕ\nЧЕМ ИДЕАЛЬНО.",
+  "НЕ ИЩИ\nМОТИВАЦИЮ\nСОБЕРИ СРЕДУ.",
 ];
 
 const GLOSSARY = [

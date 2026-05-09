@@ -1,4 +1,4 @@
-import { fireEvent, render, screen } from "@testing-library/react";
+import { act, fireEvent, render, screen } from "@testing-library/react";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 import { LandingPage } from "./landing-page";
@@ -38,13 +38,14 @@ describe("LandingPage", () => {
   });
 
   afterEach(() => {
+    vi.useRealTimers();
     vi.restoreAllMocks();
   });
 
   it("renders brutal landing with hero and CTA", () => {
     render(<LandingPage />);
 
-    expect(screen.getAllByText(/СО СЛЕДУЮЩЕГО/).length).toBeGreaterThan(0);
+    expect(screen.getAllByText(/ТЫ ДЕЛАЕШЬ/).length).toBeGreaterThan(0);
     expect(screen.getByText("КАК НАМЕРЕНИЕ СТАНОВИТСЯ ДВИЖЕНИЕМ.")).toBeInTheDocument();
     expect(screen.getByText("ДО КОНЦА ДНЯ")).toBeInTheDocument();
     expect(screen.getByText("ДЛЯ КАЖДОЙ РОЛИ — СВОЁ.")).toBeInTheDocument();
@@ -148,5 +149,19 @@ describe("LandingPage", () => {
     // New question about teams is rendered (collapsed)
     const teamBtn = screen.getByRole("button", { name: /ДЛЯ КОМАНДЫ/ });
     expect(teamBtn).toHaveAttribute("aria-expanded", "false");
+  });
+
+  it("rotates the message band copy every 5 seconds", () => {
+    vi.useFakeTimers();
+
+    render(<LandingPage />);
+
+    expect(screen.getByRole("heading", { level: 2, name: /ЗАВТРА/ })).toBeInTheDocument();
+
+    act(() => {
+      vi.advanceTimersByTime(5000);
+    });
+
+    expect(screen.getByRole("heading", { level: 2, name: /ИДЕАЛЬНЫЙ/ })).toBeInTheDocument();
   });
 });

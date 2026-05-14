@@ -10,7 +10,7 @@ ALTER TABLE goals
       'work_initiative',
       'free_goal'
     )),
-  ADD COLUMN rhythm_cadence TEXT
+  ADD COLUMN rhythm_cadence TEXT DEFAULT 'weekly'
     CHECK (rhythm_cadence IN ('daily', 'weekly', 'biweekly', 'custom')),
   ADD COLUMN challenge_duration_days INTEGER
     CHECK (challenge_duration_days IN (7, 14, 28, 42)),

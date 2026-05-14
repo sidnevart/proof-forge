@@ -36,6 +36,7 @@ import type {
   TeamDetail,
   TeamRole,
   TelegramLinkToken,
+  TelegramLinkStatus,
   User,
   Workspace,
   WeeklyAssembly,
@@ -43,6 +44,8 @@ import type {
   AICompanionNotification,
   AIProofDraft,
   TeamAIHealth,
+  CirclesBoard,
+  MyMembership,
 } from "@/lib/types";
 
 // Production: empty string = same-origin requests through nginx.
@@ -200,6 +203,10 @@ export async function getDashboard(): Promise<DashboardResponse> {
   return request<DashboardResponse>("/v1/dashboard");
 }
 
+export async function getMyMemberships(): Promise<{ memberships: MyMembership[] }> {
+  return request<{ memberships: MyMembership[] }>("/v1/me/memberships");
+}
+
 export async function registerUser(input: RegisterInput): Promise<{ user: User }> {
   return request<{ user: User }>("/v1/register", {
     method: "POST",
@@ -333,6 +340,14 @@ export async function getRecap(recapID: number): Promise<{ recap: WeeklyRecap }>
 
 export async function createTelegramLinkToken(): Promise<TelegramLinkToken> {
   return request<TelegramLinkToken>("/v1/telegram/link-token", { method: "POST" });
+}
+
+export async function getTelegramLinkStatus(): Promise<TelegramLinkStatus> {
+  return request<TelegramLinkStatus>("/v1/telegram/link");
+}
+
+export async function deleteTelegramLink(): Promise<void> {
+  return request<void>("/v1/telegram/link", { method: "DELETE" });
 }
 
 export async function refineGoal(draftText: string): Promise<GoalRefineResponse> {
@@ -864,6 +879,10 @@ export async function approveInitiativeProof(
     method: "POST",
     body: JSON.stringify({ comment: comment ?? "" }),
   });
+}
+
+export async function getCirclesBoard(communityId: number, periodWeeks = 4): Promise<{ data: CirclesBoard }> {
+  return request<{ data: CirclesBoard }>(`/v1/community-spaces/${communityId}/circles-board?period=last_${periodWeeks}_weeks`);
 }
 
 // ── AI Companion ─────────────────────────────────────────────────────────────

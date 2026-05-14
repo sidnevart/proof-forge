@@ -64,7 +64,7 @@ describe("DashboardScreen", () => {
       await screen.findByText("КРУГ «УТРЕННИЙ КРУГ» · 1 участник"),
     ).toBeInTheDocument();
     // Headline + sub.
-    expect(screen.getByRole("heading", { name: "ЧТО БУДЕШЬ ДОКАЗЫВАТЬ?" })).toBeInTheDocument();
+    expect(screen.getByRole("heading", { name: "ЧТО БУДЕШЬ ДЕЛАТЬ?" })).toBeInTheDocument();
     expect(screen.getByText(/Создай круг/)).toBeInTheDocument();
     // Inline white CTA.
     expect(screen.getByRole("link", { name: "СОЗДАТЬ КРУГ" })).toBeInTheDocument();
@@ -152,7 +152,7 @@ describe("DashboardScreen", () => {
     });
     fireEvent.submit(screen.getByRole("button", { name: "СОЗДАТЬ АККАУНТ" }).closest("form")!);
 
-    expect(await screen.findByRole("heading", { name: "ЧТО БУДЕШЬ ДОКАЗЫВАТЬ?" })).toBeInTheDocument();
+    expect(await screen.findByRole("heading", { name: "ЧТО БУДЕШЬ ДЕЛАТЬ?" })).toBeInTheDocument();
     expect(screen.getByRole("link", { name: "СОЗДАТЬ КРУГ" })).toBeInTheDocument();
   });
 });

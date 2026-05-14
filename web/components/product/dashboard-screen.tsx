@@ -5,6 +5,7 @@ import { type FormEvent, useCallback, useEffect, useState, useTransition } from 
 import { useRouter } from "next/navigation";
 
 import { AIBadge } from "@/components/product/ai-badge";
+import { AINotificationCenter } from "@/components/product/ai-notification-center";
 import { GoalCircleCard } from "@/components/product/goal-circle-card";
 import { NowCard } from "@/components/product/now-card";
 import { PersonalProgressBar } from "@/components/product/personal-progress-bar";
@@ -210,7 +211,7 @@ export function DashboardScreen() {
                 : "НОВЫЙ КРУГ"}
             </div>
             <h1 id="empty-state-heading" className={styles.emptyHeading}>
-              ЧТО БУДЕШЬ ДОКАЗЫВАТЬ?
+              ЧТО БУДЕШЬ ДЕЛАТЬ?
             </h1>
             <p className={styles.emptySub}>
               Создай круг — партнёр получит приглашение.
@@ -230,6 +231,7 @@ export function DashboardScreen() {
   return (
     <main className={styles.page}>
       <AIBadge />
+      <AINotificationCenter />
       {nowCard && <NowCard data={nowCard} />}
       {personalStats && <PersonalProgressBar data={personalStats} />}
       <div className={styles.goalStack}>

@@ -111,6 +111,14 @@ func (r *Repository) GetFirstActiveTeamMembership(ctx context.Context, userID in
 	return teamID, nil
 }
 
+func (r *Repository) DeleteTelegramLink(ctx context.Context, userID int64) error {
+	_, err := r.pool.Exec(ctx,
+		`UPDATE telegram_links SET status = 'disconnected' WHERE user_id = $1`,
+		userID,
+	)
+	return err
+}
+
 func (r *Repository) GetLinkedUsersByChatIDs(ctx context.Context, userIDs []int64) ([]TelegramLink, error) {
 	rows, err := r.pool.Query(ctx,
 		`SELECT id, user_id, telegram_chat_id, COALESCE(telegram_username,''), linked_at, status

@@ -7,6 +7,8 @@ import (
 	"fmt"
 	"log/slog"
 	"net/http"
+	"strings"
+	"time"
 
 	"github.com/go-chi/chi/v5"
 	"github.com/jackc/pgx/v5/pgxpool"
@@ -90,6 +92,24 @@ func RunAPI(ctx context.Context, cfg platformconfig.Config) error {
 		}
 		errCh <- nil
 	}()
+
+	// Auto-register Telegram webhook if enabled.
+	if cfg.Telegram.Enabled {
+		go func() {
+			// Give the server a moment to start listening.
+			time.Sleep(2 * time.Second)
+			webhookURL := strings.TrimSuffix(cfg.Telegram.WebhookBase, "/") + "/telegram/webhook"
+			if strings.Contains(webhookURL, "localhost") {
+				log.Warn("telegram webhook url contains localhost; Telegram servers cannot reach it. Use ngrok or a public URL.", "url", webhookURL)
+			}
+			b := bot.New(cfg.Telegram.BotToken)
+			if err := b.SetWebhook(ctx, webhookURL, cfg.Telegram.WebhookSecret); err != nil {
+				log.Warn("telegram webhook registration failed", "err", err)
+			} else {
+				log.Info("telegram webhook registered", "url", webhookURL)
+			}
+		}()
+	}
 
 	select {
 	case <-ctx.Done():
@@ -325,12 +345,17 @@ func registerAPIRoutes(router *chi.Mux, log *slog.Logger, pool *pgxpool.Pool, cf
 				adminStatsHandler.RegisterRoutes(r)
 			})
 
-			// Telegram link token endpoint.
+			// Telegram link endpoints (status/unlink always available; token generation
+			// only when the bot is configured because it needs botUsername).
+			tgRepo := telegram.NewRepository(pool)
+			r.Get("/telegram/link", makeGetTelegramLinkHandler(tgRepo, log))
+			r.Delete("/telegram/link", makeDeleteTelegramLinkHandler(tgRepo, log))
 			if cfg.Telegram.Enabled {
-				tgRepo := telegram.NewRepository(pool)
 				botUsername := cfg.Telegram.BotUsername
 				r.Post("/telegram/link-token", makeLinkTokenHandler(tgRepo, botUsername, log))
 			}
+
+			r.Get("/me/memberships", makeGetMembershipsHandler(pool, log))
 		})
 	})
 }
@@ -381,5 +406,123 @@ func makeLinkTokenHandler(repo *telegram.Repository, botUsername string, log *sl
 			"token":    token,
 			"deeplink": deeplink,
 		})
+	}
+}
+
+func makeGetTelegramLinkHandler(repo *telegram.Repository, log *slog.Logger) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		actor, ok := users.CurrentUser(r.Context())
+		if !ok {
+			http.Error(w, "unauthorized", http.StatusUnauthorized)
+			return
+		}
+
+		link, err := repo.GetTelegramLinkByUserID(r.Context(), actor.ID)
+		if err != nil {
+			if errors.Is(err, telegram.ErrLinkNotFound) {
+				w.Header().Set("Content-Type", "application/json")
+				_ = json.NewEncoder(w).Encode(map[string]any{"linked": false})
+				return
+			}
+			log.Error("get telegram link", "err", err)
+			http.Error(w, "internal error", http.StatusInternalServerError)
+			return
+		}
+
+		w.Header().Set("Content-Type", "application/json")
+		_ = json.NewEncoder(w).Encode(map[string]any{
+			"linked":   true,
+			"username": link.TelegramUsername,
+		})
+	}
+}
+
+func makeDeleteTelegramLinkHandler(repo *telegram.Repository, log *slog.Logger) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		actor, ok := users.CurrentUser(r.Context())
+		if !ok {
+			http.Error(w, "unauthorized", http.StatusUnauthorized)
+			return
+		}
+
+		if err := repo.DeleteTelegramLink(r.Context(), actor.ID); err != nil {
+			log.Error("delete telegram link", "err", err)
+			http.Error(w, "internal error", http.StatusInternalServerError)
+			return
+		}
+
+		w.WriteHeader(http.StatusNoContent)
+	}
+}
+
+func makeGetMembershipsHandler(pool *pgxpool.Pool, log *slog.Logger) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		actor, ok := users.CurrentUser(r.Context())
+		if !ok {
+			http.Error(w, "unauthorized", http.StatusUnauthorized)
+			return
+		}
+
+		ctx := r.Context()
+
+		// Teams
+		teamRows, err := pool.Query(ctx, `
+			SELECT t.id, t.name, tm.role
+			FROM teams t
+			JOIN team_memberships tm ON tm.team_id = t.id
+			WHERE tm.user_id = $1 AND tm.status = 'active'
+		`, actor.ID)
+		if err != nil {
+			log.Error("memberships: query teams", "err", err)
+			http.Error(w, "internal error", http.StatusInternalServerError)
+			return
+		}
+		defer teamRows.Close()
+
+		memberships := []map[string]any{}
+		for teamRows.Next() {
+			var id int64
+			var name, role string
+			if err := teamRows.Scan(&id, &name, &role); err != nil {
+				continue
+			}
+			memberships = append(memberships, map[string]any{
+				"space_type": "teamspace",
+				"space_id":   id,
+				"space_name": name,
+				"role":       role,
+			})
+		}
+
+		// Communities
+		commRows, err := pool.Query(ctx, `
+			SELECT cs.id, cs.name, cm.role
+			FROM community_spaces cs
+			JOIN community_memberships cm ON cm.community_space_id = cs.id
+			WHERE cm.user_id = $1 AND cm.status = 'active'
+		`, actor.ID)
+		if err != nil {
+			log.Error("memberships: query communities", "err", err)
+			http.Error(w, "internal error", http.StatusInternalServerError)
+			return
+		}
+		defer commRows.Close()
+
+		for commRows.Next() {
+			var id int64
+			var name, role string
+			if err := commRows.Scan(&id, &name, &role); err != nil {
+				continue
+			}
+			memberships = append(memberships, map[string]any{
+				"space_type": "community",
+				"space_id":   id,
+				"space_name": name,
+				"role":       role,
+			})
+		}
+
+		w.Header().Set("Content-Type", "application/json")
+		_ = json.NewEncoder(w).Encode(map[string]any{"memberships": memberships})
 	}
 }

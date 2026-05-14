@@ -11,69 +11,73 @@
   letter-spacing: 0.04em;
 }
 
-/* ─── Hero ─────────────────────────────────────────────────────────────────── */
+/* ─── Compact Hero ───────────────────────────────────────────────────────── */
 
 .hero {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 0;
+  display: flex;
+  align-items: stretch;
   border-bottom: 2px solid var(--border-strong);
-  margin-bottom: 40px;
+  margin-bottom: 24px;
+  flex-wrap: wrap;
 }
 
 .heroLeft {
   border-right: 2px solid var(--border-strong);
-  padding: 48px 40px;
+  padding: 32px 40px 24px;
   display: flex;
   flex-direction: column;
-  gap: 8px;
+  gap: 6px;
   background: var(--bg-surface);
+  flex: 1 1 260px;
+  min-width: 260px;
 }
 
 .rankWrap {
   display: flex;
   align-items: baseline;
-  gap: 12px;
+  gap: 10px;
 }
 
 .rankNum {
   font-family: var(--font-display);
-  font-size: clamp(80px, 12vw, 140px);
-  line-height: 0.9;
+  font-size: clamp(48px, 8vw, 80px);
+  line-height: 0.95;
   color: var(--ink-primary);
   letter-spacing: -0.02em;
 }
 
 .rankOf {
   font-family: var(--font-display);
-  font-size: 28px;
+  font-size: 18px;
   color: var(--ink-mono);
   letter-spacing: 0.04em;
 }
 
 .rankLabel {
   font-family: var(--font-display);
-  font-size: 18px;
+  font-size: 13px;
   color: var(--ink-mono);
   letter-spacing: 0.08em;
-  margin-top: 4px;
+  margin-top: 2px;
 }
 
 .circleName {
   font-family: var(--font-mono);
-  font-size: 12px;
+  font-size: 11px;
   color: var(--ink-mono);
   letter-spacing: 0.1em;
-  margin-top: 8px;
+  margin-top: 6px;
   border: 1px solid var(--border-strong);
   display: inline-block;
-  padding: 4px 10px;
+  padding: 3px 8px;
 }
 
 .heroRight {
-  padding: 48px 40px;
+  padding: 24px 40px;
   display: flex;
   align-items: center;
+  flex: 2 1 320px;
+  min-width: 320px;
 }
 
 /* ─── Stat row ──────────────────────────────────────────────────────────────── */
@@ -88,8 +92,8 @@
 .bigStat {
   display: flex;
   flex-direction: column;
-  gap: 6px;
-  padding: 16px;
+  gap: 4px;
+  padding: 12px 14px;
   border-right: 2px solid var(--border-strong);
   transition: background 0.15s;
 }
@@ -104,7 +108,7 @@
 
 .bigNum {
   font-family: var(--font-display);
-  font-size: clamp(32px, 4vw, 56px);
+  font-size: clamp(28px, 3.5vw, 48px);
   line-height: 1;
   color: var(--ink-primary);
   letter-spacing: -0.01em;
@@ -116,9 +120,56 @@
 
 .bigLabel {
   font-family: var(--font-display);
-  font-size: 13px;
+  font-size: 11px;
   color: var(--ink-mono);
   letter-spacing: 0.1em;
+}
+
+/* ─── Tab Bar ──────────────────────────────────────────────────────────────── */
+
+.tabBar {
+  display: flex;
+  gap: 4px;
+  padding: 0 40px;
+  margin-bottom: 24px;
+  overflow-x: auto;
+  scrollbar-width: none;
+}
+
+.tabBar::-webkit-scrollbar {
+  display: none;
+}
+
+.tab {
+  flex-shrink: 0;
+  padding: 8px 18px;
+  background: transparent;
+  border: 2px solid var(--border-strong);
+  font-family: var(--font-display);
+  font-size: 13px;
+  letter-spacing: 0.06em;
+  color: var(--ink-mono);
+  cursor: pointer;
+  transition: background 0.15s, color 0.15s, border-color 0.15s;
+  white-space: nowrap;
+}
+
+.tab:hover {
+  color: var(--ink-primary);
+  border-color: var(--ink-primary);
+}
+
+.tabActive {
+  background: var(--ink-primary);
+  color: #000;
+  border-color: var(--ink-primary);
+}
+
+.tabBadge {
+  font-family: var(--font-mono);
+  font-size: 10px;
+  margin-left: 6px;
+  opacity: 0.7;
 }
 
 /* ─── Verdict ───────────────────────────────────────────────────────────────── */
@@ -126,10 +177,10 @@
 .verdictSection {
   display: flex;
   align-items: center;
-  gap: 24px;
-  padding: 28px 40px;
+  gap: 20px;
+  padding: 20px 24px;
   border: 2px solid var(--border-strong);
-  margin: 0 0 40px;
+  margin: 0 40px 24px;
   border-radius: 0;
 }
 
@@ -154,7 +205,7 @@
 }
 
 .verdictIcon {
-  font-size: 48px;
+  font-size: 32px;
   line-height: 1;
   flex-shrink: 0;
 }
@@ -162,26 +213,26 @@
 .verdictText {
   display: flex;
   flex-direction: column;
-  gap: 6px;
+  gap: 4px;
 }
 
 .verdictHeadline {
   font-family: var(--font-display);
-  font-size: clamp(22px, 3vw, 32px);
+  font-size: clamp(18px, 2.5vw, 26px);
   color: var(--ink-primary);
   letter-spacing: 0.04em;
 }
 
 .verdictSub {
-  font-size: 15px;
+  font-size: 14px;
   color: var(--ink-mono);
   line-height: 1.5;
 }
 
-/* ─── Generic section ────────────────────────────────────────────────────────── */
+/* ─── Generic section ──────────────────────────────────────────────────────── */
 
 .section {
-  margin-bottom: 40px;
+  margin: 0 40px 24px;
   border: 2px solid var(--border-strong);
 }
 
@@ -189,26 +240,26 @@
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 14px 20px;
+  padding: 12px 16px;
   border-bottom: 2px solid var(--border-strong);
   background: var(--bg-surface);
 }
 
 .sectionLabel {
   font-family: var(--font-display);
-  font-size: 15px;
+  font-size: 13px;
   letter-spacing: 0.1em;
   color: var(--ink-mono);
 }
 
 .sectionCta {
   font-family: var(--font-display);
-  font-size: 13px;
+  font-size: 12px;
   color: var(--ink-primary);
   text-decoration: none;
   letter-spacing: 0.08em;
   border: 2px solid var(--border-strong);
-  padding: 4px 12px;
+  padding: 3px 10px;
   transition: background 0.15s, color 0.15s;
 }
 
@@ -220,28 +271,28 @@
 /* ─── Empty state ────────────────────────────────────────────────────────────── */
 
 .emptyBlock {
-  padding: 48px 40px;
+  padding: 40px 24px;
   display: flex;
   flex-direction: column;
   align-items: flex-start;
-  gap: 20px;
+  gap: 16px;
 }
 
 .emptyText {
   font-family: var(--font-display);
-  font-size: 28px;
+  font-size: 22px;
   color: var(--ink-mono);
   letter-spacing: 0.04em;
 }
 
 .bigCta {
   font-family: var(--font-display);
-  font-size: 20px;
+  font-size: 16px;
   color: #000;
   background: var(--ink-primary);
   border: 2px solid var(--ink-primary);
   text-decoration: none;
-  padding: 12px 28px;
+  padding: 10px 22px;
   letter-spacing: 0.05em;
   transition: background 0.15s, color 0.15s;
   display: inline-block;
@@ -261,12 +312,12 @@
 }
 
 .goalCard {
-  padding: 24px 20px;
+  padding: 20px 16px;
   border-right: 2px solid var(--border-strong);
   border-bottom: 2px solid var(--border-strong);
   display: flex;
   flex-direction: column;
-  gap: 12px;
+  gap: 10px;
   transition: background 0.15s;
 }
 
@@ -289,7 +340,7 @@
 
 .goalTitle {
   font-family: var(--font-display);
-  font-size: 20px;
+  font-size: 18px;
   color: var(--ink-primary);
   letter-spacing: 0.02em;
   line-height: 1.2;
@@ -298,37 +349,37 @@
 .goalMeta {
   display: flex;
   align-items: center;
-  gap: 10px;
+  gap: 8px;
   flex-wrap: wrap;
 }
 
 .goalStatusPill {
   font-family: var(--font-mono);
-  font-size: 11px;
+  font-size: 10px;
   color: var(--ink-mono);
   border: 1px solid var(--border-strong);
-  padding: 3px 8px;
+  padding: 2px 6px;
   letter-spacing: 0.06em;
 }
 
 .goalCategory {
   font-family: var(--font-mono);
-  font-size: 11px;
+  font-size: 10px;
   color: var(--ink-mono);
   letter-spacing: 0.06em;
 }
 
 .goalAction {
   font-family: var(--font-display);
-  font-size: 14px;
+  font-size: 13px;
   color: var(--win);
   text-decoration: none;
   letter-spacing: 0.06em;
   border: 2px solid var(--win);
-  padding: 6px 14px;
+  padding: 5px 12px;
   display: inline-block;
   transition: background 0.15s, color 0.15s;
-  margin-top: 4px;
+  margin-top: 2px;
   align-self: flex-start;
 }
 
@@ -354,14 +405,14 @@
 .circleTab {
   display: flex;
   flex-direction: column;
-  gap: 4px;
-  padding: 12px 20px;
+  gap: 2px;
+  padding: 10px 16px;
   background: transparent;
   border: none;
   border-bottom: 2px solid transparent;
   margin-bottom: -2px;
   font-family: var(--font-display);
-  font-size: 14px;
+  font-size: 13px;
   letter-spacing: 0.06em;
   color: var(--ink-mono);
   cursor: pointer;
@@ -396,10 +447,10 @@
 
 .standingRow {
   display: grid;
-  grid-template-columns: 40px 1fr 60px 60px auto;
+  grid-template-columns: 36px 1fr 56px 56px auto;
   align-items: center;
-  gap: 12px;
-  padding: 14px 20px;
+  gap: 10px;
+  padding: 12px 16px;
   border-bottom: 1px solid var(--border-strong);
   transition: background 0.15s;
 }
@@ -423,7 +474,7 @@
 
 .standingRank {
   font-family: var(--font-display);
-  font-size: 22px;
+  font-size: 20px;
   text-align: center;
   letter-spacing: -0.01em;
 }
@@ -443,7 +494,7 @@
 
 .standingName {
   font-family: var(--font-display);
-  font-size: 16px;
+  font-size: 14px;
   color: var(--ink-primary);
   letter-spacing: 0.04em;
   white-space: nowrap;
@@ -453,14 +504,14 @@
 
 .standingStreak {
   font-family: var(--font-mono);
-  font-size: 14px;
+  font-size: 13px;
   color: var(--ink-mono);
   text-align: right;
 }
 
 .standingScore {
   font-family: var(--font-display);
-  font-size: 22px;
+  font-size: 20px;
   color: var(--ink-primary);
   text-align: right;
   letter-spacing: -0.01em;
@@ -468,41 +519,178 @@
 
 .aheadBadge {
   font-family: var(--font-mono);
-  font-size: 10px;
+  font-size: 9px;
   color: var(--warn);
   border: 1px solid var(--warn);
-  padding: 2px 8px;
+  padding: 2px 6px;
   letter-spacing: 0.08em;
   white-space: nowrap;
 }
 
-/* ─── Quick links ────────────────────────────────────────────────────────────── */
+/* ─── Memberships ─────────────────────────────────────────────────────────────── */
 
-.quickLinks {
+.membershipList {
   display: flex;
-  gap: 0;
-  border: 2px solid var(--border-strong);
-  margin-top: 40px;
+  flex-direction: column;
 }
 
-.quickLink {
-  flex: 1;
-  font-family: var(--font-display);
-  font-size: 16px;
-  color: var(--ink-mono);
+.membershipRow {
+  display: grid;
+  grid-template-columns: 90px 1fr auto;
+  align-items: center;
+  gap: 10px;
+  padding: 12px 16px;
+  border-bottom: 1px solid var(--border-strong);
   text-decoration: none;
-  padding: 16px 20px;
-  text-align: center;
-  letter-spacing: 0.06em;
-  border-right: 2px solid var(--border-strong);
+  transition: background 0.15s;
+}
+
+.membershipRow:last-child {
+  border-bottom: none;
+}
+
+.membershipRow:hover {
+  background: var(--bg-elevated);
+}
+
+.membershipType {
+  font-family: var(--font-mono);
+  font-size: 10px;
+  letter-spacing: 0.08em;
+  color: var(--ink-mono);
+}
+
+.membershipName {
+  font-family: var(--font-display);
+  font-size: 14px;
+  letter-spacing: 0.04em;
+  color: var(--ink-primary);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.membershipRole {
+  font-family: var(--font-mono);
+  font-size: 10px;
+  letter-spacing: 0.08em;
+  color: var(--ink-mono);
+  text-transform: uppercase;
+}
+
+/* ─── Account (bottom) ───────────────────────────────────────────────────────── */
+
+.accountSection {
+  margin: 24px 40px 0;
+  border: 2px solid var(--border-strong);
+  background: var(--bg-surface);
+}
+
+.accountHead {
+  padding: 10px 16px;
+  font-family: var(--font-display);
+  font-size: 11px;
+  letter-spacing: 0.16em;
+  color: var(--ink-mono);
+  border-bottom: 1px solid var(--border);
+}
+
+.accountRow {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 14px 16px;
+  gap: 12px;
+}
+
+.accountEmail {
+  font-family: var(--font-mono, var(--font-display));
+  font-size: 12px;
+  letter-spacing: 0.04em;
+  color: var(--ink-mono);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.logoutBtn {
+  flex-shrink: 0;
+  padding: 8px 16px;
+  background: transparent;
+  border: 2px solid var(--danger);
+  color: var(--danger);
+  font-family: var(--font-display);
+  font-size: 12px;
+  letter-spacing: 0.1em;
+  cursor: pointer;
+  transition: background 120ms, color 120ms;
+}
+
+.logoutBtn:hover:not(:disabled),
+.logoutBtn:focus-visible {
+  background: var(--danger);
+  color: #000;
+  outline: none;
+}
+
+.logoutBtn:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.telegramRow {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 10px 16px;
+  gap: 12px;
+  border-top: 1px solid var(--border);
+}
+
+.telegramInfo {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-width: 0;
+}
+
+.telegramDot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--ink-mono);
+  opacity: 0.4;
+  flex-shrink: 0;
+}
+
+.telegramDotOn {
+  background: var(--success, #22c55e);
+  opacity: 1;
+}
+
+.telegramLabel {
+  font-family: var(--font-mono, var(--font-display));
+  font-size: 11px;
+  letter-spacing: 0.04em;
+  color: var(--ink-mono);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.telegramAction {
+  flex-shrink: 0;
+  font-family: var(--font-display);
+  font-size: 11px;
+  letter-spacing: 0.1em;
+  color: var(--ink-primary);
+  text-decoration: none;
+  border: 1px solid var(--border-strong);
+  padding: 5px 10px;
   transition: background 0.15s, color 0.15s;
 }
 
-.quickLink:last-child {
-  border-right: none;
-}
-
-.quickLink:hover {
+.telegramAction:hover {
   background: var(--ink-primary);
   color: #000;
 }
@@ -511,19 +699,106 @@
 
 @media (max-width: 768px) {
   .hero {
-    grid-template-columns: 1fr;
+    flex-direction: column;
   }
 
   .heroLeft {
     border-right: none;
     border-bottom: 2px solid var(--border-strong);
-    padding: 32px 20px;
+    padding: 24px 20px 16px;
+    flex: 1 1 auto;
+    min-width: auto;
   }
 
   .heroRight {
+    padding: 16px 20px;
+    flex: 1 1 auto;
+    min-width: auto;
+  }
+
+  .statRow {
+    grid-template-columns: repeat(4, 1fr);
+  }
+
+  .bigStat {
+    padding: 10px 8px;
+  }
+
+  .bigStat:nth-child(2) {
+    border-right: none;
+  }
+
+  .tabBar {
+    padding: 0 16px;
+    margin-bottom: 16px;
+  }
+
+  .tab {
+    padding: 6px 12px;
+    font-size: 12px;
+  }
+
+  .verdictSection {
+    margin: 0 16px 16px;
+    padding: 16px 20px;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 12px;
+  }
+
+  .verdictIcon {
+    font-size: 28px;
+  }
+
+  .verdictHeadline {
+    font-size: 20px;
+  }
+
+  .section {
+    margin: 0 16px 16px;
+  }
+
+  .emptyBlock {
     padding: 28px 20px;
   }
 
+  .emptyText {
+    font-size: 18px;
+  }
+
+  .sectionHead {
+    padding: 10px 14px;
+  }
+
+  .goalGrid {
+    grid-template-columns: 1fr;
+  }
+
+  .goalCard {
+    border-right: none;
+  }
+
+  .standingRow {
+    grid-template-columns: 32px 1fr 48px 48px;
+    gap: 8px;
+    padding: 10px 14px;
+  }
+
+  .aheadBadge {
+    display: none;
+  }
+
+  .accountSection {
+    margin: 16px 16px 0;
+  }
+
+  .membershipRow {
+    padding: 10px 14px;
+    grid-template-columns: 80px 1fr auto;
+  }
+}
+
+@media (max-width: 480px) {
   .statRow {
     grid-template-columns: repeat(2, 1fr);
   }
@@ -542,127 +817,10 @@
     border-top: 2px solid var(--border-strong);
   }
 
-  .verdictSection {
-    flex-direction: column;
-    align-items: flex-start;
-    padding: 20px;
-    gap: 16px;
-  }
-
-  .verdictIcon {
-    font-size: 36px;
-  }
-
-  .emptyBlock {
-    padding: 32px 20px;
-  }
-
-  .sectionHead {
-    padding: 12px 16px;
-  }
-
-  .goalGrid {
-    grid-template-columns: 1fr;
-  }
-
-  .goalCard {
-    border-right: none;
-  }
-
-  .standingRow {
-    grid-template-columns: 36px 1fr 50px 50px;
-    gap: 8px;
-    padding: 12px 16px;
-  }
-
-  .aheadBadge {
-    display: none;
-  }
-
-  .quickLinks {
-    flex-direction: column;
-  }
-
-  .quickLink {
-    border-right: none;
-    border-bottom: 2px solid var(--border-strong);
-  }
-
-  .quickLink:last-child {
-    border-bottom: none;
-  }
-}
-
-/* ── Аккаунт (внизу /me) ─────────────────────────
- *
- * Logout живёт здесь намеренно: внизу страницы, не в hero.
- * Стиль — нейтральный, не destructive — это не «удалить аккаунт»,
- * а просто выйти. Confirm() в JS добавляет ещё один шаг от
- * случайного нажатия.
- */
-.accountSection {
-  margin-top: 32px;
-  border: 2px solid var(--border-strong);
-  background: var(--bg-surface);
-}
-
-.accountHead {
-  padding: 12px 20px;
-  font-family: var(--font-display);
-  font-size: 12px;
-  letter-spacing: 0.16em;
-  color: var(--ink-mono);
-  border-bottom: 1px solid var(--border);
-}
-
-.accountRow {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  padding: 16px 20px;
-  gap: 16px;
-}
-
-.accountEmail {
-  font-family: var(--font-mono, var(--font-display));
-  font-size: 13px;
-  letter-spacing: 0.04em;
-  color: var(--ink-mono);
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-}
-
-.logoutBtn {
-  flex-shrink: 0;
-  padding: 10px 20px;
-  background: transparent;
-  border: 2px solid var(--danger);
-  color: var(--danger);
-  font-family: var(--font-display);
-  font-size: 13px;
-  letter-spacing: 0.1em;
-  cursor: pointer;
-  transition: background 120ms, color 120ms;
-}
-
-.logoutBtn:hover:not(:disabled),
-.logoutBtn:focus-visible {
-  background: var(--danger);
-  color: #000;
-  outline: none;
-}
-
-.logoutBtn:disabled {
-  opacity: 0.6;
-  cursor: not-allowed;
-}
-
-@media (max-width: 640px) {
   .accountRow {
     flex-direction: column;
     align-items: stretch;
-    gap: 12px;
+    gap: 10px;
   }
 
   .accountEmail {

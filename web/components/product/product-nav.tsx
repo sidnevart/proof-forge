@@ -127,6 +127,14 @@ export function ProductNav() {
                 >
                   ПРОФИЛЬ
                 </Link>
+                <Link
+                  href="/me/ai"
+                  className={styles.menuItem}
+                  role="menuitem"
+                  onClick={() => setMenuOpen(false)}
+                >
+                  AI ЦЕНТР
+                </Link>
                 <button
                   type="button"
                   className={`${styles.menuItem} ${styles.menuItemDanger}`}

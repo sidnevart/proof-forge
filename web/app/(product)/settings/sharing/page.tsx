@@ -24,7 +24,7 @@ export default function SharingSettingsPage() {
   }
 
   return (
-    <main className={styles.page}>
+    <div>
       <header className={styles.header}>
         <span className="eyebrow">Настройки</span>
         <h1>ПУБЛИЧНОСТЬ</h1>
@@ -89,6 +89,6 @@ export default function SharingSettingsPage() {
         <a href="/feed" className={styles.link}>ЛЕНТА →</a>
         <a href="/library" className={styles.link}>ШАБЛОНЫ →</a>
       </div>
-    </main>
+    </div>
   );
 }

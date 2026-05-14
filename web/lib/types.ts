@@ -239,6 +239,11 @@ export type TelegramLinkToken = {
   deeplink: string;
 };
 
+export type TelegramLinkStatus = {
+  linked: boolean;
+  username?: string;
+};
+
 export type GoalRefineVariant = {
   title: string;
   smart: string;
@@ -613,4 +618,37 @@ export type TeamAIHealth = {
   fair_play_status: string;
   pending_approvals: number;
   alerts: AICompanionAlert[];
+};
+
+export type MyMembership = {
+  space_type: "teamspace" | "community";
+  space_id: number;
+  space_name: string;
+  role: string;
+};
+
+export type CircleBoardEntry = {
+  rank: number;
+  circle_id: number;
+  circle_name: string;
+  members_count: number;
+  proofs_submitted: number;
+  proofs_approved: number;
+  completion_pct: number;
+  active_members: number;
+  circle_score: number;
+  is_my_circle: boolean;
+};
+
+export type CirclePosition = {
+  rank: number;
+  circle_score: number;
+  total_circles: number;
+};
+
+export type CirclesBoard = {
+  board_type: string;
+  period: string;
+  entries: CircleBoardEntry[];
+  my_circle_position?: CirclePosition;
 };

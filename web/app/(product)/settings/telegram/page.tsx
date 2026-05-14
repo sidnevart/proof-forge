@@ -1,14 +1,29 @@
 "use client";
 
-import { useState } from "react";
-import { createTelegramLinkToken } from "@/lib/api";
+import { useEffect, useState } from "react";
+import {
+  createTelegramLinkToken,
+  getTelegramLinkStatus,
+  deleteTelegramLink,
+} from "@/lib/api";
 import styles from "./page.module.css";
 
 export default function TelegramSettingsPage() {
+  const [linked, setLinked] = useState<boolean | null>(null);
+  const [username, setUsername] = useState<string>("");
   const [deeplink, setDeeplink] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
   const [copied, setCopied] = useState(false);
   const [error, setError] = useState<string | null>(null);
+
+  useEffect(() => {
+    getTelegramLinkStatus()
+      .then((status) => {
+        setLinked(status.linked);
+        if (status.username) setUsername(status.username);
+      })
+      .catch(() => setLinked(false));
+  }, []);
 
   async function handleConnect() {
     setLoading(true);
@@ -30,11 +45,69 @@ export default function TelegramSettingsPage() {
     setTimeout(() => setCopied(false), 2000);
   }
 
+  async function handleDisconnect() {
+    setLoading(true);
+    try {
+      await deleteTelegramLink();
+      setLinked(false);
+      setUsername("");
+      setDeeplink(null);
+    } catch {
+      setError("Не удалось отключить. Попробуй ещё раз.");
+    } finally {
+      setLoading(false);
+    }
+  }
+
+  if (linked === null) {
+    return (
+      <div>
+        <h1 className={styles.heading}>TELEGRAM</h1>
+        <p className={styles.sub}>Загрузка…</p>
+      </div>
+    );
+  }
+
+  if (linked) {
+    return (
+      <div>
+        <h1 className={styles.heading}>TELEGRAM</h1>
+        <p className={styles.sub}>
+          Бот подключен. Получай сводку утром, нуджи в нужный момент, одобряй
+          пруфы без открытия сайта.
+        </p>
+
+        <div className={styles.linkedBlock}>
+          <div className={styles.linkedBadge}>
+            <span className={styles.linkedDot} />
+            {username ? (
+              <span>
+                Подключен как <strong>@{username}</strong>
+              </span>
+            ) : (
+              <span>Подключен</span>
+            )}
+          </div>
+          <button
+            className={styles.disconnectBtn}
+            onClick={handleDisconnect}
+            disabled={loading}
+          >
+            {loading ? "ОТКЛЮЧАЮ…" : "ОТКЛЮЧИТЬ"}
+          </button>
+        </div>
+
+        {error && <p className={styles.error}>{error}</p>}
+      </div>
+    );
+  }
+
   return (
-    <main className={styles.page}>
+    <div>
       <h1 className={styles.heading}>TELEGRAM</h1>
       <p className={styles.sub}>
-        Подключи бота — получай сводку утром, нуджи в нужный момент, одобряй пруфы без открытия сайта.
+        Подключи бота — получай сводку утром, нуджи в нужный момент, одобряй
+        пруфы без открытия сайта.
       </p>
 
       {!deeplink ? (
@@ -48,7 +121,8 @@ export default function TelegramSettingsPage() {
       ) : (
         <div className={styles.linkBlock}>
           <p className={styles.instruction}>
-            Ссылка действует <strong>10 минут</strong>. Открой в Telegram или скопируй.
+            Ссылка действует <strong>10 минут</strong>. Открой в Telegram или
+            скопируй.
           </p>
           <a
             href={deeplink}
@@ -68,6 +142,6 @@ export default function TelegramSettingsPage() {
       )}
 
       {error && <p className={styles.error}>{error}</p>}
-    </main>
+    </div>
   );
 }

@@ -1,6 +1,4 @@
 .page {
-  max-width: 480px;
-  margin: 0 auto;
   padding: 48px 24px;
 }
 
@@ -107,6 +105,57 @@
   padding: 0;
   text-decoration: underline;
   align-self: flex-start;
+}
+
+.linkedBlock {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.linkedBadge {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 14px 18px;
+  border: 1px solid var(--border);
+  font-family: var(--font-body);
+  font-size: 14px;
+  color: var(--ink-primary);
+}
+
+.linkedDot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--success, #22c55e);
+  display: inline-block;
+  flex-shrink: 0;
+}
+
+.disconnectBtn {
+  display: block;
+  width: 100%;
+  padding: 14px 24px;
+  background: transparent;
+  color: var(--danger);
+  border: 2px solid var(--danger);
+  font-family: var(--font-display);
+  font-size: 16px;
+  font-weight: 400;
+  letter-spacing: 0.05em;
+  cursor: pointer;
+  transition: background 0.15s, color 0.15s;
+}
+
+.disconnectBtn:hover:not(:disabled) {
+  background: var(--danger);
+  color: var(--bg-base);
+}
+
+.disconnectBtn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
 }
 
 .error {

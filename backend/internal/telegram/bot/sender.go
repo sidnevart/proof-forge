@@ -74,6 +74,17 @@ func (c *Client) AnswerCallbackQuery(ctx context.Context, callbackQueryID, text 
 	return c.call(ctx, "answerCallbackQuery", payload, nil)
 }
 
+func (c *Client) SetWebhook(ctx context.Context, webhookURL string, secretToken string) error {
+	payload := map[string]any{
+		"url":             webhookURL,
+		"allowed_updates": []string{"message", "callback_query"},
+	}
+	if secretToken != "" {
+		payload["secret_token"] = secretToken
+	}
+	return c.call(ctx, "setWebhook", payload, nil)
+}
+
 func (c *Client) call(ctx context.Context, method string, payload any, out any) error {
 	body, err := json.Marshal(payload)
 	if err != nil {

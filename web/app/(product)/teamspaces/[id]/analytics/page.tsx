@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { AINotificationCenter } from "@/components/product/ai-notification-center";
 import { TeamspaceAnalytics } from "@/components/product/teamspace-analytics";
 import styles from "./page.module.css";
 
@@ -16,6 +17,7 @@ export default async function TeamspaceAnalyticsPage({ params }: Props) {
         </Link>
         <h1 className={styles.title}>Аналитика</h1>
       </header>
+      <AINotificationCenter />
       <TeamspaceAnalytics teamspaceId={Number(id)} />
     </div>
   );

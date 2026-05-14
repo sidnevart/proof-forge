@@ -7,6 +7,10 @@ vi.mock("next/navigation", () => ({
   useRouter: () => ({ push: vi.fn() }),
 }));
 
+vi.mock("./ai-draft-card", () => ({
+  AIDraftCard: () => null,
+}));
+
 const BASE_CHECK_IN = {
   id: 1,
   goal_id: 10,

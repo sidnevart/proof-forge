@@ -1,0 +1,357 @@
+.page {
+  max-width: 720px;
+  margin: 0 auto;
+  padding: 0 16px 80px;
+}
+
+.header {
+  display: flex;
+  align-items: baseline;
+  gap: 16px;
+  padding: 24px 0;
+  border-bottom: 2px solid var(--border-strong);
+  margin-bottom: 24px;
+}
+
+.back {
+  font-family: var(--font-display);
+  font-size: 13px;
+  color: var(--ink-mono);
+  text-decoration: none;
+  letter-spacing: 0.08em;
+}
+
+.back:hover {
+  color: var(--ink-primary);
+}
+
+.title {
+  font-family: var(--font-display);
+  font-size: 28px;
+  font-weight: 400;
+  letter-spacing: 0.04em;
+  color: var(--ink-primary);
+  margin: 0;
+}
+
+.badge {
+  font-family: var(--font-mono);
+  font-size: 11px;
+  letter-spacing: 0.08em;
+  color: var(--ink-mono);
+  border: 1px solid var(--border-strong);
+  padding: 4px 10px;
+}
+
+/* ─── Shortcuts ────────────────────────────────────────────────────────────── */
+
+.shortcutGrid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 0;
+  border: 2px solid var(--border-strong);
+  margin-bottom: 32px;
+}
+
+.shortcutBtn {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  padding: 20px 12px;
+  background: transparent;
+  border: none;
+  border-right: 2px solid var(--border-strong);
+  font-family: var(--font-display);
+  font-size: 13px;
+  letter-spacing: 0.06em;
+  color: var(--ink-mono);
+  cursor: pointer;
+  transition: background 0.15s, color 0.15s;
+  text-decoration: none;
+  text-align: center;
+}
+
+.shortcutBtn:last-child {
+  border-right: none;
+}
+
+.shortcutBtn:hover {
+  background: var(--bg-elevated);
+  color: var(--ink-primary);
+}
+
+.shortcutIcon {
+  font-size: 24px;
+  line-height: 1;
+}
+
+/* ─── Section ──────────────────────────────────────────────────────────────── */
+
+.section {
+  margin-bottom: 32px;
+}
+
+.sectionHead {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 16px;
+}
+
+.sectionLabel {
+  font-family: var(--font-display);
+  font-size: 12px;
+  letter-spacing: 0.16em;
+  color: var(--ink-mono);
+}
+
+.sectionCount {
+  font-family: var(--font-mono);
+  font-size: 12px;
+  letter-spacing: 0.08em;
+  color: var(--ink-mono);
+}
+
+/* ─── Empty state ────────────────────────────────────────────────────────────── */
+
+.empty {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  padding: 48px 20px;
+  text-align: center;
+  border: 2px solid var(--border-strong);
+  background: var(--bg-surface);
+}
+
+.emptyIcon {
+  font-size: 32px;
+  line-height: 1;
+  opacity: 0.5;
+}
+
+.emptyText {
+  font-family: var(--font-display);
+  font-size: 16px;
+  letter-spacing: 0.04em;
+  color: var(--ink-mono);
+}
+
+.emptySub {
+  font-size: 13px;
+  color: var(--ink-mono);
+  opacity: 0.7;
+}
+
+/* ─── Notification cards ─────────────────────────────────────────────────────── */
+
+.notificationList {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.notificationCard {
+  padding: 16px 20px;
+  border: 1px solid var(--border-strong);
+  border-left: 4px solid var(--border-strong);
+  background: var(--bg-surface);
+  transition: background 0.15s;
+}
+
+.notificationCard:hover {
+  background: var(--bg-elevated);
+}
+
+.notificationCard_warn {
+  border-left-color: var(--warn);
+}
+
+.notificationCard_good {
+  border-left-color: var(--win);
+}
+
+.notificationCard_danger {
+  border-left-color: var(--danger);
+}
+
+.notificationFeature {
+  font-family: var(--font-mono);
+  font-size: 10px;
+  letter-spacing: 0.1em;
+  color: var(--ink-mono);
+  margin-bottom: 8px;
+}
+
+.notificationTitle {
+  font-family: var(--font-display);
+  font-size: 17px;
+  letter-spacing: 0.02em;
+  color: var(--ink-primary);
+  margin-bottom: 6px;
+  line-height: 1.3;
+}
+
+.notificationBody {
+  font-size: 14px;
+  line-height: 1.5;
+  color: var(--ink-mono);
+  margin: 0 0 14px;
+}
+
+.notificationActions {
+  display: flex;
+  gap: 8px;
+}
+
+/* ─── Draft cards ────────────────────────────────────────────────────────────── */
+
+.draftList {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.draftCard {
+  padding: 16px 20px;
+  border: 1px solid var(--border-strong);
+  border-left: 4px solid var(--border-strong);
+  background: var(--bg-surface);
+  transition: background 0.15s;
+}
+
+.draftCard:hover {
+  background: var(--bg-elevated);
+}
+
+.draftRationale {
+  font-family: var(--font-display);
+  font-size: 16px;
+  letter-spacing: 0.02em;
+  color: var(--ink-primary);
+  margin-bottom: 8px;
+  line-height: 1.3;
+}
+
+.draftMeta {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex-wrap: wrap;
+  margin-bottom: 14px;
+}
+
+.confidenceBadge {
+  font-family: var(--font-mono);
+  font-size: 10px;
+  letter-spacing: 0.08em;
+  padding: 3px 8px;
+  border: 1px solid var(--border-strong);
+}
+
+.confidence_high {
+  border-color: var(--win);
+  color: var(--win);
+}
+
+.confidence_medium {
+  border-color: var(--warn);
+  color: var(--warn);
+}
+
+.confidence_low {
+  border-color: var(--danger);
+  color: var(--danger);
+}
+
+.goalLink {
+  font-family: var(--font-mono);
+  font-size: 11px;
+  letter-spacing: 0.06em;
+  color: var(--ink-mono);
+}
+
+.draftActions {
+  display: flex;
+  gap: 8px;
+}
+
+/* ─── Buttons ────────────────────────────────────────────────────────────────── */
+
+.ctaBtn {
+  padding: 8px 16px;
+  background: var(--ink-primary);
+  color: var(--bg-base);
+  border: none;
+  font-family: var(--font-display);
+  font-size: 12px;
+  letter-spacing: 0.1em;
+  cursor: pointer;
+  transition: opacity 0.15s;
+}
+
+.ctaBtn:hover {
+  opacity: 0.85;
+}
+
+.ghostBtn {
+  padding: 8px 16px;
+  background: transparent;
+  color: var(--ink-mono);
+  border: 1px solid var(--border-strong);
+  font-family: var(--font-display);
+  font-size: 12px;
+  letter-spacing: 0.1em;
+  cursor: pointer;
+  transition: border-color 0.15s, color 0.15s;
+}
+
+.ghostBtn:hover {
+  border-color: var(--ink-primary);
+  color: var(--ink-primary);
+}
+
+/* ─── Responsive ─────────────────────────────────────────────────────────────── */
+
+@media (max-width: 480px) {
+  .shortcutGrid {
+    grid-template-columns: 1fr;
+  }
+
+  .shortcutBtn {
+    border-right: none;
+    border-bottom: 2px solid var(--border-strong);
+    flex-direction: row;
+    justify-content: flex-start;
+    padding: 14px 16px;
+  }
+
+  .shortcutBtn:last-child {
+    border-bottom: none;
+  }
+
+  .header {
+    flex-wrap: wrap;
+    gap: 8px;
+    padding: 16px 0;
+  }
+
+  .title {
+    font-size: 22px;
+  }
+
+  .notificationCard,
+  .draftCard {
+    padding: 14px 16px;
+  }
+
+  .notificationTitle {
+    font-size: 15px;
+  }
+
+  .notificationBody {
+    font-size: 13px;
+  }
+}

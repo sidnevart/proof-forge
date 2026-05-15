@@ -243,9 +243,7 @@ export function DashboardScreen() {
             goalTitle={g.goal.title}
             goalStatus={g.goal.status}
             buddyStatus={g.pact.status}
-            seasonDay={computeSeasonDay(g.goal.created_at)}
-            seasonDaysLeft={computeSeasonDaysLeft(g.goal.created_at)}
-            seasonStatus={computeSeasonStatus(g.goal.created_at)}
+            proofStreak={g.goal.current_streak_count}
             membersCount={1}
             lastCheckInAt={null}
             viewerRole={g.viewer_role}
@@ -261,27 +259,4 @@ export function DashboardScreen() {
       </div>
     </main>
   );
-}
-
-// ── Season helpers ────────────────────────────────────────────────────────────
-
-function computeSeasonDay(createdAt: string): number {
-  const created = new Date(createdAt).getTime();
-  const now = Date.now();
-  const daysSince = Math.floor((now - created) / (1000 * 60 * 60 * 24));
-  return Math.min(Math.max(daysSince + 1, 1), 7);
-}
-
-function computeSeasonDaysLeft(createdAt: string): number {
-  const created = new Date(createdAt).getTime();
-  const now = Date.now();
-  const daysSince = Math.floor((now - created) / (1000 * 60 * 60 * 24));
-  return Math.max(7 - daysSince, 0);
-}
-
-function computeSeasonStatus(createdAt: string): "active" | "completed" {
-  const created = new Date(createdAt).getTime();
-  const now = Date.now();
-  const daysSince = Math.floor((now - created) / (1000 * 60 * 60 * 24));
-  return daysSince >= 7 ? "completed" : "active";
 }

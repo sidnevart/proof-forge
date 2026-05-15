@@ -25,11 +25,40 @@
   container-type: inline-size;
 }
 
-/* ── Top row: ring + title ───────────────────── */
+/* ── Top row: streak + title ─────────────────── */
 .topRow {
   display: flex;
   align-items: center;
   gap: 16px;
+}
+
+.streakMark {
+  flex-shrink: 0;
+  width: 64px;
+  height: 64px;
+  border: 2px solid var(--win);
+  background: #101200;
+  color: var(--win);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex-direction: column;
+  gap: 1px;
+}
+
+.streakNumber {
+  font-family: var(--font-display);
+  font-size: 24px;
+  line-height: 1;
+  letter-spacing: 0;
+}
+
+.streakUnit {
+  font-family: var(--font-mono);
+  font-size: 9px;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
 }
 
 .titleColumn {
@@ -73,8 +102,8 @@
   overflow: hidden;
 }
 
-/* ── Season meta line ────────────────────────── */
-.seasonMeta {
+/* ── Progress meta line ──────────────────────── */
+.progressMeta {
   margin: 0;
   font-family: var(--font-mono);
   font-size: 12px;
@@ -106,20 +135,6 @@
 
 .statusPill[data-status="completed"] {
   color: var(--ink-mono);
-}
-
-/* ── Completed badge (top-right corner) ─────── */
-.completedBadge {
-  position: absolute;
-  top: clamp(12px, 2vw, 20px);
-  right: clamp(12px, 2vw, 20px);
-  padding: 4px 10px;
-  border: 2px solid var(--win);
-  color: var(--win);
-  font-family: var(--font-mono);
-  font-size: 11px;
-  font-weight: 700;
-  letter-spacing: 0.08em;
 }
 
 /* ── Check-in button (matches dashboard .ctaSolid) ─── */

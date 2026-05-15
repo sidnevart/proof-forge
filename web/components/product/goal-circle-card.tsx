@@ -1,7 +1,5 @@
 "use client";
 
-import { SeasonProgressRing } from "@/components/product/season-progress-ring";
-import { SeasonEndPanel } from "@/components/product/season-end-panel";
 import styles from "./goal-circle-card.module.css";
 
 export interface GoalCircleCardProps {
@@ -10,47 +8,35 @@ export interface GoalCircleCardProps {
   goalTitle: string;
   goalStatus: "pending_buddy_acceptance" | "active";
   buddyStatus: "invited" | "active";
-  seasonDay: number;
-  seasonDaysLeft: number;
-  seasonStatus: "active" | "completed";
+  proofStreak: number;
   membersCount: number;
   lastCheckInAt?: string | null;
   onCheckIn?: () => void;
-  // Season end panel props
-  seasonId?: number;
-  onSeasonEnd?: (action: "extend" | "start_new") => void;
   // viewerRole drives the «вы — автор» / «вы — партнёр» eyebrow so a user who
   // joined a buddy's круг can immediately tell it isn't their own.
   viewerRole?: "owner" | "buddy";
 }
 
 export function GoalCircleCard({
-  circleId,
   goalId,
   goalTitle,
   goalStatus,
   buddyStatus,
-  seasonDay,
-  seasonDaysLeft,
-  seasonStatus,
+  proofStreak,
   onCheckIn,
-  seasonId,
-  onSeasonEnd,
   viewerRole,
 }: GoalCircleCardProps) {
-  const canCheckIn = seasonStatus === "active" && goalStatus === "active";
-  const showSeasonEndPanel =
-    seasonStatus === "completed" && seasonId !== undefined && onSeasonEnd !== undefined;
+  const canCheckIn = goalStatus === "active";
+  const streakLabel = proofStreak > 0 ? `СЕРИЯ ${proofStreak}` : "СЕРИЯ ЕЩЁ НЕ НАЧАТА";
 
   return (
     <article className={styles.card} data-goal-id={goalId}>
-      {/* Top row: ring + title */}
+      {/* Top row: streak + title */}
       <div className={styles.topRow}>
-        <SeasonProgressRing
-          day={seasonDay}
-          daysLeft={seasonDaysLeft}
-          status={seasonStatus}
-        />
+        <div className={styles.streakMark} aria-label={streakLabel}>
+          <span className={styles.streakNumber}>{proofStreak}</span>
+          <span className={styles.streakUnit}>streak</span>
+        </div>
         <div className={styles.titleColumn}>
           {viewerRole ? (
             <span className={styles.viewerRole} data-role={viewerRole}>
@@ -61,10 +47,8 @@ export function GoalCircleCard({
         </div>
       </div>
 
-      {/* Season meta */}
-      <p className={styles.seasonMeta}>
-        День {seasonDay} / 7 &middot; осталось {seasonDaysLeft}{" "}
-        {pluralDays(seasonDaysLeft)}
+      <p className={styles.progressMeta}>
+        {streakLabel} · СЛЕДУЮЩИЙ ПРУФ ДЕРЖИТ СЕРИЮ ЖИВОЙ
       </p>
 
       {/* Status pill: pending = waiting for buddy; active = pact accepted */}
@@ -79,11 +63,6 @@ export function GoalCircleCard({
         </span>
       )}
 
-      {/* Completed badge (only when no end panel) */}
-      {seasonStatus === "completed" && !showSeasonEndPanel && (
-        <span className={styles.completedBadge}>СЕЗОН ЗАВЕРШЁН</span>
-      )}
-
       {/* Check-in button */}
       {canCheckIn && (
         <button
@@ -94,24 +73,6 @@ export function GoalCircleCard({
           СДАТЬ ПРУФ →
         </button>
       )}
-
-      {/* Season end panel — shown inline when season is over */}
-      {showSeasonEndPanel && (
-        <SeasonEndPanel
-          circleId={circleId}
-          seasonId={seasonId!}
-          onEnd={onSeasonEnd!}
-        />
-      )}
     </article>
   );
-}
-
-function pluralDays(n: number): string {
-  const abs = Math.abs(n);
-  const mod10 = abs % 10;
-  const mod100 = abs % 100;
-  if (mod10 === 1 && mod100 !== 11) return "день";
-  if (mod10 >= 2 && mod10 <= 4 && (mod100 < 10 || mod100 >= 20)) return "дня";
-  return "дней";
 }

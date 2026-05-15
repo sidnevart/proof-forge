@@ -9,6 +9,7 @@ DECLARE
   buddy_id BIGINT;
   observer_id BIGINT;
   circle_id BIGINT;
+  launch_circle_id BIGINT;
   team_id BIGINT;
   goal_pitch_id BIGINT;
   goal_launch_id BIGINT;
@@ -46,7 +47,7 @@ BEGIN
     'Вернуть силовые тренировки'
   );
 
-  DELETE FROM circles WHERE invite_code = 'PFDEMO';
+  DELETE FROM circles WHERE invite_code IN ('PFDEMO', 'PFDEMO2');
 
   INSERT INTO users (email, display_name, public_alias, share_default, is_anonymous_public, created_at, updated_at)
   VALUES ('demo@proof-forge.local', 'Демо Основатель', 'demo_founder', TRUE, FALSE, NOW() - INTERVAL '45 days', NOW())
@@ -89,18 +90,34 @@ BEGIN
       updated_at = NOW()
   RETURNING id INTO circle_id;
 
+  INSERT INTO circles (owner_user_id, name, invite_code, member_limit, daily_window_tz, daily_cutoff, created_at, updated_at)
+  VALUES (demo_user_id, 'Предзаказ без самообмана', 'PFDEMO2', 8, 'Europe/Moscow', '22:30', NOW() - INTERVAL '12 days', NOW())
+  ON CONFLICT (invite_code) DO UPDATE
+  SET owner_user_id = EXCLUDED.owner_user_id,
+      name = EXCLUDED.name,
+      member_limit = EXCLUDED.member_limit,
+      daily_window_tz = EXCLUDED.daily_window_tz,
+      daily_cutoff = EXCLUDED.daily_cutoff,
+      updated_at = NOW()
+  RETURNING id INTO launch_circle_id;
+
   INSERT INTO circle_memberships (circle_id, user_id, status, role, joined_at, created_at)
   VALUES
     (circle_id, demo_user_id, 'active', 'owner', NOW() - INTERVAL '21 days', NOW() - INTERVAL '21 days'),
     (circle_id, buddy_id, 'active', 'buddy', NOW() - INTERVAL '20 days', NOW() - INTERVAL '20 days'),
-    (circle_id, observer_id, 'active', 'observer', NOW() - INTERVAL '12 days', NOW() - INTERVAL '12 days')
-  ON CONFLICT (circle_id, user_id) DO UPDATE
+    (circle_id, observer_id, 'active', 'observer', NOW() - INTERVAL '12 days', NOW() - INTERVAL '12 days'),
+    (launch_circle_id, demo_user_id, 'active', 'owner', NOW() - INTERVAL '12 days', NOW() - INTERVAL '12 days'),
+    (launch_circle_id, buddy_id, 'active', 'buddy', NOW() - INTERVAL '11 days', NOW() - INTERVAL '11 days')
+  ON CONFLICT ON CONSTRAINT circle_memberships_circle_id_user_id_key DO UPDATE
   SET status = EXCLUDED.status,
       role = EXCLUDED.role,
       joined_at = EXCLUDED.joined_at;
 
   INSERT INTO circle_seasons (circle_id, status, starts_at, ends_at, created_at)
   VALUES (circle_id, 'active', NOW() - INTERVAL '90 days', NOW() + INTERVAL '365 days', NOW() - INTERVAL '90 days');
+
+  INSERT INTO circle_seasons (circle_id, status, starts_at, ends_at, created_at)
+  VALUES (launch_circle_id, 'active', NOW() - INTERVAL '90 days', NOW() + INTERVAL '365 days', NOW() - INTERVAL '90 days');
 
   INSERT INTO teams (lead_user_id, name, invite_code, member_limit, ai_mode, created_at, updated_at)
   VALUES (demo_user_id, 'ProofForge demo lab', 'PFDEMOAI', 12, 'metadata-only', NOW() - INTERVAL '21 days', NOW())
@@ -116,7 +133,7 @@ BEGIN
     (team_id, demo_user_id, 'lead', 'active', TRUE, 'Europe/Moscow', NOW() - INTERVAL '21 days'),
     (team_id, buddy_id, 'trusted_approver', 'active', TRUE, 'Europe/Moscow', NOW() - INTERVAL '20 days'),
     (team_id, observer_id, 'member', 'active', TRUE, 'Europe/Moscow', NOW() - INTERVAL '12 days')
-  ON CONFLICT (team_id, user_id) DO UPDATE
+  ON CONFLICT ON CONSTRAINT team_memberships_team_id_user_id_key DO UPDATE
   SET role = EXCLUDED.role,
       status = EXCLUDED.status,
       ai_consent = EXCLUDED.ai_consent,
@@ -128,7 +145,7 @@ BEGIN
     is_public_template, movement_mode, rhythm_cadence, created_at, updated_at
   )
   VALUES (
-    circle_id, demo_user_id, buddy_id,
+    launch_circle_id, demo_user_id, buddy_id,
     'Собрать публичный investor update',
     'Каждый рабочий день превращать прогресс в видимый артефакт: цифры, скрины, ссылки, решения.',
     'active', 'stable', 9,
@@ -330,5 +347,10 @@ COMMIT;
 SELECT
   'demo@proof-forge.local' AS login_email,
   (SELECT COUNT(*) FROM goals g JOIN users u ON u.id = g.owner_user_id WHERE u.email = 'demo@proof-forge.local') AS owned_goals,
-  (SELECT COUNT(*) FROM check_ins ci JOIN goals g ON g.id = ci.goal_id WHERE g.circle_id = (SELECT id FROM circles WHERE invite_code = 'PFDEMO')) AS circle_proofs,
+  (
+    SELECT COUNT(*)
+    FROM check_ins ci
+    JOIN goals g ON g.id = ci.goal_id
+    WHERE g.circle_id IN (SELECT id FROM circles WHERE invite_code IN ('PFDEMO', 'PFDEMO2'))
+  ) AS circle_proofs,
   (SELECT COUNT(*) FROM ai_notifications n JOIN users u ON u.id = n.user_id WHERE u.email = 'demo@proof-forge.local' AND n.dismissed_at IS NULL) AS active_ai_notifications;

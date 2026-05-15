@@ -29,7 +29,7 @@ function TrendBadge({ trend, delta }: { trend: WeekTrend; delta: number }) {
   );
 }
 
-function SparkChart({ weeks, maxValue }: { weeks: { week: string; count: number }[]; maxValue: number }) {
+function SparkChart({ weeks, maxValue }: { weeks: { week: string; proofs_count: number }[]; maxValue: number }) {
   const safeMax = maxValue > 0 ? maxValue : 1;
   return (
     <div className={styles.sparkChart}>
@@ -37,8 +37,8 @@ function SparkChart({ weeks, maxValue }: { weeks: { week: string; count: number 
         <div key={w.week} className={styles.sparkBar}>
           <div
             className={styles.sparkFill}
-            style={{ height: `${Math.max((w.count / safeMax) * 100, w.count > 0 ? 4 : 0)}%` }}
-            title={`${w.count} пруфов`}
+            style={{ height: `${Math.max((w.proofs_count / safeMax) * 100, w.proofs_count > 0 ? 4 : 0)}%` }}
+            title={`${w.proofs_count} пруфов`}
           />
           <div className={styles.sparkWeekLabel}>
             {w.week.slice(-2)}
@@ -77,7 +77,7 @@ interface Props {
 export function PersonalProgressBar({ data }: Props) {
   const proofsThisWeek = data.current_week.proofs_count;
   const trend = data.current_week.trend as WeekTrend;
-  const maxProofs = Math.max(...data.weekly_history.map((w) => w.count), 1);
+  const maxProofs = Math.max(...data.weekly_history.map((w) => w.proofs_count), 1);
 
   return (
     <section className={styles.section}>
@@ -96,8 +96,8 @@ export function PersonalProgressBar({ data }: Props) {
       )}
 
       <StreakBar
-        current={data.streak.current_streak}
-        record={data.streak.longest_streak}
+        current={data.streak.current_weeks}
+        record={data.streak.personal_record_weeks}
       />
     </section>
   );

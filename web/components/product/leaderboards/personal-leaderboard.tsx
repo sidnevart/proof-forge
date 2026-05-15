@@ -26,14 +26,14 @@ const TREND_COLOR: Record<WeekTrend, string> = {
 
 function SparkBars({ history }: { history: WeekCount[] }) {
   const last8 = history.slice(-8);
-  const max = Math.max(...last8.map((w) => w.count), 1);
+  const max = Math.max(...last8.map((w) => w.proofs_count), 1);
   return (
     <div className={styles.sparkWrap} aria-hidden>
       {last8.map((w) => (
         <div key={w.week} className={styles.sparkBar}>
           <div
             className={styles.sparkFill}
-            style={{ height: `${Math.round((w.count / max) * 100)}%` }}
+            style={{ height: `${Math.round((w.proofs_count / max) * 100)}%` }}
           />
         </div>
       ))}
@@ -56,8 +56,8 @@ export function PersonalLeaderboardWidget() {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    apiFetch<PersonalLeaderboard>("/v1/me/leaderboard")
-      .then(setData)
+    apiFetch<{ data: PersonalLeaderboard }>("/v1/me/leaderboard")
+      .then((res) => setData(res.data))
       .catch(() => {})
       .finally(() => setLoading(false));
   }, []);
@@ -96,14 +96,14 @@ export function PersonalLeaderboardWidget() {
       <div className={styles.stats}>
         <StatRow
           label="Серия недель"
-          value={data.streak.current_streak}
+          value={data.streak.current_weeks}
           sublabel={
-            data.streak.longest_streak > data.streak.current_streak
-              ? `рекорд ${data.streak.longest_streak}`
+            data.streak.personal_record_weeks > data.streak.current_weeks
+              ? `рекорд ${data.streak.personal_record_weeks}`
               : undefined
           }
         />
-        <StatRow label="Активных недель" value={data.streak.weeks_active} />
+        <StatRow label="Активных недель" value={data.streak.current_weeks} />
         <StatRow
           label="Этот сезон"
           value={data.current_season.proofs_count}

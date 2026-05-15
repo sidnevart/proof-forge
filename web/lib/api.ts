@@ -808,7 +808,8 @@ export async function getUserStats(): Promise<UserStats> {
 }
 
 export async function getPersonalLeaderboard(): Promise<PersonalLeaderboard> {
-  return request<PersonalLeaderboard>("/v1/me/leaderboard");
+  const res = await request<{ data: PersonalLeaderboard }>("/v1/me/leaderboard");
+  return res.data;
 }
 
 // ── Contracts ─────────────────────────────────────────────────────────────────

@@ -452,7 +452,7 @@ export type UserStats = {
 
 export type WeekCount = {
   week: string;
-  count: number;
+  proofs_count: number;
 };
 
 export type PersonalLeaderboard = {
@@ -467,9 +467,9 @@ export type PersonalLeaderboard = {
     trend: string;
   };
   streak: {
-    current_streak: number;
-    longest_streak: number;
-    weeks_active: number;
+    current_weeks: number;
+    personal_record_weeks: number;
+    is_personal_record: boolean;
   };
   weekly_history: WeekCount[];
 };

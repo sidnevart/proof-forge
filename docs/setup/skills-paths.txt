@@ -47,6 +47,7 @@
 .claude/skills/goals-feature-builder/SKILL.md
 .claude/skills/grafana-dashboard-builder/SKILL.md
 .claude/skills/growth-loop-designer/SKILL.md
+.claude/skills/integration-quality-gate/SKILL.md
 .claude/skills/invites-feature-builder/SKILL.md
 .claude/skills/landing-page-builder/SKILL.md
 .claude/skills/landing-page-copywriter/SKILL.md
@@ -138,6 +139,7 @@
 .codex/skills/goals-feature-builder/SKILL.md
 .codex/skills/grafana-dashboard-builder/SKILL.md
 .codex/skills/growth-loop-designer/SKILL.md
+.codex/skills/integration-quality-gate/SKILL.md
 .codex/skills/invites-feature-builder/SKILL.md
 .codex/skills/landing-page-builder/SKILL.md
 .codex/skills/landing-page-copywriter/SKILL.md

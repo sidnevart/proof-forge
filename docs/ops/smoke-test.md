@@ -44,9 +44,9 @@ curl -sf -c /tmp/pf-smoke.jar -X POST "${BASE}/v1/register" \
   -H "Content-Type: application/json" \
   -d "{\"email\":\"${USER_EMAIL}\",\"display_name\":\"Smoke Owner\"}" | jq .
 ```
-**Expected:** `{"user":{"id":<n>,"email":"...","display_name":"Smoke Owner",...}}` with HTTP 200.  
+**Expected:** `{"user":{"id":<n>,"email":"...","display_name":"Smoke Owner",...}}` with HTTP 201.  
 Session cookie `pf_session` written to `/tmp/pf-smoke.jar`.  
-**Blocker if:** non-200 or no session cookie in jar.
+**Blocker if:** non-201 or no session cookie in jar.
 
 ---
 
@@ -138,7 +138,7 @@ for i in $(seq 1 12); do
     -d "{\"email\":\"ratelimit-${i}@example.com\",\"display_name\":\"RL\"}"
 done
 ```
-**Expected:** The first 10 return 200; requests 11–12 return 429 (nginx rate limit zone `api_auth`).  
+**Expected:** The first 10 return 201; requests 11–12 return 429 (nginx rate limit zone `api_auth`).  
 **Blocker if:** no 429 at all — rate limiting misconfigured.
 
 ---
@@ -196,7 +196,7 @@ rm -f /tmp/pf-smoke.jar
 | 1a | API readiness | 200 `{"status":"ok"}` | |
 | 1b | All containers running | 7 running, minio-init exited 0 | |
 | 1c | TLS + HSTS | HTTP/2 200, HSTS header | |
-| 2 | User registration | 200 + session cookie | |
+| 2 | User registration | 201 + session cookie | |
 | 3 | Goal creation | 200 + goal id | |
 | 4 | Dashboard | `total_goals:1` | |
 | 5a | Draft check-in | 200 + check-in id | |

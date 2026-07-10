@@ -134,6 +134,7 @@ SKILL_GROUPS = [
             ("performance-smoke-tester", "Run fast performance smoke checks for key flows, queries, and background processing paths.", "tester"),
             ("bug-reproducer", "Reduce reported issues to deterministic steps, observable evidence, and likely fault boundaries.", "reproducer"),
             ("quality-gate-runner", "Execute the final automated and manual quality gates before merge or release.", "runner"),
+            ("integration-quality-gate", "Run a full ProofForge quality gate for a feature slice: scenario matrix, backend integration coverage, frontend e2e coverage, deploy smoke validation, and a final release verdict with blockers and gaps called out explicitly.", "runner"),
         ],
     },
     {
